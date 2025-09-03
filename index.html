@@ -73,18 +73,29 @@
       padding: 0 2rem;
       box-shadow: 0 6px 20px var(--shadow-light); /* Softer shadow */
       z-index: 1000;
+      justify-content: space-between; /* Distribute items with space between */
+    }
+    header.site-header .header-content {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 1200px; /* Limit width for better centering */
+      margin: 0 auto; /* Center the content within the header */
     }
     header.site-header img.logo {
       height: 45px;
       width: auto;
-      margin-right: 1.5rem;
+      margin-right: 1.5rem; /* Keep margin for spacing from title */
       filter: drop-shadow(0 2px 4px var(--shadow-light));
+      /* No absolute positioning needed here, flexbox handles it */
     }
     header.site-header h1 {
       font-size: 1.75rem;
       font-weight: 700;
       color: var(--dark-text);
       letter-spacing: -0.02em;
+      flex-grow: 1; /* Allow title to take available space */
+      text-align: center; /* Center the title */
     }
 
     /* Main Content Layout */
@@ -96,24 +107,9 @@
       min-height: calc(100vh - 70px);
     }
 
-    /* Header Text */
+    /* Header Text (removed from main, now in header.site-header) */
     main > header {
-      text-align: center;
-      margin: 2rem 0 0;
-      max-width: 900px;
-    }
-    main > header h2 {
-      font-size: 3.2rem; /* Slightly larger */
-      font-weight: 700;
-      color: var(--dark-text);
-      margin-bottom: 0.5rem;
-      letter-spacing: -0.03em; /* Tighter spacing */
-      /* Removed titleFadeIn here as it will be replaced by glitch animation */
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Subtle text shadow */
-    }
-    @keyframes titleFadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      display: none; /* Hide the old header text */
     }
 
     /* New CSS for Animated Dashboard Title - Glitch Effect */
@@ -416,14 +412,14 @@
       transform: scale(1.08); /* More pronounced zoom */
     }
     .app-card h3 {
-      font-size: 1.6rem; /* Slightly larger */
+      font-size: 1.3rem; /* Reduced by 2 units from 1.5rem */
       font-weight: 600;
       color: var(--dark-text);
-      margin: 0 0 0.6rem 0;
+      margin: 0 0 0.5rem 0;
       transition: color 0.4s ease; /* Smooth color transition */
     }
     .app-card p {
-      font-size: 1.05rem; /* Slightly larger */
+      font-size: 0.75rem; /* Reduced by 2 units from 0.95rem */
       color: var(--dark-text);
       margin: 0;
       transition: color 0.4s ease; /* Smooth color transition */
@@ -461,8 +457,15 @@
         font-size: 0.9rem;
         border-radius: 0 0 15px 15px;
       }
+      header.site-header {
+        padding: 0 1rem; /* Adjust padding for smaller screens */
+      }
+      header.site-header img.logo {
+        height: 40px; /* Smaller logo on mobile */
+        margin-right: 1rem;
+      }
       header.site-header h1 {
-        font-size: 1.2rem;
+        font-size: 1.5rem; /* Smaller title on mobile */
       }
       .nav-btn {
         width: 45px;
@@ -471,9 +474,6 @@
       }
       .nav-btn.prev { left: 15px; }
       .nav-btn.next { right: 15px; }
-      main > header h2 {
-        font-size: 2.2rem;
-      }
       .app-grid {
         gap: 2rem;
       }
@@ -483,22 +483,31 @@
       .app-card img {
         border-radius: 15px 15px 0 0;
       }
+      .app-card h3 {
+        font-size: 1.1rem; /* Further adjust for mobile, 2 units down from 1.3rem */
+      }
+      .app-card p {
+        font-size: 0.65rem; /* Further adjust for mobile, 2 units down from 0.75rem */
+      }
     }
   </style>
 </head>
 <body>
   <!-- Fixed header with logo and title -->
   <header class="site-header" role="banner">
-    <img src="https://i.imgur.com/sH95z16.png" alt="Company logo depicting a modern geometric design with green and blue tones representing innovation and growth" class="logo" />
-    <!-- Optional: Add a title next to the logo -->
-    <!-- <h1>Genetek Dashboard</h1> -->
+    <div class="header-content">
+      <img src="https://i.imgur.com/sH95z16.png" alt="Company logo depicting a modern geometric design with green and blue tones representing innovation and growth" class="logo" />
+      <!-- Dashboard title moved here and centered -->
+      <h1 class="animated-dashboard-title" data-text="DASHBOARD">DASHBOARD</h1>
+      <!-- An empty div or span to push the title to center if logo is on left -->
+      <div style="width: 45px; margin-left: 1.5rem;"></div> <!-- Placeholder to balance logo space -->
+    </div>
   </header>
 
   <main>
-    <!-- Header text -->
+    <!-- Header text (This section is now empty as the title moved to the header) -->
     <header class="w-full text-center px-4">
-      <!-- Added data-text attribute for glitch effect -->
-      <h2 class="animated-dashboard-title" data-text="DASHBOARD">DASHBOARD</h2>
+      <!-- The h2 element was here, but it's now in the site-header -->
     </header>
 
     <!-- Slideshow Section -->
@@ -569,8 +578,8 @@
 
   <!-- Footer/Credits Section -->
   <footer class="site-footer">
-    <p>&copy; 2025 Genetek. All rights reserved.</p>
-    <p>Designed and Developed by Galih Satrio</a></p>
+    <p>&copy; 2024 Genetek. All rights reserved.</p>
+    <p>Designed and Developed by <a href="https://blackbox.ai" target="_blank">BLACKBOX.AI Assistant</a></p>
   </footer>
 
   <script>
