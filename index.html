@@ -274,20 +274,162 @@
     </header>
 
     <!-- Slideshow Section -->
-    <!-- ... (slideshow tetap sama seperti file asli Anda) ... -->
+    <section class="slideshow-container" aria-label="Automatic Information Slideshow">
+      <div class="slide active" role="group" aria-roledescription="slide" aria-label="Slide 1">
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/67a17248-a220-41e7-b6a0-bfa274f75dca.png" alt="Wide panoramic banner showcasing a technology seminary setup with modern stages, projectors, diverse attendees, and digital interfaces in an illuminated convention center landscape at night" />
+        <div class="caption">Tech Seminar: Advanced AI Workshop, 15 July 2024, Virtual & On-Site</div>
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 2">
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6d0e7f97-5974-4ce2-8441-f350cc53a49c.png" alt="Vibrant promotional poster for a coding bootcamp featuring colorful code snippets, modern laptops, diverse learners collaborating, and a bright, creative classroom environment with plants and windows" />
+        <div class="caption">Coding Bootcamp: Learn Python in 4 Weeks, Starting 20 July 2024</div>
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 3">
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dbfb5e7f-99eb-49a0-a9a3-3bf9359dd36b.png" alt="Festive digital notice board showing a company holiday celebration with calendars, joyful team members, balloons, decorations, and a relaxing office breakout area with refreshments" />
+        <div class="caption">Holiday Notice: Independence Day Closure on 17 August 2024</div>
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 4">
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/db83f77b-9e40-4a6f-bf68-5f1925f1acc9.png" alt="Dynamic product launch teaser illustrating futuristic smart home gadgets, glowing holographic displays, innovative tech devices, and an exciting unveiling scene in a high-tech laboratory setting" />
+        <div class="caption">New Product Launch: Smart Home Gadgets, Available from 1 September 2024</div>
+      </div>
+      <button class="nav-btn prev" aria-label="Previous slide" title="Go to previous slide"><</button>
+      <button class="nav-btn next" aria-label="Next slide" title="Go to next slide">></button>
+    </section>
 
     <!-- App Menu Section -->
-    <!-- ... (app card tetap sama seperti file asli Anda) ... -->
+    <section class="app-grid" aria-label="Application menu">
+      <div class="app-card" data-url="https://pipelines.genetek.co.id" role="button" tabindex="0" aria-label="Pipeline Sales Manager">
+        <img src="https://i.imgur.com/dV1buoT.png" alt="Collage of diverse users engaging on a social media platform, featuring colorful posts, smiling faces, chat bubbles, and trending hashtags in an urban street market setting" />
+        <div class="card-content">
+          <h3>Pipelines Sales Manager</h3>
+          <p>Aplikasi Pipeline Untuk Mengelola Penjualan</p>
+        </div>
+      </div>
+
+      <div class="app-card" data-url="https://supplychain.genetek.co.id" role="button" tabindex="0" aria-label="Supply Chain Application">
+        <img src="https://i.imgur.com/nEaz0Co.png" alt="Professional email dashboard with neatly arranged inbox folders, calendar overlays, notification icons, coffee cup, and a tidy modern desk in a well-lit office space" />
+        <div class="card-content">
+          <h3>Supply Chain Application</h3>
+          <p>Aplikasi untung mengelola Supply Chain</p>
+        </div>
+      </div>
+
+      <div class="app-card" data-url="https://panduan.genetek.co.id" role="button" tabindex="0" aria-label="Panduan">
+        <img src="https://i.imgur.com/QMO96ed.png" alt="Interactive weather interface with sunny forecast visuals, animated sunny clouds, temperature gradients, cityscape buildings, and palm trees in a coastal tropical environment" />
+        <div class="card-content">
+          <h3>Panduan</h3>
+          <p>Panduan untuk aplikasi</p>
+        </div>
+      </div>
+
+      <div class="app-card" data-url="https://orderatk.genetek.co.id" role="button" tabindex="0" aria-label="Order ATK">
+        <img src="https://i.imgur.com/nYsU3l7.png" alt="Scrolling news feed interface with prominent headlines, live update banners, global map overlays, and journalist equipment in a bustling modern newsroom" />
+        <div class="card-content">
+          <h3>Order ATK</h3>
+          <p>Aplikasi untuk memesan alat tulis kantor.</p>
+        </div>
+      </div>
+
+      <div class="app-card" data-url="https://formapd.genetek.co.id" role="button" tabindex="0" aria-label="Form Alat Pelindung Diri">
+        <img src="https://i.imgur.com/3N4NiJb.png" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
+        <div class="card-content">
+          <h3>Form Alat Pelindung Diri</h3>
+          <p>Form untuk memesan dan mengembalikan APD</p>
+        </div>
+      </div>
+    </section>
   </main>
-
+  
   <footer class="site-footer">
-    © 2025 Genetek Dashboard
+    © 2025 Genetek Dashboard | Developed with ❤️ by YourName
   </footer>
-
+  
   <script>
     (function() {
-      // ... (slideshow & app-card script asli Anda) ...
-    })();
+      // Slideshow functionality with enhanced transitions
+      const slides = document.querySelectorAll('.slide');
+      const prevBtn = document.querySelector('.nav-btn.prev');
+      const nextBtn = document.querySelector('.nav-btn.next');
+      let currentIndex = 0;
+      let slideInterval = null;
+      const slideCount = slides.length;
+      const autoSlideDelay = 5000; // 5 seconds
+
+      function showSlide(index, instant = false) {
+        slides.forEach((slide, i) => {
+          if (i === index) {
+            slide.classList.add('active');
+            slide.style.opacity = '1';
+          } else {
+            slide.classList.remove('active');
+            slide.style.opacity = '0';
+          }
+        });
+        currentIndex = index;
+      }
+
+      function nextSlide() {
+        const nextIndex = (currentIndex + 1) % slideCount;
+        showSlide(nextIndex);
+      }
+
+      function prevSlide() {
+        const prevIndex = (currentIndex - 1 + slideCount) % slideCount;
+        showSlide(prevIndex);
+      }
+
+      function resetAutoSlide() {
+        clearInterval(slideInterval);
+        slideInterval = setInterval(nextSlide, autoSlideDelay);
+      }
+
+      // Event listeners for manual navigation
+      prevBtn.addEventListener('click', () => {
+        prevSlide();
+        resetAutoSlide();
+      });
+
+      nextBtn.addEventListener('click', () => {
+        nextSlide();
+        resetAutoSlide();
+      });
+
+      // Start auto slideshow
+      resetAutoSlide();
+
+      // App card click handler with smooth feedback
+      document.addEventListener('DOMContentLoaded', () => {
+        const appCards = document.querySelectorAll('.app-card');
+
+        appCards.forEach(card => {
+          const url = card.getAttribute('data-url');
+
+          card.addEventListener('click', e => {
+            e.preventDefault();
+            if (url) {
+              // Add click effect before redirect
+              card.style.transform = 'translateY(-15px) scale(0.98)';
+              setTimeout(() => {
+                window.location.href = url;
+              }, 200);
+            }
+          });
+
+          // Keyboard accessibility for cards
+          card.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              card.click();
+            }
+          });
+        });
+      });
+
+      // Optional: Pause auto-slide on hover (enhances user experience)
+      document.addEventListener('DOMContentLoaded', () => {
+        const slideshow = document.querySelector('.slideshow-container');
+        slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
+        slideshow.addEventListener('mouseleave', () => resetAutoSlide());
+      });
 
     // Tambahan animasi glow setelah typing selesai
     document.addEventListener("DOMContentLoaded", () => {
@@ -295,7 +437,10 @@
       setTimeout(() => {
         title.classList.add("glow");
       }, 3100);
-    });
+      
+    })();
   </script>
 </body>
 </html>
+</content>
+</create_file>
