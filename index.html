@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ... (CSS Anda yang sudah ada, tidak ada perubahan di sini) ... */
+
     /* Global Variables for Colors */
     :root {
       --primary-color: #007bff; /* Blue */
@@ -23,6 +25,26 @@
       --shadow-light: rgba(0, 0, 0, 0.08);
       --shadow-medium: rgba(0, 0, 0, 0.15);
       --shadow-strong: rgba(0, 0, 0, 0.25);
+
+      /* New variables for modern design */
+      --font-family-base: 'Poppins', sans-serif;
+      --font-size-base: 1rem;
+      --spacing-xs: 0.5rem;
+      --spacing-sm: 1rem;
+      --spacing-md: 1.5rem;
+      --spacing-lg: 2rem;
+      --spacing-xl: 3rem;
+      --border-radius-sm: 8px;
+      --border-radius-md: 15px;
+      --border-radius-lg: 25px;
+      --transition-speed-fast: 0.2s;
+      --transition-speed-normal: 0.4s;
+      --transition-speed-slow: 0.6s;
+
+      /* New variables for advanced card animations */
+      --card-tilt-degree: 5deg; /* Max tilt degree */
+      --card-glow-color: var(--primary-color); /* Color for the glowing border */
+      --card-overlay-color: rgba(0, 0, 0, 0.6); /* Overlay color on image hover */
     }
 
     /* Base Styles & Background */
@@ -30,7 +52,7 @@
       background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
       background-attachment: fixed;
       min-height: 100vh;
-      font-family: 'Poppins', sans-serif; /* Modern font */
+      font-family: var(--font-family-base); /* Modern font */
       overflow-x: hidden;
       overflow-y: auto;
       margin: 0;
@@ -48,14 +70,15 @@
       background-image: radial-gradient(circle at 20% 50%, var(--glass-light) 2px, transparent 2px),
                         radial-gradient(circle at 80% 50%, var(--glass-light) 1px, transparent 1px),
                         radial-gradient(circle at 40% 20%, var(--glass-medium) 0.5px, transparent 0.5px);
-      background-size: 50px 50px, 30px 30px, 80px 80px;
-      animation: moveParticles 20s linear infinite;
+      background-size: 60px 60px, 40px 40px, 90px 90px; /* Slightly larger particles */
+      animation: moveParticles 25s linear infinite alternate; /* Slower, alternates direction */
       pointer-events: none;
       z-index: -1;
     }
     @keyframes moveParticles {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(100vh); }
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(10vw, 50vh); } /* Move diagonally */
+      100% { transform: translate(0, 100vh); }
     }
 
     /* Header */
@@ -70,10 +93,14 @@
       border-bottom: 1px solid var(--glass-light);
       display: flex;
       align-items: center;
-      padding: 0 2rem;
-      box-shadow: 0 6px 20px var(--shadow-light); /* Softer shadow */
+      padding: 0 var(--spacing-lg);
+      box-shadow: 0 6px 20px var(--shadow-light); /* Softer initial shadow */
       z-index: 1000;
       justify-content: space-between; /* Distribute items with space between */
+      transition: all var(--transition-speed-normal) ease-in-out; /* Smooth transition for shadow */
+    }
+    header.site-header:hover {
+      box-shadow: 0 8px 25px var(--shadow-medium); /* Subtle shadow change on hover */
     }
     header.site-header .header-content {
       display: flex;
@@ -85,9 +112,8 @@
     header.site-header img.logo {
       height: 45px;
       width: auto;
-      margin-right: 1.5rem; /* Keep margin for spacing from title */
+      margin-right: var(--spacing-md); /* Keep margin for spacing from title */
       filter: drop-shadow(0 2px 4px var(--shadow-light));
-      /* No absolute positioning needed here, flexbox handles it */
     }
     header.site-header h1 {
       font-size: 1.75rem;
@@ -238,18 +264,17 @@
       }
     }
 
-
     /* Slideshow */
     .slideshow-container {
       position: relative;
       width: 95vw;
       max-width: 1100px;
       height: 450px;
-      border-radius: 25px; /* More rounded corners */
+      border-radius: var(--border-radius-lg); /* More rounded corners */
       overflow: hidden;
       box-shadow: 0 25px 70px var(--shadow-medium), 0 0 0 1px var(--glass-light); /* Enhanced shadow */
       background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
-      margin-bottom: 3rem;
+      margin-bottom: var(--spacing-xl);
       backdrop-filter: blur(25px);
       animation: slideInUp 1s ease-out;
       perspective: 1000px;
@@ -264,7 +289,7 @@
       width: 100%;
       height: 100%;
       opacity: 0;
-      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s ease-out; /* Faster opacity, smoother transform */
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Smoother transform */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -273,13 +298,16 @@
     }
     .slide.active {
       opacity: 1;
-      transform: scale(1);
+      transform: scale(1) rotateY(0deg); /* Ensure active slide is normal scale */
+    }
+    .slide:not(.active) {
+      transform: scale(0.95) rotateY(5deg); /* Subtle 3D effect for inactive slides */
     }
     .slide img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 25px; /* Match container */
+      border-radius: var(--border-radius-lg); /* Match container */
       transition: transform 0.5s ease-out;
     }
     .slide:hover img {
@@ -296,7 +324,7 @@
       font-size: 1.3rem; /* Slightly larger font */
       font-weight: 500;
       line-height: 1.5;
-      border-radius: 0 0 25px 25px; /* Match container */
+      border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); /* Match container */
       text-align: center;
       backdrop-filter: blur(12px); /* Increased blur */
       transition: background 0.3s ease;
@@ -331,7 +359,7 @@
       height: 55px;
       border-radius: 50%;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all var(--transition-speed-normal) cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 5px 15px var(--shadow-light);
       z-index: 10;
       display: flex;
@@ -342,31 +370,60 @@
       background: var(--primary-color); /* Primary color on hover */
       color: var(--white); /* White text on hover */
       transform: translateY(-50%) scale(1.15); /* More pronounced scale */
-      box-shadow: 0 8px 25px var(--shadow-medium);
+      box-shadow: 0 10px 30px var(--shadow-medium); /* Stronger shadow on hover */
     }
-    .nav-btn.prev { left: 25px; } /* Slightly more inset */
-    .nav-btn.next { right: 25px; }
+    .nav-btn.prev { left: var(--spacing-lg); } /* Slightly more inset */
+    .nav-btn.next { right: var(--spacing-lg); }
+
+    /* Slide Dots */
+    .slide-dots {
+      position: absolute;
+      bottom: var(--spacing-md); /* Adjust position */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px; /* Spacing between dots */
+      z-index: 15; /* Above caption */
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent white */
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all var(--transition-speed-fast) ease;
+      border: 1px solid rgba(255, 255, 255, 0.8); /* Subtle border */
+    }
+    .dot.active {
+      background-color: var(--primary-color); /* Primary color for active dot */
+      transform: scale(1.2); /* Slightly larger active dot */
+      border-color: var(--primary-color);
+    }
+    .dot:hover {
+      background-color: var(--primary-color);
+      transform: scale(1.1);
+    }
 
     /* App Grid */
     .app-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2.8rem; /* Increased gap */
-      padding: 0 1rem;
+      padding: 0 var(--spacing-sm);
       max-width: 1200px;
       width: 100%;
-      margin: 2rem auto 3rem;
+      margin: var(--spacing-lg) auto var(--spacing-xl);
     }
 
-    /* App Cards */
+    /* App Cards - Advanced Animations */
     .app-card {
       background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
       border: 1px solid var(--glass-light);
       backdrop-filter: blur(20px);
-      border-radius: 20px; /* More rounded */
+      border-radius: var(--border-radius-md);
       cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 12px 35px var(--shadow-light); /* Softer initial shadow */
+      transition: all var(--transition-speed-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 12px 35px var(--shadow-light);
       overflow: hidden;
       position: relative;
       opacity: 0;
@@ -374,6 +431,8 @@
       animation: cardStaggerIn 0.6s ease-out forwards;
       display: flex;
       flex-direction: column;
+      transform-style: preserve-3d; /* Enable 3D transformations for children */
+      perspective: 1000px; /* Define perspective for 3D tilt */
     }
     .app-card:nth-child(1) { animation-delay: 0.3s; }
     .app-card:nth-child(2) { animation-delay: 0.4s; }
@@ -387,49 +446,142 @@
       0% { opacity: 0; transform: translateY(40px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    .app-card:hover {
-      transform: translateY(-18px) scale(1.03); /* More lift and scale */
-      box-shadow: 0 30px 60px var(--shadow-strong); /* Stronger shadow on hover */
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Vibrant gradient on hover */
-      border-color: var(--white); /* White border on hover */
-      color: var(--white); /* Text color change on hover */
+
+    /* Glowing Border Effect */
+    .app-card::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color), var(--primary-color));
+      background-size: 400% 400%;
+      border-radius: var(--border-radius-md);
+      z-index: -1;
+      opacity: 0;
+      filter: blur(8px); /* Soft glow */
+      transition: opacity var(--transition-speed-normal) ease-out, filter var(--transition-speed-normal) ease-out;
+      animation: glowingBorder 8s linear infinite; /* Continuous subtle animation */
     }
-    .app-card:hover h3, .app-card:hover p {
-      color: var(--white); /* Ensure text inside changes color */
+
+    .app-card:hover::before {
+      opacity: 1;
+      filter: blur(12px); /* Stronger glow on hover */
     }
-    .app-card .card-content {
-      padding: 1.8rem; /* More padding */
-      flex-grow: 1;
+
+    @keyframes glowingBorder {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
+
+    /* Card Content and Image */
+    .app-card .card-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--border-radius-md);
+      overflow: hidden;
+      transition: transform var(--transition-speed-normal) cubic-bezier(0.25, 0.8, 0.25, 1); /* For 3D tilt */
+      background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark)); /* Ensure inner has background */
+      box-shadow: inset 0 0 0 1px var(--glass-light); /* Inner border */
+    }
+
+    .app-card:hover .card-inner {
+      transform: translateY(-10px) scale(1.02); /* Lift and slight scale */
+      box-shadow: 0 20px 50px var(--shadow-medium); /* Deeper shadow on inner card */
+    }
+
     .app-card img {
       width: 100%;
       height: 180px;
       object-fit: cover;
-      transition: transform 0.4s ease;
-      border-radius: 20px 20px 0 0; /* Match card border radius */
+      transition: transform var(--transition-speed-normal) ease, filter var(--transition-speed-normal) ease;
+      border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+      position: relative; /* For overlay */
+      z-index: 1;
     }
+
+    .app-card .image-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+    }
+
+    /* Image Overlay on Hover */
+    .app-card .image-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--card-overlay-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--transition-speed-normal) ease;
+      z-index: 2;
+      border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+    }
+
+    .app-card:hover .image-overlay {
+      opacity: 1;
+    }
+
+    .app-card .image-overlay .overlay-text {
+      color: var(--white);
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-align: center;
+      padding: var(--spacing-sm);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: transform var(--transition-speed-normal) ease, opacity var(--transition-speed-normal) ease;
+    }
+
+    .app-card:hover .image-overlay .overlay-text {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
     .app-card:hover img {
-      transform: scale(1.08); /* More pronounced zoom */
+      transform: scale(1.15); /* More pronounced zoom */
+      filter: brightness(0.8); /* Slightly dim image under overlay */
+    }
+
+    .app-card .card-content {
+      padding: 1.8rem; /* More padding */
+      flex-grow: 1;
+      position: relative;
+      z-index: 3; /* Ensure content is above glow */
     }
     .app-card h3 {
-      font-size: 1.3rem; /* Reduced by 2 units from 1.5rem */
+      font-size: 1.2rem; /* Adjusted for better balance */
       font-weight: 600;
       color: var(--dark-text);
       margin: 0 0 0.5rem 0;
       transition: color 0.4s ease; /* Smooth color transition */
     }
     .app-card p {
-      font-size: 0.75rem; /* Reduced by 2 units from 0.95rem */
+      font-size: 0.7rem; /* Adjusted for better balance */
       color: var(--dark-text);
       margin: 0;
       transition: color 0.4s ease; /* Smooth color transition */
     }
 
+    /* Text color change on hover */
+    .app-card:hover h3, .app-card:hover p {
+      color: var(--white);
+    }
+
     /* Footer/Credits */
     .site-footer {
       text-align: center;
-      padding: 2rem;
-      margin-top: 3rem;
+      padding: var(--spacing-lg);
+      margin-top: var(--spacing-xl);
       color: var(--dark-text);
       font-size: 0.9rem;
       background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
@@ -450,19 +602,19 @@
     @media (max-width: 768px) {
       .slideshow-container {
         height: 300px;
-        border-radius: 15px;
+        border-radius: var(--border-radius-md);
       }
       .caption {
-        padding: 1rem;
+        padding: var(--spacing-sm);
         font-size: 0.9rem;
-        border-radius: 0 0 15px 15px;
+        border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
       }
       header.site-header {
-        padding: 0 1rem; /* Adjust padding for smaller screens */
+        padding: 0 var(--spacing-sm); /* Adjust padding for smaller screens */
       }
       header.site-header img.logo {
         height: 40px; /* Smaller logo on mobile */
-        margin-right: 1rem;
+        margin-right: var(--spacing-sm);
       }
       header.site-header h1 {
         font-size: 1.5rem; /* Smaller title on mobile */
@@ -472,22 +624,29 @@
         height: 45px;
         font-size: 1.8rem;
       }
-      .nav-btn.prev { left: 15px; }
-      .nav-btn.next { right: 15px; }
+      .nav-btn.prev { left: var(--spacing-sm); }
+      .nav-btn.next { right: var(--spacing-sm); }
       .app-grid {
-        gap: 2rem;
+        gap: var(--spacing-lg);
       }
       .app-card {
-        border-radius: 15px;
+        border-radius: var(--border-radius-md);
       }
       .app-card img {
-        border-radius: 15px 15px 0 0;
+        border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
       }
       .app-card h3 {
-        font-size: 1.1rem; /* Further adjust for mobile, 2 units down from 1.3rem */
+        font-size: 1rem; /* Further adjust for mobile */
       }
       .app-card p {
-        font-size: 0.65rem; /* Further adjust for mobile, 2 units down from 0.75rem */
+        font-size: 0.6rem; /* Further adjust for mobile */
+      }
+      /* Disable 3D tilt on mobile for performance/simplicity */
+      .app-card .card-inner {
+        transform: none !important;
+      }
+      .app-card:hover .card-inner {
+        transform: translateY(-10px) scale(1.02) !important; /* Keep lift effect */
       }
     }
   </style>
@@ -535,42 +694,77 @@
     <!-- App Menu Section -->
     <section class="app-grid" aria-label="Application menu">
       <div class="app-card" data-url="https://pipelines.genetek.co.id" role="button" tabindex="0" aria-label="Pipeline Sales Manager">
-        <img src="https://i.imgur.com/dV1buoT.png" alt="Collage of diverse users engaging on a social media platform, featuring colorful posts, smiling faces, chat bubbles, and trending hashtags in an urban street market setting" />
-        <div class="card-content">
-          <h3>Pipelines Sales Manager</h3>
-          <p>Aplikasi Pipeline Untuk Mengelola Penjualan</p>
+        <div class="card-inner">
+          <div class="image-container">
+            <img src="https://i.imgur.com/dV1buoT.png" alt="Collage of diverse users engaging on a social media platform, featuring colorful posts, smiling faces, chat bubbles, and trending hashtags in an urban street market setting" />
+            <div class="image-overlay">
+              <span class="overlay-text">Go to Pipeline Sales Manager</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3>Pipelines Sales Manager</h3>
+            <p>Aplikasi Pipeline Untuk Mengelola Penjualan</p>
+          </div>
         </div>
       </div>
 
       <div class="app-card" data-url="https://supplychain.genetek.co.id" role="button" tabindex="0" aria-label="Supply Chain Application">
-        <img src="https://i.imgur.com/nEaz0Co.png" alt="Professional email dashboard with neatly arranged inbox folders, calendar overlays, notification icons, coffee cup, and a tidy modern desk in a well-lit office space" />
-        <div class="card-content">
-          <h3>Supply Chain Application</h3>
-          <p>Aplikasi untung mengelola Supply Chain</p>
+        <div class="card-inner">
+          <div class="image-container">
+            <img src="https://i.imgur.com/nEaz0Co.png" alt="Professional email dashboard with neatly arranged inbox folders, calendar overlays, notification icons, coffee cup, and a tidy modern desk in a well-lit office space" />
+            <div class="image-overlay">
+              <span class="overlay-text">Explore Supply Chain App</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3>Supply Chain Application</h3>
+            <p>Aplikasi untung mengelola Supply Chain</p>
+          </div>
         </div>
       </div>
 
       <div class="app-card" data-url="https://panduan.genetek.co.id" role="button" tabindex="0" aria-label="Panduan">
-        <img src="https://i.imgur.com/QMO96ed.png" alt="Interactive weather interface with sunny forecast visuals, animated sunny clouds, temperature gradients, cityscape buildings, and palm trees in a coastal tropical environment" />
-        <div class="card-content">
-          <h3>Panduan</h3>
-          <p>Panduan untuk aplikasi</p>
+        <div class="card-inner">
+          <div class="image-container">
+            <img src="https://i.imgur.com/QMO96ed.png" alt="Interactive weather interface with sunny forecast visuals, animated sunny clouds, temperature gradients, cityscape buildings, and palm trees in a coastal tropical environment" />
+            <div class="image-overlay">
+              <span class="overlay-text">View Guides & Manuals</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3>Panduan</h3>
+            <p>Panduan untuk aplikasi</p>
+          </div>
         </div>
       </div>
 
       <div class="app-card" data-url="https://orderatk.genetek.co.id" role="button" tabindex="0" aria-label="Order ATK">
-        <img src="https://i.imgur.com/nYsU3l7.png" alt="Scrolling news feed interface with prominent headlines, live update banners, global map overlays, and journalist equipment in a bustling modern newsroom" />
-        <div class="card-content">
-          <h3>Order ATK</h3>
-          <p>Aplikasi untuk memesan alat tulis kantor.</p>
+        <div class="card-inner">
+          <div class="image-container">
+            <img src="https://i.imgur.com/nYsU3l7.png" alt="Scrolling news feed interface with prominent headlines, live update banners, global map overlays, and journalist equipment in a bustling modern newsroom" />
+            <div class="image-overlay">
+              <span class="overlay-text">Order Office Supplies</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3>Order ATK</h3>
+            <p>Aplikasi untuk memesan alat tulis kantor.</p>
+          </div>
         </div>
       </div>
 
       <div class="app-card" data-url="https://formapd.genetek.co.id" role="button" tabindex="0" aria-label="Form Alat Pelindung Diri">
-        <img src="https://i.imgur.com/3N4NiJb.png" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
-        <div class="card-content">
-          <h3>Form Alat Pelindung Diri</h3>
-          <p>Form untuk memesan dan mengembalikan APD</p>
+        <div class="card-inner">
+          <div class="image-container">
+            <img src="https://i.imgur.com/3N4NiJb.png" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
+            <div class="image-overlay">
+              <span class="overlay-text">Access PPE Order Form</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3>Form Alat Pelindung Diri</h3>
+            <p>Form untuk memesan dan mengembalikan APD</p>
+          </div>
         </div>
       </div>
     </section>
@@ -579,7 +773,7 @@
   <!-- Footer/Credits Section -->
   <footer class="site-footer">
     <p>&copy; 2024 Genetek. All rights reserved.</p>
-    <p>Designed and Developed by <a href="https://blackbox.ai" target="_blank">BLACKBOX.AI Assistant</a></p>
+    <p>Designed and Developed by <a href="https://effrensindokencana.com" target="_blank">Effrensindo Kencana</a></p>
   </footer>
 
   <script>
@@ -588,24 +782,55 @@
       const slides = document.querySelectorAll('.slide');
       const prevBtn = document.querySelector('.nav-btn.prev');
       const nextBtn = document.querySelector('.nav-btn.next');
+      const slideshowContainer = document.querySelector('.slideshow-container');
       let currentIndex = 0;
       let slideInterval = null;
       const slideCount = slides.length;
       const autoSlideDelay = 5000; // 5 seconds
+
+      // Create slide indicators (dots)
+      const dotsContainer = document.createElement('div');
+      dotsContainer.classList.add('slide-dots');
+      slideshowContainer.appendChild(dotsContainer);
+
+      slides.forEach((_, i) => {
+        const dot = document.createElement('span');
+        dot.classList.add('dot');
+        dot.setAttribute('data-index', i);
+        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        dotsContainer.appendChild(dot);
+        dot.addEventListener('click', () => {
+          showSlide(i);
+          resetAutoSlide();
+        });
+      });
+
+      const dots = document.querySelectorAll('.dot');
+
+      function updateDots() {
+        dots.forEach((dot, i) => {
+          if (i === currentIndex) {
+            dot.classList.add('active');
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+      }
 
       function showSlide(index) {
         slides.forEach((slide, i) => {
           if (i === index) {
             slide.classList.add('active');
             slide.style.opacity = '1';
-            slide.style.transform = 'scale(1)'; // Ensure active slide is normal scale
+            slide.style.transform = 'scale(1) rotateY(0deg)'; // Ensure active slide is normal scale
           } else {
             slide.classList.remove('active');
             slide.style.opacity = '0';
-            slide.style.transform = 'scale(0.95)'; // Slightly scale down inactive slides
+            slide.style.transform = 'scale(0.95) rotateY(5deg)'; // Subtle 3D effect for inactive slides
           }
         });
         currentIndex = index;
+        updateDots(); // Update dots when slide changes
       }
 
       function nextSlide() {
@@ -644,7 +869,7 @@
             // Optional: Add a subtle visual feedback before redirecting
             slide.style.transform = 'scale(0.98)';
             setTimeout(() => {
-              window.location.href = url;
+              window.open(url, '_blank'); // Changed to open in new tab
             }, 150); // Short delay for visual effect
           }
         });
@@ -660,14 +885,34 @@
 
         appCards.forEach(card => {
           const url = card.getAttribute('data-url');
+          const cardInner = card.querySelector('.card-inner');
+
+          // 3D Tilt Effect (JavaScript for mouse position)
+          card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left; // x position within the element.
+            const y = e.clientY - rect.top;  // y position within the element.
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = ((y - centerY) / centerY) * varToNum('--card-tilt-degree');
+            const rotateY = ((x - centerX) / centerX) * -varToNum('--card-tilt-degree');
+
+            cardInner.style.transform = `translateY(-10px) scale(1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+          });
+
+          card.addEventListener('mouseleave', () => {
+            cardInner.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)'; // Reset on mouse leave
+          });
 
           card.addEventListener('click', e => {
             e.preventDefault();
             if (url) {
               // Add click effect before redirect
-              card.style.transform = 'translateY(-10px) scale(0.98)'; // Slightly less aggressive than hover
+              cardInner.style.transform = 'translateY(-5px) scale(0.98)'; // Slightly less aggressive than hover
               setTimeout(() => {
-                window.location.href = url;
+                window.open(url, '_blank'); // Changed to open in new tab
               }, 200);
             }
           });
@@ -682,11 +927,29 @@
         });
       });
 
+      // Helper function to convert CSS variable to number
+      function varToNum(varName) {
+        const root = document.documentElement;
+        const style = getComputedStyle(root);
+        const value = style.getPropertyValue(varName).trim();
+        return parseFloat(value);
+      }
+
       // Optional: Pause auto-slide on hover (enhances user experience)
       document.addEventListener('DOMContentLoaded', () => {
         const slideshow = document.querySelector('.slideshow-container');
         slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
         slideshow.addEventListener('mouseleave', () => resetAutoSlide());
+
+        // Header shadow on scroll
+        const siteHeader = document.querySelector('.site-header');
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 50) { // Add shadow after scrolling 50px
+            siteHeader.style.boxShadow = '0 8px 25px var(--shadow-medium)';
+          } else {
+            siteHeader.style.boxShadow = '0 6px 20px var(--shadow-light)';
+          }
+        });
       });
 
     })();
