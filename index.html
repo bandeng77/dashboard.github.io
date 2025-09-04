@@ -116,12 +116,12 @@
       filter: drop-shadow(0 2px 4px var(--shadow-light));
     }
     header.site-header h1 {
-      font-size: 1.75rem;
+      font-size: 2.5rem; /* Increased font size */
       font-weight: 700;
       color: var(--dark-text);
-      letter-spacing: -0.02em;
-      flex-grow: 1; /* Allow title to take available space */
-      text-align: center; /* Center the title */
+      letter-spacing: 0.1em; /* Increased letter spacing */
+      flex-grow: 1;
+      text-align: center;
     }
 
     /* Main Content Layout */
@@ -580,14 +580,19 @@
     /* Footer/Credits */
     .site-footer {
       text-align: center;
-      padding: var(--spacing-lg);
-      margin-top: var(--spacing-xl);
+      padding: var(--spacing-sm); /* Reduced from var(--spacing-lg) */
+      margin-top: var(--spacing-md); /* Reduced from var(--spacing-xl) */
       color: var(--dark-text);
       font-size: 0.9rem;
       background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
       backdrop-filter: blur(15px);
       border-top: 1px solid var(--glass-light);
       box-shadow: 0 -2px 10px var(--shadow-light);
+    }
+    .site-footer p {
+      margin: 0; /* Remove default paragraph margins */
+      line-height: 1.2; /* Reduced line height for tighter spacing */
+      font-size: 0.85rem; /* Slightly smaller font size for compactness */
     }
     .site-footer a {
       color: var(--primary-color);
