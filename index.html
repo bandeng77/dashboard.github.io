@@ -282,6 +282,7 @@
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    /* Modifikasi CSS untuk slide agar <a> tag berfungsi sebagai pembungkus */
     .slide {
       position: absolute;
       width: 100%;
@@ -301,6 +302,15 @@
     .slide:not(.active) {
       transform: scale(0.95) rotateY(5deg); /* Subtle 3D effect for inactive slides */
     }
+    /* Pastikan link mengisi seluruh area slide */
+    .slide a {
+      display: block; /* Membuat link mengisi seluruh area */
+      width: 100%;
+      height: 100%;
+      text-decoration: none; /* Hapus underline default */
+      color: inherit; /* Warisi warna teks dari parent */
+      position: relative; /* Untuk posisi caption */
+    }
     .slide img {
       width: 100%;
       height: 100%;
@@ -308,7 +318,7 @@
       border-radius: var(--border-radius-lg); /* Match container */
       transition: transform 0.5s ease-out;
     }
-    .slide:hover img {
+    .slide a:hover img { /* Hover pada link, bukan slide */
       transform: scale(1.05); /* More pronounced zoom */
     }
     .caption {
@@ -328,7 +338,7 @@
       transition: background 0.3s ease;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* Text shadow for readability */
     }
-    .slide:hover .caption {
+    .slide a:hover .caption { /* Hover pada link, bukan slide */
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.85) 0); /* Even darker on hover */
     }
     .caption::before {
@@ -674,21 +684,30 @@
 
     <!-- Slideshow Section -->
     <section class="slideshow-container" aria-label="Automatic Information Slideshow">
-      <div class="slide active" role="group" aria-roledescription="slide" aria-label="Slide 1" data-url="https://forms.gle/PrdDHmJugaxzD4mW9">
-        <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
-        <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!</div>
+      <!-- Setiap slide sekarang dibungkus dengan tag <a> -->
+      <div class="slide active" role="group" aria-roledescription="slide" aria-label="Slide 1">
+        <a href="https://forms.gle/PrdDHmJugaxzD4mW9" target="_blank">
+          <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
+          <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!</div>
+        </a>
       </div>
-      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 2" data-url="https://example.com/coding-bootcamp">
-        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6d0e7f97-5974-4ce2-8441-f350cc53a49c.png" alt="Vibrant promotional poster for a coding bootcamp featuring colorful code snippets, modern laptops, diverse learners collaborating, and a bright, creative classroom environment with plants and windows" />
-        <div class="caption">Coding Bootcamp: Learn Python in 4 Weeks, Starting 20 July 2024</div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 2">
+        <a href="https://genetek.co.id/bootcamp-python" target="_blank">
+          <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6d0e7f97-5974-4ce2-8441-f350cc53a49c.png" alt="Vibrant promotional poster for a coding bootcamp featuring colorful code snippets, modern laptops, diverse learners collaborating, and a bright, creative classroom environment with plants and windows" />
+          <div class="caption">Coding Bootcamp: Learn Python in 4 Weeks, Starting 20 July 2024</div>
+        </a>
       </div>
-      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 3" data-url="https://example.com/holiday-notice">
-        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dbfb5e7f-99eb-49a0-a9a3-3bf9359dd36b.png" alt="Festive digital notice board showing a company holiday celebration with calendars, joyful team members, balloons, decorations, and a relaxing office breakout area with refreshments" />
-        <div class="caption">Holiday Notice: Independence Day Closure on 17 August 2024</div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 3">
+        <a href="https://genetek.co.id/pengumuman-libur" target="_blank">
+          <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dbfb5e7f-99eb-49a0-a9a3-3bf9359dd36b.png" alt="Festive digital notice board showing a company holiday celebration with calendars, joyful team members, balloons, decorations, and a relaxing office breakout area with refreshments" />
+          <div class="caption">Holiday Notice: Independence Day Closure on 17 August 2024</div>
+        </a>
       </div>
-      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 4" data-url="https://example.com/new-product">
-        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/db83f77b-9e40-4a6f-bf68-5f1925f1acc9.png" alt="Dynamic product launch teaser illustrating futuristic smart home gadgets, glowing holographic displays, innovative tech devices, and an exciting unveiling scene in a high-tech laboratory setting" />
-        <div class="caption">New Product Launch: Smart Home Gadgets, Available from 1 September 2024</div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 4">
+        <a href="https://genetek.co.id/produk-baru-smart-home" target="_blank">
+          <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/db83f77b-9e40-4a6f-bf68-5f1925f1acc9.png" alt="Dynamic product launch teaser illustrating futuristic smart home gadgets, glowing holographic displays, innovative tech devices, and an exciting unveiling scene in a high-tech laboratory setting" />
+          <div class="caption">New Product Launch: Smart Home Gadgets, Available from 1 September 2024</div>
+        </a>
       </div>
       <button class="nav-btn prev" aria-label="Previous slide" title="Go to previous slide"><</button>
       <button class="nav-btn next" aria-label="Next slide" title="Go to next slide">></button>
@@ -781,7 +800,6 @@
 
   <script>
     (function() {
-      // Slideshow functionality with enhanced transitions
       const slides = document.querySelectorAll('.slide');
       const prevBtn = document.querySelector('.nav-btn.prev');
       const nextBtn = document.querySelector('.nav-btn.next');
@@ -862,20 +880,6 @@
         e.stopPropagation(); // Prevent slide click when clicking nav buttons
         nextSlide();
         resetAutoSlide();
-      });
-
-      // Add click listener to each slide
-      slides.forEach(slide => {
-        slide.addEventListener('click', () => {
-          const url = slide.getAttribute('data-url');
-          if (url) {
-            // Optional: Add a subtle visual feedback before redirecting
-            slide.style.transform = 'scale(0.98)';
-            setTimeout(() => {
-              window.open(url, '_blank'); // Changed to open in new tab
-            }, 150); // Short delay for visual effect
-          }
-        });
       });
 
       // Start auto slideshow
