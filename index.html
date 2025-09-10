@@ -269,7 +269,7 @@
       position: relative;
       width: 95vw;
       max-width: 1100px;
-      height: 450px;
+      height: 480px; /* Increased height */
       border-radius: var(--border-radius-lg); /* More rounded corners */
       overflow: hidden;
       box-shadow: 0 25px 70px var(--shadow-medium), 0 0 0 1px var(--glass-light); /* Enhanced shadow */
@@ -325,9 +325,8 @@
       right: 0;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.75) 0); /* Darker, more contrast */
       color: var(--white);
-      /* PERBAIKAN: Ukuran font dan padding disesuaikan */
-      padding: 0.5rem 0.8rem; /* Padding setipis mungkin (top/bottom, left/right) */
-      font-size: 0.8rem; /* Ukuran font 0.8rem */
+      padding: 0.5rem 0.8rem;
+      font-size: 0.8rem;
       font-weight: 500;
       line-height: 1.5;
       border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); /* Match container */
@@ -335,7 +334,7 @@
       backdrop-filter: blur(12px); /* Increased blur */
       transition: background 0.3s ease;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* Text shadow for readability */
-      padding-bottom: 55px; /* Disesuaikan untuk memberi ruang tombol */
+      padding-bottom: 75px; /* Increased padding-bottom for button and dots */
       z-index: 15; /* Ensures caption is below slide-button */
       pointer-events: none; /* Caption tidak merespons klik */
     }
@@ -357,19 +356,19 @@
     /* New Slide Button Styles */
     .slide-button {
       position: absolute;
-      bottom: 15px; /* Disesuaikan agar tidak nabrak caption */
+      bottom: 35px; /* Adjusted position to be above dots */
       left: 50%;
       transform: translateX(-50%);
       background: var(--primary-color);
       color: var(--white);
-      padding: 4px 8px; /* Padding setipis mungkin (top/bottom, left/right) */
+      padding: 4px 8px;
       border-radius: var(--border-radius-md);
       text-decoration: none;
       font-weight: 600;
-      font-size: 0.8rem; /* Ukuran font 0.8rem */
+      font-size: 0.8rem;
       display: flex;
       align-items: center;
-      gap: 4px; /* Mengurangi gap agar lebih rapat */
+      gap: 4px;
       opacity: 0;
       visibility: hidden;
       transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -386,7 +385,7 @@
 
     .slide-button:hover {
       background: var(--secondary-color);
-      transform: translateX(-50%) translateY(-3px) scale(1.05); /* Mengurangi translateY sedikit */
+      transform: translateX(-50%) translateY(-3px) scale(1.05);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
 
@@ -429,9 +428,36 @@
     .nav-btn.prev { left: var(--spacing-lg); }
     .nav-btn.next { right: var(--spacing-lg); }
 
-    /* Slide Dots (Hidden) */
+    /* Slide Dots */
     .slide-dots {
-      display: none; /* Hidden to remove dot navigation */
+      position: absolute;
+      bottom: 10px; /* Adjusted position to be below the button */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 40; /* Higher than slide-button to be clickable */
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .dot.active {
+      background-color: var(--primary-color);
+      transform: scale(1.2);
+      border-color: var(--primary-color);
+    }
+
+    .dot:hover {
+      background-color: var(--primary-color);
+      transform: scale(1.1);
     }
 
     /* App Grid */
@@ -636,20 +662,23 @@
     /* Responsive Adjustments */
     @media (max-width: 768px) {
       .slideshow-container {
-        height: 300px;
+        height: 330px; /* Adjusted for mobile */
         border-radius: var(--border-radius-md);
       }
       .caption {
         padding: var(--spacing-sm);
         font-size: 0.9rem;
         border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-        padding-bottom: 60px; /* Adjusted for button on mobile */
+        padding-bottom: 80px; /* Adjusted for button and dots on mobile */
       }
       .slide-button {
-        padding: 3px 6px; /* Padding setipis mungkin untuk mobile */
-        font-size: 0.7rem; /* Ukuran font 0.7rem untuk mobile */
-        bottom: 10px; /* Adjusted position for mobile */
-        gap: 3px; /* Mengurangi gap untuk mobile */
+        padding: 3px 6px;
+        font-size: 0.7rem;
+        bottom: 40px; /* Adjusted position for mobile */
+        gap: 3px;
+      }
+      .slide-dots {
+        bottom: 15px; /* Adjusted position for mobile */
       }
       header.site-header {
         padding: 0 var(--spacing-sm);
@@ -739,6 +768,9 @@
       <!-- Navigation buttons are back -->
       <button class="nav-btn prev" aria-label="Previous slide" title="Go to previous slide"><</button>
       <button class="nav-btn next" aria-label="Next slide" title="Go to next slide">></button>
+
+      <!-- Slide Dots -->
+      <div class="slide-dots"></div>
     </section>
 
     <!-- App Menu Section -->
@@ -832,13 +864,27 @@
       const prevBtn = document.querySelector('.nav-btn.prev');
       const nextBtn = document.querySelector('.nav-btn.next');
       const slideshowContainer = document.querySelector('.slideshow-container');
+      const slideDotsContainer = document.querySelector('.slide-dots'); // Get the dots container
       let currentIndex = 0;
       let slideInterval = null;
       const slideCount = slides.length;
       const autoSlideDelay = 5000; // 5 seconds
 
+      // Function to create and update dots
       function updateDots() {
-        // Fungsi ini sekarang kosong karena tidak ada dot yang perlu diupdate
+        slideDotsContainer.innerHTML = ''; // Clear existing dots
+        slides.forEach((_, i) => {
+          const dot = document.createElement('span');
+          dot.classList.add('dot');
+          if (i === currentIndex) {
+            dot.classList.add('active');
+          }
+          dot.addEventListener('click', () => {
+            showSlide(i);
+            resetAutoSlide();
+          });
+          slideDotsContainer.appendChild(dot);
+        });
       }
 
       function showSlide(index) {
@@ -854,7 +900,7 @@
           }
         });
         currentIndex = index;
-        updateDots();
+        updateDots(); // Update dots after slide change
       }
 
       function nextSlide() {
@@ -869,7 +915,7 @@
 
       function resetAutoSlide() {
         clearInterval(slideInterval);
-        if (slideCount > 1) { // Hanya auto-slide jika ada lebih dari 1 slide
+        if (slideCount > 1) { // Only auto-slide if there's more than 1 slide
             slideInterval = setInterval(nextSlide, autoSlideDelay);
         }
       }
@@ -887,7 +933,7 @@
         resetAutoSlide();
       });
 
-      // Start auto slideshow
+      // Start auto slideshow and initialize dots
       showSlide(currentIndex);
       resetAutoSlide();
 
