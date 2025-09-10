@@ -6,6 +6,8 @@
   <title>Main Menu - Genetek</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
     /* Global Variables for Colors */
     :root {
@@ -277,12 +279,12 @@
       animation: slideInUp 1s ease-out;
       perspective: 1000px;
       border: 2px solid var(--glass-light); /* Subtle border */
+      z-index: 1; /* Added for z-index context */
     }
     @keyframes slideInUp {
       from { opacity: 0; transform: translateY(30px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    /* Modifikasi CSS untuk slide agar <a> tag berfungsi sebagai pembungkus */
     .slide {
       position: absolute;
       width: 100%;
@@ -292,8 +294,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
       transform-origin: center center;
+      z-index: 1; /* Added for z-index context */
+      pointer-events: none; /* Seluruh slide tidak merespons klik secara default */
     }
     .slide.active {
       opacity: 1;
@@ -302,25 +305,19 @@
     .slide:not(.active) {
       transform: scale(0.95) rotateY(5deg); /* Subtle 3D effect for inactive slides */
     }
-    /* Pastikan link mengisi seluruh area slide */
-    .slide a {
-      display: block; /* Membuat link mengisi seluruh area */
-      width: 100%;
-      height: 100%;
-      text-decoration: none; /* Hapus underline default */
-      color: inherit; /* Warisi warna teks dari parent */
-      position: relative; /* Untuk posisi caption */
-    }
     .slide img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: var(--border-radius-lg); /* Match container */
       transition: transform 0.5s ease-out;
+      z-index: 5; /* Added z-index for proper layering */
+      pointer-events: none; /* Gambar tidak merespons klik */
     }
-    .slide a:hover img { /* Hover pada link, bukan slide */
+    .slide:hover img { /* Hover pada slide itu sendiri */
       transform: scale(1.05); /* More pronounced zoom */
     }
+
     .caption {
       position: absolute;
       bottom: 0;
@@ -337,8 +334,11 @@
       backdrop-filter: blur(12px); /* Increased blur */
       transition: background 0.3s ease;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* Text shadow for readability */
+      padding-bottom: 90px; /* Increased space for the button */
+      z-index: 15; /* Ensures caption is below slide-button */
+      pointer-events: none; /* Caption tidak merespons klik */
     }
-    .slide a:hover .caption { /* Hover pada link, bukan slide */
+    .slide:hover .caption { /* Hover pada slide itu sendiri */
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.85) 0); /* Even darker on hover */
     }
     .caption::before {
@@ -353,7 +353,51 @@
       border-radius: 3px;
     }
 
-    /* Navigation Buttons */
+    /* New Slide Button Styles */
+    .slide-button {
+      position: absolute;
+      bottom: 30px; /* Adjusted position */
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary-color);
+      color: var(--white);
+      padding: 12px 25px;
+      border-radius: var(--border-radius-md);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      z-index: 30; /* Increased z-index to be highest */
+      pointer-events: auto; /* Memastikan tombol merespons klik */
+    }
+
+    .slide.active .slide-button {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .slide-button:hover {
+      background: var(--secondary-color);
+      transform: translateX(-50%) translateY(-5px) scale(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .slide-button i {
+      transition: transform 0.3s ease;
+    }
+
+    .slide-button:hover i {
+      transform: translateX(5px);
+    }
+
+    /* Navigation Buttons (Re-enabled) */
     .nav-btn {
       position: absolute;
       top: 50%;
@@ -369,10 +413,11 @@
       cursor: pointer;
       transition: all var(--transition-speed-normal) cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 5px 15px var(--shadow-light);
-      z-index: 10;
+      z-index: 20; /* Below slide-button (30) */
       display: flex;
       align-items: center;
       justify-content: center;
+      pointer-events: auto; /* Tombol navigasi merespons klik */
     }
     .nav-btn:hover {
       background: var(--primary-color); /* Primary color on hover */
@@ -383,33 +428,9 @@
     .nav-btn.prev { left: var(--spacing-lg); }
     .nav-btn.next { right: var(--spacing-lg); }
 
-    /* Slide Dots */
+    /* Slide Dots (Hidden) */
     .slide-dots {
-      position: absolute;
-      bottom: var(--spacing-md);
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      z-index: 15;
-    }
-    .dot {
-      width: 12px;
-      height: 12px;
-      background-color: rgba(255, 255, 255, 0.5);
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all var(--transition-speed-fast) ease;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-    .dot.active {
-      background-color: var(--primary-color);
-      transform: scale(1.2);
-      border-color: var(--primary-color);
-    }
-    .dot:hover {
-      background-color: var(--primary-color);
-      transform: scale(1.1);
+      display: none; /* Hidden to remove dot navigation */
     }
 
     /* App Grid */
@@ -621,6 +642,12 @@
         padding: var(--spacing-sm);
         font-size: 0.9rem;
         border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+        padding-bottom: 80px; /* Adjusted for button on mobile */
+      }
+      .slide-button {
+        padding: 10px 20px;
+        font-size: 1rem;
+        bottom: 20px; /* Adjusted position for mobile */
       }
       header.site-header {
         padding: 0 var(--spacing-sm);
@@ -686,18 +713,21 @@
     <section class="slideshow-container" aria-label="Automatic Information Slideshow">
       <!-- Slide 1 -->
       <div class="slide active" role="group" aria-roledescription="slide" aria-label="Slide 1">
-        <a href="https://forms.gle/PrdDHmJugaxzD4mW9" target="_blank">
-          <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
-          <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!</div>
+        <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
+        <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!</div>
+        <a href="https://forms.gle/PrdDHmJugaxzD4mW9" target="_blank" class="slide-button">
+          Click Here <i class="fas fa-arrow-right"></i>
         </a>
       </div>
-      <!-- Slide 2 (Duplikasi dari Slide 1) -->
+      <!-- Slide 2 -->
       <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 2">
-        <a href="https://orderatk.genetek.co.id" target="_blank">
-          <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
-          <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!.</div>
+        <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
+        <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!.</div>
+        <a href="https://orderatk.genetek.co.id" target="_blank" class="slide-button">
+          Click Here <i class="fas fa-arrow-right"></i> <!-- PERBAIKAN: Ikon diseragamkan -->
         </a>
       </div>
+      <!-- Navigation buttons are back -->
       <button class="nav-btn prev" aria-label="Previous slide" title="Go to previous slide"><</button>
       <button class="nav-btn next" aria-label="Next slide" title="Go to next slide">></button>
     </section>
@@ -795,36 +825,11 @@
       const slideshowContainer = document.querySelector('.slideshow-container');
       let currentIndex = 0;
       let slideInterval = null;
-      const slideCount = slides.length; // Ini akan otomatis menjadi 2
+      const slideCount = slides.length;
       const autoSlideDelay = 5000; // 5 seconds
 
-      // Create slide indicators (dots)
-      const dotsContainer = document.createElement('div');
-      dotsContainer.classList.add('slide-dots');
-      slideshowContainer.appendChild(dotsContainer);
-
-      slides.forEach((_, i) => {
-        const dot = document.createElement('span');
-        dot.classList.add('dot');
-        dot.setAttribute('data-index', i);
-        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-        dotsContainer.appendChild(dot);
-        dot.addEventListener('click', () => {
-          showSlide(i);
-          resetAutoSlide();
-        });
-      });
-
-      const dots = document.querySelectorAll('.dot');
-
       function updateDots() {
-        dots.forEach((dot, i) => {
-          if (i === currentIndex) {
-            dot.classList.add('active');
-          } else {
-            dot.classList.remove('active');
-          }
-        });
+        // Fungsi ini sekarang kosong karena tidak ada dot yang perlu diupdate
       }
 
       function showSlide(index) {
@@ -860,7 +865,7 @@
         }
       }
 
-      // Event listeners for manual navigation
+      // Event listeners for manual navigation (re-enabled)
       prevBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         prevSlide();
@@ -876,19 +881,6 @@
       // Start auto slideshow
       showSlide(currentIndex);
       resetAutoSlide();
-
-      // Event listener untuk setiap slide agar klik pada slide tidak mengganggu tautan di dalamnya
-      slides.forEach(slide => {
-        slide.addEventListener('click', (e) => {
-          // Cek apakah elemen yang diklik adalah tautan atau bagian dari tautan
-          if (e.target.closest('a')) {
-            return; // Biarkan tautan berfungsi secara normal
-          }
-          // Jika yang diklik bukan tautan, cegah perilaku default
-          e.preventDefault();
-        });
-      });
-
 
       // App card click handler with smooth feedback
       document.addEventListener('DOMContentLoaded', () => {
