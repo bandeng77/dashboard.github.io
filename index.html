@@ -251,7 +251,7 @@
         clip: rect(10px, 9999px, 0, 0);
       }
       70% {
-        clip: rect(0, 9999px, 10px, 0);
+        clip: rect(0, 9999px, 0, 0);
       }
       80% {
         clip: rect(10px, 9999px, 0, 0);
@@ -325,8 +325,9 @@
       right: 0;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.75) 0); /* Darker, more contrast */
       color: var(--white);
-      padding: 2.2rem 2.5rem 1.8rem; /* Slightly more padding */
-      font-size: 1.3rem; /* Slightly larger font */
+      /* PERBAIKAN: Ukuran font dan padding disesuaikan */
+      padding: 0.5rem 0.8rem; /* Padding setipis mungkin (top/bottom, left/right) */
+      font-size: 0.8rem; /* Ukuran font 0.8rem */
       font-weight: 500;
       line-height: 1.5;
       border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); /* Match container */
@@ -334,7 +335,7 @@
       backdrop-filter: blur(12px); /* Increased blur */
       transition: background 0.3s ease;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* Text shadow for readability */
-      padding-bottom: 90px; /* Increased space for the button */
+      padding-bottom: 55px; /* Disesuaikan untuk memberi ruang tombol */
       z-index: 15; /* Ensures caption is below slide-button */
       pointer-events: none; /* Caption tidak merespons klik */
     }
@@ -356,19 +357,19 @@
     /* New Slide Button Styles */
     .slide-button {
       position: absolute;
-      bottom: 30px; /* Adjusted position */
+      bottom: 15px; /* Disesuaikan agar tidak nabrak caption */
       left: 50%;
       transform: translateX(-50%);
       background: var(--primary-color);
       color: var(--white);
-      padding: 12px 25px;
+      padding: 4px 8px; /* Padding setipis mungkin (top/bottom, left/right) */
       border-radius: var(--border-radius-md);
       text-decoration: none;
       font-weight: 600;
-      font-size: 1.1rem;
+      font-size: 0.8rem; /* Ukuran font 0.8rem */
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px; /* Mengurangi gap agar lebih rapat */
       opacity: 0;
       visibility: hidden;
       transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -385,7 +386,7 @@
 
     .slide-button:hover {
       background: var(--secondary-color);
-      transform: translateX(-50%) translateY(-5px) scale(1.05);
+      transform: translateX(-50%) translateY(-3px) scale(1.05); /* Mengurangi translateY sedikit */
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
 
@@ -642,12 +643,13 @@
         padding: var(--spacing-sm);
         font-size: 0.9rem;
         border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-        padding-bottom: 80px; /* Adjusted for button on mobile */
+        padding-bottom: 60px; /* Adjusted for button on mobile */
       }
       .slide-button {
-        padding: 10px 20px;
-        font-size: 1rem;
-        bottom: 20px; /* Adjusted position for mobile */
+        padding: 3px 6px; /* Padding setipis mungkin untuk mobile */
+        font-size: 0.7rem; /* Ukuran font 0.7rem untuk mobile */
+        bottom: 10px; /* Adjusted position for mobile */
+        gap: 3px; /* Mengurangi gap untuk mobile */
       }
       header.site-header {
         padding: 0 var(--spacing-sm);
@@ -724,7 +726,7 @@
         <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
         <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!.</div>
         <a href="https://orderatk.genetek.co.id" target="_blank" class="slide-button">
-          Click Here <i class="fas fa-arrow-right"></i> <!-- PERBAIKAN: Ikon diseragamkan -->
+          Click Here <i class="fas fa-arrow-right"></i>
         </a>
       </div>
       <!-- Navigation buttons are back -->
