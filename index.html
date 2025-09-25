@@ -552,7 +552,8 @@
 
     .app-card img {
       width: 100%;
-      height: 180px;
+      height: 100%; /* Changed from 180px to 100% */
+      aspect-ratio: 1 / 1; /* Added to enforce 1:1 aspect ratio */
       object-fit: cover;
       transition: transform var(--transition-speed-normal) ease, filter var(--transition-speed-normal) ease;
       border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
@@ -564,6 +565,8 @@
       position: relative;
       overflow: hidden;
       border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+      padding-bottom: 100%; /* This makes the container's height equal to its width */
+      height: 0; /* Reset height as padding-bottom will define it */
     }
 
     /* Image Overlay on Hover */
