@@ -552,26 +552,28 @@
 
     .app-card img {
       width: 100%;
-      height: 100%; /* Changed from 180px to 100% */
-      aspect-ratio: 1 / 1; /* Added to enforce 1:1 aspect ratio */
+      height: 100%;
+      aspect-ratio: 1 / 1;
       object-fit: cover;
       transition: transform var(--transition-speed-normal) ease, filter var(--transition-speed-normal) ease;
       border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-      position: relative;
-      z-index: 1;
+      position: absolute; /* Diubah menjadi absolute */
+      top: 0;
+      left: 0;
+      z-index: 1; /* Z-index lebih rendah dari overlay */
     }
 
     .app-card .image-container {
-      position: relative;
+      position: relative; /* Penting untuk konteks positioning */
       overflow: hidden;
       border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-      padding-bottom: 100%; /* This makes the container's height equal to its width */
-      height: 0; /* Reset height as padding-bottom will define it */
+      padding-bottom: 100%; /* Membuat container menjadi persegi */
+      height: 0; /* Mengatur tinggi aktual menjadi 0 */
     }
 
     /* Image Overlay on Hover */
     .app-card .image-overlay {
-      position: absolute;
+      position: absolute; /* Diubah menjadi absolute */
       top: 0;
       left: 0;
       width: 100%;
@@ -582,7 +584,7 @@
       justify-content: center;
       opacity: 0;
       transition: opacity var(--transition-speed-normal) ease;
-      z-index: 2;
+      z-index: 2; /* Z-index lebih tinggi dari gambar */
       border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
     }
 
