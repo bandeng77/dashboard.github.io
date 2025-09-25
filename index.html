@@ -49,7 +49,9 @@
 
     /* Base Styles & Background */
     body {
-      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      background: url('https://i.imgur.com/ismG7Z4.png') no-repeat center center fixed; /* Menggunakan gambar sebagai latar belakang */
+      background-size: cover; /* Memastikan gambar menutupi seluruh area */
+      /* background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%); */ /* Baris ini dikomentari */
       background-attachment: fixed;
       min-height: 100vh;
       font-family: var(--font-family-base); /* Modern font */
@@ -73,7 +75,7 @@
       background-size: 60px 60px, 40px 40px, 90px 90px; /* Slightly larger particles */
       animation: moveParticles 25s linear infinite alternate; /* Slower, alternates direction */
       pointer-events: none;
-      z-index: -1;
+      z-index: -1; /* Partikel akan berada di belakang gambar latar belakang */
     }
     @keyframes moveParticles {
       0% { transform: translate(0, 0); }
