@@ -49,9 +49,7 @@
 
     /* Base Styles & Background */
     body {
-      background: url('https://i.imgur.com/roO0iao.png') no-repeat center center fixed; /* Menggunakan gambar sebagai latar belakang */
-      background-size: cover; /* Memastikan gambar menutupi seluruh area */
-      /* background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%); */ /* Baris ini dikomentari */
+      background-color: var(--white); /* Changed to white background */
       background-attachment: fixed;
       min-height: 100vh;
       font-family: var(--font-family-base); /* Modern font */
@@ -61,26 +59,6 @@
       padding: 0;
       position: relative;
       color: var(--dark-text);
-    }
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: radial-gradient(circle at 20% 50%, var(--glass-light) 2px, transparent 2px),
-                        radial-gradient(circle at 80% 50%, var(--glass-light) 1px, transparent 1px),
-                        radial-gradient(circle at 40% 20%, var(--glass-medium) 0.5px, transparent 0.5px);
-      background-size: 60px 60px, 40px 40px, 90px 90px; /* Slightly larger particles */
-      animation: moveParticles 25s linear infinite alternate; /* Slower, alternates direction */
-      pointer-events: none;
-      z-index: -1; /* Partikel akan berada di belakang gambar latar belakang */
-    }
-    @keyframes moveParticles {
-      0% { transform: translate(0, 0); }
-      50% { transform: translate(10vw, 50vh); } /* Move diagonally */
-      100% { transform: translate(0, 100vh); }
     }
 
     /* Header */
@@ -860,193 +838,133 @@
       <div class="app-card" data-url="https://monfinance.genetek.co.id" role="button" tabindex="0" aria-label="Medical Claim">
         <div class="card-inner">
           <div class="image-container">
-            <img src="https://i.imgur.com/uGdDqDd.png" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
+            <img src="https://i.imgur.com/0Qx3vY3.jpeg" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
             <div class="image-overlay">
-              <span class="overlay-text">Monitoring finance helps prevent risks</span>
+              <span class="overlay-text">Submit your Medical Claim</span>
             </div>
           </div>
           <div class="card-content">
-            <h3>Monitoring Finance</h3>
-            <p>Accurate finance monitoring supports smarter strategic planning</p>
-           </div>
+            <h3>Finance Monitoring</h3>
+            <p>Finance Monitoring is an application that provides real-time tracking and analysis of financial data to support informed decision-making</p>
+          </div>
         </div>
-      </div>        
-      
-      <div class="app-card" data-url="https://formapd.genetek.co.id" role="button" tabindex="0" aria-label="Form Alat Pelindung Diri">
+      </div>
+
+      <div class="app-card" data-url="https://mainmenu.genetek.co.id/2.%20GA%20102%20-%20Form%20Request%20Perbaikan%20IT.pdf" role="button" tabindex="0" aria-label="IT Support Request">
         <div class="card-inner">
           <div class="image-container">
-            <img src="https://i.imgur.com/FzsjX4m.jpeg" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
+            <img src="https://i.imgur.com/3PmN8Qj.jpeg" alt="Interactive map interface with animated route planning, GPS location markers, scenic travel destinations, and transportation icons in a vibrant city landscape" />
             <div class="image-overlay">
-              <span class="overlay-text">Access PPE Order Form</span>
+              <span class="overlay-text">Request IT Support</span>
             </div>
           </div>
           <div class="card-content">
-            <h3>Secure Gear</h3>
-            <p>SecureGear is an application designed to efficiently manage the borrowing and returning of personal protective equipment, ensuring safety and accountability</p>
+            <h3>IT Support Request</h3>
+            <p>IT Support Request is an application that facilitates the submission and tracking of IT-related issues and support requests</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="app-card" data-url="https://mainmenu.genetek.co.id/3.%20GA%20103%20-%20Form%20Request%20Perbaikan%20GA.pdf" role="button" tabindex="0" aria-label="GA Support Request">
+        <div class="card-inner">
+          <div class="image-container">
+            <img src="https://i.imgur.com/1i9gL0o.jpeg" alt="Streaming service interface with movie posters, play buttons, trending banners, popcorn, and comfortable home theater setup in a cozy living room environment" />
+            <div class="image-overlay">
+              <span class="overlay-text">Request GA Support</span>
+            </div>
+          </div>
+          <div class="card-content">
+            <h3>GA Support Request</h3>
+            <p>GA Support Request is an application that streamlines the process of requesting and tracking general administrative support services</p>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Footer/Credits -->
+    <footer class="site-footer" role="contentinfo">
+      <p>© 2024 Genetek. All rights reserved.</p>
+    </footer>
   </main>
 
-  <!-- Footer/Credits Section -->
-  <footer class="site-footer">
-    <p>&copy; 2025 Genetek. All rights reserved.</p>
-    <p>Designed and Developed by <a href="https://effrensindokencana.com" target="_blank">Effrensindo Kencana</a></p>
-  </footer>
-
   <script>
-    (function() {
+    // Slideshow functionality
+    document.addEventListener('DOMContentLoaded', function() {
       const slides = document.querySelectorAll('.slide');
+      const dotsContainer = document.querySelector('.slide-dots');
       const prevBtn = document.querySelector('.nav-btn.prev');
       const nextBtn = document.querySelector('.nav-btn.next');
-      const slideshowContainer = document.querySelector('.slideshow-container');
-      const slideDotsContainer = document.querySelector('.slide-dots'); // Get the dots container
-      let currentIndex = 0;
-      let slideInterval = null;
-      const slideCount = slides.length;
-      const autoSlideDelay = 5000; // 5 seconds
+      let currentSlide = 0;
+      let slideInterval;
 
-      // Function to create and update dots
-      function updateDots() {
-        slideDotsContainer.innerHTML = ''; // Clear existing dots
-        slides.forEach((_, i) => {
-          const dot = document.createElement('span');
-          dot.classList.add('dot');
-          if (i === currentIndex) {
-            dot.classList.add('active');
-          }
-          dot.addEventListener('click', () => {
-            showSlide(i);
-            resetAutoSlide();
-          });
-          slideDotsContainer.appendChild(dot);
-        });
+      // Create dots
+      slides.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        if (index === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+
+      const dots = document.querySelectorAll('.dot');
+
+      // Function to go to a specific slide
+      function goToSlide(n) {
+        slides[currentSlide].classList.remove('active');
+        dots[currentSlide].classList.remove('active');
+        
+        currentSlide = (n + slides.length) % slides.length;
+        
+        slides[currentSlide].classList.add('active');
+        dots[currentSlide].classList.add('active');
+        
+        resetInterval();
       }
 
-      function showSlide(index) {
-        slides.forEach((slide, i) => {
-          if (i === index) {
-            slide.classList.add('active');
-            slide.style.opacity = '1';
-            slide.style.transform = 'scale(1) rotateY(0deg)';
-          } else {
-            slide.classList.remove('active');
-            slide.style.opacity = '0';
-            slide.style.transform = 'scale(0.95) rotateY(5deg)';
-          }
-        });
-        currentIndex = index;
-        updateDots(); // Update dots after slide change
-      }
-
+      // Next slide function
       function nextSlide() {
-        const nextIndex = (currentIndex + 1) % slideCount;
-        showSlide(nextIndex);
+        goToSlide(currentSlide + 1);
       }
 
+      // Previous slide function
       function prevSlide() {
-        const prevIndex = (currentIndex - 1 + slideCount) % slideCount;
-        showSlide(prevIndex);
+        goToSlide(currentSlide - 1);
       }
 
-      function resetAutoSlide() {
+      // Reset the automatic slideshow interval
+      function resetInterval() {
         clearInterval(slideInterval);
-        if (slideCount > 1) { // Only auto-slide if there's more than 1 slide
-            slideInterval = setInterval(nextSlide, autoSlideDelay);
-        }
+        slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
       }
 
-      // Event listeners for manual navigation (re-enabled)
-      prevBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        prevSlide();
-        resetAutoSlide();
-      });
+      // Event listeners for navigation buttons
+      prevBtn.addEventListener('click', prevSlide);
+      nextBtn.addEventListener('click', nextSlide);
 
-      nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        nextSlide();
-        resetAutoSlide();
-      });
+      // Initialize the slideshow
+      resetInterval();
 
-      // Start auto slideshow and initialize dots
-      showSlide(currentIndex);
-      resetAutoSlide();
-
-      // App card click handler with smooth feedback
-      document.addEventListener('DOMContentLoaded', () => {
-        const appCards = document.querySelectorAll('.app-card');
-
-        appCards.forEach(card => {
-          const url = card.getAttribute('data-url');
-          const cardInner = card.querySelector('.card-inner');
-
-          // 3D Tilt Effect (JavaScript for mouse position)
-          card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = ((y - centerY) / centerY) * varToNum('--card-tilt-degree');
-            const rotateY = ((x - centerX) / centerX) * -varToNum('--card-tilt-degree');
-
-            cardInner.style.transform = `translateY(-10px) scale(1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-          });
-
-          card.addEventListener('mouseleave', () => {
-            cardInner.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)';
-          });
-
-          card.addEventListener('click', e => {
-            e.preventDefault();
-            if (url) {
-              cardInner.style.transform = 'translateY(-5px) scale(0.98)';
-              setTimeout(() => {
-                window.open(url, '_blank');
-              }, 200);
-            }
-          });
-
-          // Keyboard accessibility for cards
-          card.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              card.click();
-            }
-          });
+      // Card click functionality
+      document.querySelectorAll('.app-card').forEach(card => {
+        card.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.open(url, '_blank');
+          }
         });
-      });
-
-      // Helper function to convert CSS variable to number
-      function varToNum(varName) {
-        const root = document.documentElement;
-        const style = getComputedStyle(root);
-        const value = style.getPropertyValue(varName).trim();
-        return parseFloat(value);
-      }
-
-      // Optional: Pause auto-slide on hover (enhances user experience)
-      document.addEventListener('DOMContentLoaded', () => {
-        const slideshow = document.querySelector('.slideshow-container');
-        slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
-        slideshow.addEventListener('mouseleave', () => resetAutoSlide());
-
-        // Header shadow on scroll
-        const siteHeader = document.querySelector('.site-header');
-        window.addEventListener('scroll', () => {
-          if (window.scrollY > 50) {
-            siteHeader.style.boxShadow = '0 8px 25px var(--shadow-medium)';
-          } else {
-            siteHeader.style.boxShadow = '0 6px 20px var(--shadow-light)';
+        
+        // Add keyboard support for accessibility
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const url = this.getAttribute('data-url');
+            if (url) {
+              window.open(url, '_blank');
+            }
           }
         });
       });
-
-    })();
+    });
   </script>
 </body>
 </html>
