@@ -1,1089 +1,488 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Main Menu - Genetek</title>
+  <title>Genetek Workspace OS</title>
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'shimmer': 'shimmer 2.5s infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            shimmer: {
+              '100%': { transform: 'translateX(100%)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Font Awesome 6.5 -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Swiper.js for Modern Touch Slider -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
   <style>
-    /* Global Variables for Colors */
-    :root {
-      --primary-color: #007bff; /* Blue */
-      --secondary-color: #6f42c1; /* Purple */
-      --accent-color: #28a745; /* Green */
-      --light-bg: #e9ecef; /* Light Gray */
-      --dark-text: #343a40; /* Dark Gray */
-      --white: #ffffff;
-      --glass-light: rgba(255, 255, 255, 0.2);
-      --glass-medium: rgba(255, 255, 255, 0.3);
-      --glass-dark: rgba(255, 255, 255, 0.1);
-      --gradient-start: #84fab0; /* Light Green */
-      --gradient-end: #8fd3f4; /* Light Blue */
-      --shadow-light: rgba(0, 0, 0, 0.08);
-      --shadow-medium: rgba(0, 0, 0, 0.15);
-      --shadow-strong: rgba(0, 0, 0, 0.25);
-
-      /* New variables for modern design */
-      --font-family-base: 'Poppins', sans-serif;
-      --font-size-base: 1rem;
-      --spacing-xs: 0.5rem;
-      --spacing-sm: 1rem;
-      --spacing-md: 1.5rem;
-      --spacing-lg: 2rem;
-      --spacing-xl: 3rem;
-      --border-radius-sm: 8px;
-      --border-radius-md: 15px;
-      --border-radius-lg: 25px;
-      --transition-speed-fast: 0.2s;
-      --transition-speed-normal: 0.4s;
-      --transition-speed-slow: 0.6s;
-
-      /* New variables for advanced card animations */
-      --card-tilt-degree: 5deg; /* Max tilt degree */
-      --card-glow-color: var(--primary-color); /* Color for the glowing border */
-      --card-overlay-color: rgba(0, 0, 0, 0.6); /* Overlay color on image hover */
-    }
-
-    /* Base Styles & Background */
     body {
-      background-color: var(--white); /* Changed to white background */
-      background-attachment: fixed;
-      min-height: 100vh;
-      font-family: var(--font-family-base); /* Modern font */
-      overflow-x: hidden;
-      overflow-y: auto;
-      margin: 0;
-      padding: 0;
-      position: relative;
-      color: var(--dark-text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: background-color 0.4s ease, color 0.4s ease;
     }
-    body::before {
-      content: '';
+
+    /* Animated Dynamic Aurora Background */
+    .aurora-bg {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: radial-gradient(circle at 20% 50%, var(--glass-light) 2px, transparent 2px),
-                        radial-gradient(circle at 80% 50%, var(--glass-light) 1px, transparent 1px),
-                        radial-gradient(circle at 40% 20%, var(--glass-medium) 0.5px, transparent 0.5px);
-      background-size: 60px 60px, 40px 40px, 90px 90px; /* Slightly larger particles */
-      animation: moveParticles 25s linear infinite alternate; /* Slower, alternates direction */
-      pointer-events: none;
-      z-index: -1; /* Partikel akan berada di belakang gambar latar belakang */
-    }
-    @keyframes moveParticles {
-      0% { transform: translate(0, 0); }
-      50% { transform: translate(10vw, 50vh); } /* Move diagonally */
-      100% { transform: translate(0, 100vh); }
-    }
-
-    /* Header */
-    header.site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 70px;
-      background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
-      backdrop-filter: blur(25px); /* Increased blur */
-      border-bottom: 1px solid var(--glass-light);
-      display: flex;
-      align-items: center;
-      padding: 0 var(--spacing-lg);
-      box-shadow: 0 6px 20px var(--shadow-light); /* Softer initial shadow */
-      z-index: 1000;
-      justify-content: space-between; /* Distribute items with space between */
-      transition: all var(--transition-speed-normal) ease-in-out; /* Smooth transition for shadow */
-    }
-    header.site-header:hover {
-      box-shadow: 0 8px 25px var(--shadow-medium); /* Subtle shadow change on hover */
-    }
-    header.site-header .header-content {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      max-width: 1200px; /* Limit width for better centering */
-      margin: 0 auto; /* Center the content within the header */
-    }
-    header.site-header img.logo {
-      height: 45px;
-      width: auto;
-      margin-right: var(--spacing-md); /* Keep margin for spacing from title */
-      filter: drop-shadow(0 2px 4px var(--shadow-light));
-    }
-    header.site-header h1 {
-      font-size: 2.5rem; /* Increased font size */
-      font-weight: 700;
-      color: var(--dark-text);
-      letter-spacing: 0.1em; /* Increased letter spacing */
-      flex-grow: 1;
-      text-align: center;
-    }
-
-    /* Main Content Layout */
-    main {
-      padding-top: 90px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: calc(100vh - 70px);
-    }
-
-    /* Header Text (removed from main, now in header.site-header) */
-    main > header {
-      display: none; /* Hide the old header text */
-    }
-
-    /* New CSS for Animated Dashboard Title - Glitch Effect */
-    .animated-dashboard-title {
-      position: relative;
-      display: inline-block;
-      color: var(--dark-text); /* Base color */
-      animation: textGlitch 2s linear infinite alternate; /* Glitch animation */
-    }
-
-    .animated-dashboard-title::before,
-    .animated-dashboard-title::after {
-      content: attr(data-text); /* Use data-text attribute for content */
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: inherit; /* Inherit background to cover original text */
-      overflow: hidden;
-      clip: rect(0, 900px, 0, 0); /* Initial clip */
-    }
-
-    .animated-dashboard-title::before {
-      left: 2px;
-      text-shadow: -1px 0 var(--primary-color); /* Red shadow */
-      animation: textGlitchTop 1.5s linear infinite alternate-reverse;
-    }
-
-    .animated-dashboard-title::after {
-      left: -2px;
-      text-shadow: 1px 0 var(--secondary-color); /* Blue shadow */
-      animation: textGlitchBottom 1.8s linear infinite alternate;
-    }
-
-    @keyframes textGlitch {
-      0% {
-        transform: translate(0);
-      }
-      20% {
-        transform: translate(-2px, 2px);
-      }
-      40% {
-        transform: translate(-2px, -2px);
-      }
-      60% {
-        transform: translate(2px, 2px);
-      }
-      80% {
-        transform: translate(2px, -2px);
-      }
-      100% {
-        transform: translate(0);
-      }
-    }
-
-    @keyframes textGlitchTop {
-      0% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      10% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      20% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      30% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      40% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      50% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      60% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      70% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      80% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      90% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      100% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-    }
-
-    @keyframes textGlitchBottom {
-      0% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      10% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      20% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      30% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      40% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      50% {
-        clip: rect(0, 9999px, 10px, 0);
-      }
-      60% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      70% {
-        clip: rect(0, 9999px, 0, 0);
-      }
-      80% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      90% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-      100% {
-        clip: rect(10px, 9999px, 0, 0);
-      }
-    }
-
-    /* Slideshow */
-    .slideshow-container {
-      position: relative;
-      width: 95vw;
-      max-width: 1100px;
-      height: 480px; /* Increased height */
-      border-radius: var(--border-radius-lg); /* More rounded corners */
-      overflow: hidden;
-      box-shadow: 0 25px 70px var(--shadow-medium), 0 0 0 1px var(--glass-light); /* Enhanced shadow */
-      background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
-      margin-bottom: var(--spacing-xl);
-      backdrop-filter: blur(25px);
-      animation: slideInUp 1s ease-out;
-      perspective: 1000px;
-      border: 2px solid var(--glass-light); /* Subtle border */
-      z-index: 1; /* Added for z-index context */
-    }
-    @keyframes slideInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .slide {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Smoother transform */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transform-origin: center center;
-      z-index: 1; /* Added for z-index context */
-      pointer-events: none; /* Seluruh slide tidak merespons klik secara default */
-    }
-    .slide.active {
-      opacity: 1;
-      transform: scale(1) rotateY(0deg); /* Ensure active slide is normal scale */
-    }
-    .slide:not(.active) {
-      transform: scale(0.95) rotateY(5deg); /* Subtle 3D effect for inactive slides */
-    }
-    .slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: var(--border-radius-lg); /* Match container */
-      transition: transform 0.5s ease-out;
-      z-index: 5; /* Added z-index for proper layering */
-      pointer-events: none; /* Gambar tidak merespons klik */
-    }
-    .slide:hover img { /* Hover pada slide itu sendiri */
-      transform: scale(1.05); /* More pronounced zoom */
-    }
-
-    .caption {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.75) 0); /* Darker, more contrast */
-      color: var(--white);
-      padding: 0.5rem 0.8rem;
-      font-size: 0.8rem;
-      font-weight: 500;
-      line-height: 1.5;
-      border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); /* Match container */
-      text-align: center;
-      backdrop-filter: blur(12px); /* Increased blur */
-      transition: background 0.3s ease;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* Text shadow for readability */
-      padding-bottom: 75px; /* Increased padding-bottom for button and dots */
-      z-index: 15; /* Ensures caption is below slide-button */
-      pointer-events: none; /* Caption tidak merespons klik */
-    }
-    .slide:hover .caption { /* Hover pada slide itu sendiri */
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.85) 0); /* Even darker on hover */
-    }
-    .caption::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70px; /* Wider accent line */
-      height: 5px; /* Thicker accent line */
-      background: var(--primary-color); /* Use primary color */
-      border-radius: 3px;
-    }
-
-    /* New Slide Button Styles */
-    .slide-button {
-      position: absolute;
-      bottom: 35px; /* Adjusted position to be above dots */
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--primary-color);
-      color: var(--white);
-      padding: 4px 8px;
-      border-radius: var(--border-radius-md);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-      z-index: 30; /* Increased z-index to be highest */
-      pointer-events: auto; /* Memastikan tombol merespons klik */
-    }
-
-    .slide.active .slide-button {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    .slide-button:hover {
-      background: var(--secondary-color);
-      transform: translateX(-50%) translateY(-3px) scale(1.05);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .slide-button i {
-      transition: transform 0.3s ease;
-    }
-
-    .slide-button:hover i {
-      transform: translateX(5px);
-    }
-
-    /* Navigation Buttons (Re-enabled) */
-    .nav-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--glass-medium);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-light);
-      color: var(--dark-text);
-      font-size: 2.2rem; /* Larger icon */
-      width: 55px; /* Larger button */
-      height: 55px;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all var(--transition-speed-normal) cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 5px 15px var(--shadow-light);
-      z-index: 20; /* Below slide-button (30) */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: auto; /* Tombol navigasi merespons klik */
-    }
-    .nav-btn:hover {
-      background: var(--primary-color); /* Primary color on hover */
-      color: var(--white); /* White text on hover */
-      transform: translateY(-50%) scale(1.15); /* More pronounced scale */
-      box-shadow: 0 10px 30px var(--shadow-medium); /* Stronger shadow on hover */
-    }
-    .nav-btn.prev { left: var(--spacing-lg); }
-    .nav-btn.next { right: var(--spacing-lg); }
-
-    /* Slide Dots */
-    .slide-dots {
-      position: absolute;
-      bottom: 10px; /* Adjusted position to be below the button */
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 8px;
-      z-index: 40; /* Higher than slide-button to be clickable */
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      background-color: rgba(255, 255, 255, 0.5);
-      border-radius: 50%;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-
-    .dot.active {
-      background-color: var(--primary-color);
-      transform: scale(1.2);
-      border-color: var(--primary-color);
-    }
-
-    .dot:hover {
-      background-color: var(--primary-color);
-      transform: scale(1.1);
-    }
-
-    /* App Grid */
-    .app-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2.8rem;
-      padding: 0 var(--spacing-sm);
-      max-width: 1200px;
-      width: 100%;
-      margin: var(--spacing-lg) auto var(--spacing-xl);
-    }
-
-    /* App Cards - Advanced Animations */
-    .app-card {
-      background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
-      border: 1px solid var(--glass-light);
-      backdrop-filter: blur(20px);
-      border-radius: var(--border-radius-md);
-      cursor: pointer;
-      transition: all var(--transition-speed-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
-      box-shadow: 0 12px 35px var(--shadow-light);
-      overflow: hidden;
-      position: relative;
-      opacity: 0;
-      transform: translateY(40px);
-      animation: cardStaggerIn 0.6s ease-out forwards;
-      display: flex;
-      flex-direction: column;
-      transform-style: preserve-3d;
-      perspective: 1000px;
-    }
-    .app-card:nth-child(1) { animation-delay: 0.3s; }
-    .app-card:nth-child(2) { animation-delay: 0.4s; }
-    .app-card:nth-child(3) { animation-delay: 0.5s; }
-    .app-card:nth-child(4) { animation-delay: 0.6s; }
-    .app-card:nth-child(5) { animation-delay: 0.7s; }
-    .app-card:nth-child(6) { animation-delay: 0.8s; }
-    .app-card:nth-child(7) { animation-delay: 0.9s; }
-    .app-card:nth-child(8) { animation-delay: 1.0s; }
-    @keyframes cardStaggerIn {
-      0% { opacity: 0; transform: translateY(40px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Glowing Border Effect */
-    .app-card::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color), var(--primary-color));
-      background-size: 400% 400%;
-      border-radius: var(--border-radius-md);
+      inset: 0;
       z-index: -1;
-      opacity: 0;
-      filter: blur(8px);
-      transition: opacity var(--transition-speed-normal) ease-out, filter var(--transition-speed-normal) ease-out;
-      animation: glowingBorder 8s linear infinite;
-    }
-
-    .app-card:hover::before {
-      opacity: 1;
-      filter: blur(12px);
-    }
-
-    @keyframes glowingBorder {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* Card Content and Image */
-    .app-card .card-inner {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      border-radius: var(--border-radius-md);
       overflow: hidden;
-      transition: transform var(--transition-speed-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
-      background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
-      box-shadow: inset 0 0 0 1px var(--glass-light);
+      pointer-events: none;
+    }
+    .aurora-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.4;
+      animation: float 8s ease-in-out infinite alternate;
     }
 
-    .app-card:hover .card-inner {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 20px 50px var(--shadow-medium);
+    /* Glassmorphism Classes */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    .dark .glass {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .app-card img {
-      width: 100%;
-      height: 100%;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      transition: transform var(--transition-speed-normal) ease, filter var(--transition-speed-normal) ease;
-      border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-      position: absolute; /* Diubah menjadi absolute */
-      top: 0;
-      left: 0;
-      z-index: 1; /* Z-index lebih rendah dari overlay */
-    }
-
-    .app-card .image-container {
-      position: relative; /* Penting untuk konteks positioning */
-      overflow: hidden;
-      border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-      padding-bottom: 100%; /* Membuat container menjadi persegi */
-      height: 0; /* Mengatur tinggi aktual menjadi 0 */
-    }
-
-    /* Image Overlay on Hover */
-    .app-card .image-overlay {
-      position: absolute; /* Diubah menjadi absolute */
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--card-overlay-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity var(--transition-speed-normal) ease;
-      z-index: 2; /* Z-index lebih tinggi dari gambar */
-      border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-    }
-
-    .app-card:hover .image-overlay {
-      opacity: 1;
-    }
-
-    .app-card .image-overlay .overlay-text {
-      color: var(--white);
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-align: center;
-      padding: var(--spacing-sm);
-      transform: translateY(20px);
-      opacity: 0;
-      transition: transform var(--transition-speed-normal) ease, opacity var(--transition-speed-normal) ease;
-    }
-
-    .app-card:hover .image-overlay .overlay-text {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .app-card:hover img {
-      transform: scale(1.15);
-      filter: brightness(0.8);
-    }
-
-    .app-card .card-content {
-      padding: 1.8rem;
-      flex-grow: 1;
+    /* Card Glow Hover Animation */
+    .glow-card {
       position: relative;
-      z-index: 3;
     }
-    .app-card h3 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--dark-text);
-      margin: 0 0 0.5rem 0;
-      transition: color 0.4s ease;
+    .glow-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 1.25rem;
+      padding: 1.5px;
+      background: linear-gradient(135deg, #14b8a6, #0d9488, #6366f1);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
     }
-    .app-card p {
-      font-size: 0.7rem;
-      color: var(--dark-text);
-      margin: 0;
-      transition: color 0.4s ease;
-    }
-
-    /* Text color change on hover */
-    .app-card:hover h3, .app-card:hover p {
-      color: var(--white);
+    .glow-card:hover::before {
+      opacity: 1;
     }
 
-    /* Footer/Credits */
-    .site-footer {
-      text-align: center;
-      padding: var(--spacing-sm);
-      margin-top: var(--spacing-md);
-      color: var(--dark-text);
-      font-size: 0.9rem;
-      background: linear-gradient(135deg, var(--glass-medium), var(--glass-dark));
-      backdrop-filter: blur(15px);
-      border-top: 1px solid var(--glass-light);
-      box-shadow: 0 -2px 10px var(--shadow-light);
-    }
-    .site-footer p {
-      margin: 0;
-      line-height: 1.2;
-      font-size: 0.85rem;
-    }
-    .site-footer a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .site-footer a:hover {
-      text-decoration: underline;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-      .slideshow-container {
-        height: 330px; /* Adjusted for mobile */
-        border-radius: var(--border-radius-md);
-      }
-      .caption {
-        padding: var(--spacing-sm);
-        font-size: 0.9rem;
-        border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-        padding-bottom: 80px; /* Adjusted for button and dots on mobile */
-      }
-      .slide-button {
-        padding: 3px 6px;
-        font-size: 0.7rem;
-        bottom: 40px; /* Adjusted position for mobile */
-        gap: 3px;
-      }
-      .slide-dots {
-        bottom: 15px; /* Adjusted position for mobile */
-      }
-      header.site-header {
-        padding: 0 var(--spacing-sm);
-      }
-      header.site-header img.logo {
-        height: 40px;
-        margin-right: var(--spacing-sm);
-      }
-      header.site-header h1 {
-        font-size: 1.5rem;
-      }
-      .nav-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.8rem;
-      }
-      .nav-btn.prev { left: var(--spacing-sm); }
-      .nav-btn.next { right: var(--spacing-sm); }
-      .app-grid {
-        gap: var(--spacing-lg);
-      }
-      .app-card {
-        border-radius: var(--border-radius-md);
-      }
-      .app-card img {
-        border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
-      }
-      .app-card h3 {
-        font-size: 1rem;
-      }
-      .app-card p {
-        font-size: 0.6rem;
-      }
-      /* Disable 3D tilt on mobile for performance/simplicity */
-      .app-card .card-inner {
-        transform: none !important;
-      }
-      .app-card:hover .card-inner {
-        transform: translateY(-10px) scale(1.02) !important;
-      }
+    /* Custom Swiper Styles */
+    .swiper-pagination-bullet-active {
+      width: 24px !important;
+      border-radius: 8px !important;
+      background: #14b8a6 !important;
     }
   </style>
 </head>
-<body>
-  <!-- Fixed header with logo and title -->
-  <header class="site-header" role="banner">
-    <div class="header-content">
-      <img src="https://i.imgur.com/sH95z16.png" alt="Company logo depicting a modern geometric design with green and blue tones representing innovation and growth" class="logo" />
-      <!-- Dashboard title moved here and centered -->
-      <h1 class="animated-dashboard-title" data-text="DASHBOARD">DASHBOARD</h1>
-      <!-- An empty div or span to push the title to center if logo is on left -->
-      <div style="width: 45px; margin-left: 1.5rem;"></div> <!-- Placeholder to balance logo space -->
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-24">
+
+  <!-- Background Animated Lights -->
+  <div class="aurora-bg">
+    <div class="aurora-blob w-[500px] h-[500px] -top-20 -left-20 bg-teal-500/20 dark:bg-teal-600/20"></div>
+    <div class="aurora-blob w-[450px] h-[450px] top-1/2 right-0 bg-indigo-500/20 dark:bg-indigo-600/20" style="animation-delay: -3s;"></div>
+    <div class="aurora-blob w-[400px] h-[400px] -bottom-20 left-1/3 bg-emerald-500/20 dark:bg-emerald-600/20" style="animation-delay: -5s;"></div>
+  </div>
+
+  <!-- Top Glass Header Bar -->
+  <header class="sticky top-0 z-50 glass px-4 py-3 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Brand Logo & Title Hijau Tosca -->
+      <div class="flex items-center space-x-4">
+        <div class="p-2 bg-teal-500/10 rounded-2xl border border-teal-500/20 flex items-center justify-center">
+          <img src="https://i.imgur.com/sH95z16.png" alt="Genetek Logo" class="h-8 w-auto object-contain" />
+        </div>
+        <div>
+          <h1 class="font-black text-lg tracking-wider text-teal-600 dark:text-teal-400">GENETEK</h1>
+        </div>
+      </div>
+
+      <!-- Quick Action Toolbar & Jam Operasional -->
+      <div class="flex items-center space-x-2">
+        <!-- View Toggle (Grid / List) -->
+        <button id="viewToggle" onclick="toggleLayoutView()" title="Ganti Tampilan Grid/List" class="p-2.5 rounded-xl bg-slate-200/60 dark:bg-slate-800/60 hover:bg-teal-500 hover:text-white transition-all text-slate-600 dark:text-slate-300">
+          <i class="fas fa-th-large text-sm" id="viewIcon"></i>
+        </button>
+
+        <!-- Dark/Light Theme Switcher -->
+        <button id="themeToggle" onclick="toggleTheme()" title="Ganti Mode Gelap/Terang" class="p-2.5 rounded-xl bg-slate-200/60 dark:bg-slate-800/60 hover:bg-amber-500 hover:text-white transition-all text-slate-600 dark:text-slate-300">
+          <i class="fas fa-moon text-sm" id="themeIcon"></i>
+        </button>
+
+        <!-- Live Clock -->
+        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <span id="liveClock">00:00:00 AM</span>
+        </div>
+      </div>
     </div>
   </header>
 
-  <main>
-    <!-- Header text (This section is now empty as the title moved to the header) -->
-    <header class="w-full text-center px-4">
-      <!-- The h2 element was here, but it's now in the site-header -->
-    </header>
+  <main class="max-w-7xl mx-auto px-4 mt-6 space-y-8">
 
-    <!-- Slideshow Section -->
-    <section class="slideshow-container" aria-label="Automatic Information Slideshow">
-      <!-- Slide 1 -->
-      <div class="slide active" role="group" aria-roledescription="slide" aria-label="Slide 1">
-        <img src="https://i.imgur.com/AYL5RTd.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
-        <div class="caption">Email Signature: It only takes a few moments to set up, but it makes every email look so much better, just click here!!</div>
-        <a href="https://forms.gle/PrdDHmJugaxzD4mW9" target="_blank" class="slide-button">
-          Click Here <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-      <!-- Slide 2 -->
-      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 2">
-        <img src="https://i.imgur.com/crcDAJA.png" alt="It only takes a few moments to set up, but it makes every email look so much better." />
-        <div class="caption">ISO 14001:2015 Distributor of Fire Protection Equipment, Installation & Maintenance Within Indonesia</div>
-        <a href="https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2014%20IA.pdf" target="_blank" class="slide-button">
-          Click Here <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-      <!-- Navigation buttons are back -->
-      <button class="nav-btn prev" aria-label="Previous slide" title="Go to previous slide"><</button>
-      <button class="nav-btn next" aria-label="Next slide" title="Go to next slide">></button>
+    <!-- Hero Announcement Swiper Slider (16:9) -->
+    <section class="max-w-4xl mx-auto w-full rounded-3xl overflow-hidden glass shadow-2xl relative border border-slate-200/50 dark:border-slate-800/50">
+      <div class="swiper mainSwiper aspect-video w-full">
+        <div class="swiper-wrapper">
+          
+          <!-- Slide 1 -->
+          <div class="swiper-slide relative h-full">
+            <img src="https://i.imgur.com/AYL5RTd.png" class="absolute inset-0 w-full h-full object-cover opacity-30 dark:opacity-40" alt="Email Signature" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-6 sm:p-10 flex flex-col justify-end text-white">
+              <span class="px-3 py-1 bg-teal-500/30 border border-teal-400/40 text-teal-300 text-[11px] font-extrabold rounded-full w-fit mb-3 uppercase tracking-wider backdrop-blur-md">Feature Highlight</span>
+              <h2 class="text-xl sm:text-3xl font-extrabold mb-2">Email Signature Generator</h2>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-xl mb-4 leading-relaxed">Format standar tanda tangan email resmi Genetek. Buat profil profesional Anda secara otomatis hanya dalam beberapa klik.</p>
+              <a href="https://forms.gle/PrdDHmJugaxzD4mW9" target="_blank" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-500/30 w-fit transition-all transform hover:-translate-y-0.5">
+                <span>Buat Signature</span>
+                <i class="fas fa-arrow-right text-[10px]"></i>
+              </a>
+            </div>
+          </div>
 
-      <!-- Slide Dots -->
-      <div class="slide-dots"></div>
+          <!-- Slide 2 -->
+          <div class="swiper-slide relative h-full">
+            <img src="https://i.imgur.com/crcDAJA.png" class="absolute inset-0 w-full h-full object-cover opacity-30 dark:opacity-40" alt="ISO 14001" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-6 sm:p-10 flex flex-col justify-end text-white">
+              <span class="px-3 py-1 bg-purple-500/30 border border-purple-400/40 text-purple-300 text-[11px] font-extrabold rounded-full w-fit mb-3 uppercase tracking-wider backdrop-blur-md">Certification</span>
+              <h2 class="text-xl sm:text-3xl font-extrabold mb-2">ISO 14001:2015 Accredited</h2>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-xl mb-4 leading-relaxed">Sertifikasi Manajemen Lingkungan Resmi Distributor Peralatan & Pemeliharaan Proteksi Kebakaran Indonesia.</p>
+              <a href="https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2014%20IA.pdf" target="_blank" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-500/30 w-fit transition-all transform hover:-translate-y-0.5">
+                <span>Unduh Sertifikat PDF</span>
+                <i class="fas fa-download text-[10px]"></i>
+              </a>
+            </div>
+          </div>
+
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
     </section>
 
-    <!-- App Menu Section -->
-    <section class="app-grid" aria-label="Application menu">
-       <div class="app-card" data-url="https://panduan.genetek.co.id" role="button" tabindex="0" aria-label="Panduan">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/OnL0ikF.jpeg" alt="Interactive weather interface with sunny forecast visuals, animated sunny clouds, temperature gradients, cityscape buildings, and palm trees in a coastal tropical environment" />
-            <div class="image-overlay">
-              <span class="overlay-text">View Guides & Manuals</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Guides & Manuals</h3>
-            <p>Guides & Manuals is an app that provides quick access to user guides and manuals anytime, anywhere</p>
-          </div>
-        </div>
-      </div>
-    
-      <div class="app-card" data-url="https://orderatk.genetek.co.id" role="button" tabindex="0" aria-label="Order ATK">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/o6gblrv.jpeg" alt="Scrolling news feed interface with prominent headlines, live update banners, global map overlays, and journalist equipment in a bustling modern newsroom" />
-            <div class="image-overlay">
-              <span class="overlay-text">Order Office Supplies</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Office Supply</h3>
-            <p>Office Supply is an application that streamlines the ordering and management of office stationery to support workplace efficiency</p>
-          </div>
-        </div>
-      </div>
-                  
-      <div class="app-card" data-url="https://ga.genetek.co.id" role="button" tabindex="0" aria-label="General Affair">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/bbJveSl.png" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
-            <div class="image-overlay">
-              <span class="overlay-text">Managing office needs and maintaining workplace efficiency.</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>General Affair</h3>
-            <p>Ensuring smooth daily operations and supporting all departments efficiently</p>
-           </div>
-        </div>
-      </div>        
-      
-      <div class="app-card" data-url="https://formapd.genetek.co.id" role="button" tabindex="0" aria-label="Form Alat Pelindung Diri">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/FzsjX4m.jpeg" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
-            <div class="image-overlay">
-              <span class="overlay-text">Access PPE Order Form</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Secure Gear</h3>
-            <p>SecureGear is an application designed to efficiently manage the borrowing and returning of personal protective equipment, ensuring safety and accountability</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="app-card" data-url="https://pipelines.genetek.co.id" role="button" tabindex="0" aria-label="Pipeline Sales Manager">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/ARlQTCV.jpeg" alt="Collage of diverse users engaging on a social media platform, featuring colorful posts, smiling faces, chat bubbles, and trending hashtags in an urban street market setting" />
-            <div class="image-overlay">
-              <span class="overlay-text">Go to Pipeline Sales Manager</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Pipelines Sales Manager</h3>
-            <p>Pipelines Sales Manager is an application designed to systematically monitor, organize, and manage sales opportunities across the entire pipeline</p>
-          </div>
-        </div>
+    <!-- App Launcher Workspace Section -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-2">
+          <i class="fas fa-cubes text-teal-500"></i>
+          <span>Aplikasi Utama</span>
+        </h3>
+        <span class="text-xs font-semibold text-slate-500 bg-slate-200/60 dark:bg-slate-800/60 px-2.5 py-1 rounded-full">10 Aplikasi</span>
       </div>
 
-            <div class="app-card" data-url="https://workorder.genetek.co.id" role="button" tabindex="0" aria-label="Work Order">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/wgGGaOw.png" alt="Collage of diverse users engaging on a social media platform, featuring colorful posts, smiling faces, chat bubbles, and trending hashtags in an urban street market setting" />
-            <div class="image-overlay">
-              <span class="overlay-text">Go to Work Order</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Work Order</h3>
-            <p>A Work Order Web Application is a digital platform designed to streamline the process of requesting, assigning, and tracking maintenance or service tasks</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="app-card" data-url="https://monitoringeng.genetek.co.id" role="button" tabindex="0" aria-label="Engineering Monitor">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/qqBHZ5H.jpeg" alt="Collage of diverse users engaging on a social media platform, featuring colorful posts, smiling faces, chat bubbles, and trending hashtags in an urban street market setting" />
-            <div class="image-overlay">
-              <span class="overlay-text">Engineering Monitor</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Engineering Monitor</h3>
-            <p>Engineering Monitoring provides real-time tracking and analysis of all technical operations to ensure efficiency and reliability</p>
-          </div>
-        </div>
-      </div>
+      <!-- Apps Grid Container -->
+      <div id="appsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
 
-      <div class="app-card" data-url="https://supplychain.genetek.co.id" role="button" tabindex="0" aria-label="Supply Chain Application">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/mCO1jCu.jpeg" alt="Professional email dashboard with neatly arranged inbox folders, calendar overlays, notification icons, coffee cup, and a tidy modern desk in a well-lit office space" />
-            <div class="image-overlay">
-              <span class="overlay-text">Explore Supply Chain App</span>
+        <!-- App 1: Guides -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-book-open"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Guides & Manuals</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Akses cepat ke panduan pengguna dan manual operasional lengkap.</p>
             </div>
           </div>
-          <div class="card-content">
-            <h3>Supply Chain Application</h3>
-            <p>Supply Chain Application is a tool that helps manage, monitor, and optimize the flow of goods and information across the supply chain</p>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://panduan.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
           </div>
         </div>
-      </div>
 
-       <div class="app-card" data-url="https://medicalclaim.genetek.co.id" role="button" tabindex="0" aria-label="Medical Claim">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/sGDXCZh.jpeg" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
-            <div class="image-overlay">
-              <span class="overlay-text">Submit your Medical Claim</span>
+        <!-- App 2: Office Supply -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-boxes-packing"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Office Supply (ATK)</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Pengelolaan dan permintaan alat tulis kantor secara terstruktur.</p>
             </div>
           </div>
-          <div class="card-content">
-            <h3>Medical Claim</h3>
-            <p>The insurance company reviewed his medical claim before approving the reimbursement</p>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://orderatk.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
           </div>
         </div>
-      </div>
-      
-      <div class="app-card" data-url="https://monfinance.genetek.co.id" role="button" tabindex="0" aria-label="Medical Claim">
-        <div class="card-inner">
-          <div class="image-container">
-            <img src="https://i.imgur.com/uGdDqDd.png" alt="Music player app screen with animated waveform graphics, diverse playlist covers, headphones resting on a desk, studio microphone, and colorful neon lighting in a creative sound room" />
-            <div class="image-overlay">
-              <span class="overlay-text">Monitoring finance helps prevent risks</span>
-            </div>
-          </div>
-          <div class="card-content">
-            <h3>Monitoring Finance</h3>
-            <p>Accurate finance monitoring supports smarter strategic planning</p>
-           </div>
-        </div>
-      </div>        
 
+        <!-- App 3: General Affair -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-building-user"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">General Affair</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Layanan fasilitas umum dan pengelolaan kebutuhan umum kantor.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://ga.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 4: Secure Gear APD -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-shield-halved"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Secure Gear (APD)</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Manajemen peminjaman Alat Pelindung Diri & standar K3.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://formapd.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 5: Pipelines Sales Manager -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Pipeline Sales Manager</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Monitoring dan manajemen proyek peluang sales secara real-time.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://pipelines.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 6: Work Order -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-list-check"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Work Order</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Sistem tiket instruksi kerja dan penugasan maintenance teknis.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://workorder.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 7: Engineering Monitor -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-microchip"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Engineering Monitor</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Monitoring teknis operasi engineering & keandalan alat.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://monitoringeng.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 8: Supply Chain -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-truck-ramp-box"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Supply Chain App</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Pelacakan arus kargo, rantai pasok, dan stok gudang.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://supplychain.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 9: Medical Claim -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-heart-pulse"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Medical Claim</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Pengajuan penggantian klaim medis dan biaya kesehatan.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://medicalclaim.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- App 10: Monitoring Finance -->
+        <div class="app-item glow-card glass rounded-2xl p-4 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-500 flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">
+              <i class="fas fa-chart-pie"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-teal-500 transition-colors">Monitoring Finance</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">Pemantauan arus kas dan pelaporan keuangan terpadu.</p>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end">
+            <a href="https://monfinance.genetek.co.id" target="_blank" class="w-full justify-center px-3 py-2 bg-teal-500/10 hover:bg-teal-600 text-teal-600 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Buka Aplikasi</span>
+              <i class="fas fa-external-link-alt text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
     </section>
+
   </main>
 
-  <!-- Footer/Credits Section -->
-  <footer class="site-footer">
-    <p>&copy; 2025 Genetek. All rights reserved.</p>
-    <p>Designed and Developed by <a href="https://effrensindokencana.com" target="_blank">Effrensindo Kencana</a></p>
+  <!-- Toast Notification System -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="mt-16 text-center text-xs text-slate-400 border-t border-slate-200/60 dark:border-slate-800/60 py-6">
+    <div class="max-w-7xl mx-auto px-4 space-y-1">
+      <p>&copy; 2026 <span class="font-bold text-slate-600 dark:text-slate-300">Genetek</span>. All rights reserved.</p>
+      <p>Engineered by <a href="https://effrensindokencana.com" target="_blank" class="text-teal-500 hover:underline">Effrensindo Kencana</a></p>
+    </div>
   </footer>
 
+  <!-- App Script Logic -->
   <script>
-    (function() {
-      const slides = document.querySelectorAll('.slide');
-      const prevBtn = document.querySelector('.nav-btn.prev');
-      const nextBtn = document.querySelector('.nav-btn.next');
-      const slideshowContainer = document.querySelector('.slideshow-container');
-      const slideDotsContainer = document.querySelector('.slide-dots'); // Get the dots container
-      let currentIndex = 0;
-      let slideInterval = null;
-      const slideCount = slides.length;
-      const autoSlideDelay = 5000; // 5 seconds
+    // 1. Swiper Slider Initialization
+    const swiper = new Swiper('.mainSwiper', {
+      loop: true,
+      autoplay: { delay: 4500, disableOnInteraction: false },
+      pagination: { el: '.swiper-pagination', clickable: true },
+      effect: 'fade',
+      fadeEffect: { crossFade: true }
+    });
 
-      // Function to create and update dots
-      function updateDots() {
-        slideDotsContainer.innerHTML = ''; // Clear existing dots
-        slides.forEach((_, i) => {
-          const dot = document.createElement('span');
-          dot.classList.add('dot');
-          if (i === currentIndex) {
-            dot.classList.add('active');
-          }
-          dot.addEventListener('click', () => {
-            showSlide(i);
-            resetAutoSlide();
-          });
-          slideDotsContainer.appendChild(dot);
-        });
+    // 2. Realtime Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('liveClock').textContent = now.toLocaleTimeString('en-US', { hour12: true });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 3. Theme Toggle (Dark / Light)
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('themeIcon');
+      
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        themeIcon.className = 'fas fa-sun text-sm';
+        localStorage.setItem('theme', 'light');
+        showToast('Switched to Light Mode ☀️');
+      } else {
+        html.classList.add('dark');
+        themeIcon.className = 'fas fa-moon text-sm';
+        localStorage.setItem('theme', 'dark');
+        showToast('Switched to Dark Mode 🌙');
       }
+    }
 
-      function showSlide(index) {
-        slides.forEach((slide, i) => {
-          if (i === index) {
-            slide.classList.add('active');
-            slide.style.opacity = '1';
-            slide.style.transform = 'scale(1) rotateY(0deg)';
-          } else {
-            slide.classList.remove('active');
-            slide.style.opacity = '0';
-            slide.style.transform = 'scale(0.95) rotateY(5deg)';
-          }
-        });
-        currentIndex = index;
-        updateDots(); // Update dots after slide change
+    // 4. View Toggle (Grid / List)
+    let isGridView = true;
+    function toggleLayoutView() {
+      const container = document.getElementById('appsContainer');
+      const viewIcon = document.getElementById('viewIcon');
+
+      isGridView = !isGridView;
+      if (isGridView) {
+        container.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5";
+        viewIcon.className = "fas fa-th-large text-sm";
+        showToast('Tampilan Grid');
+      } else {
+        container.className = "flex flex-col space-y-3";
+        viewIcon.className = "fas fa-list text-sm";
+        showToast('Tampilan List');
       }
+    }
 
-      function nextSlide() {
-        const nextIndex = (currentIndex + 1) % slideCount;
-        showSlide(nextIndex);
-      }
+    // 5. Toast Notification System
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = "pointer-events-auto bg-slate-900 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl border border-slate-800 flex items-center space-x-2 transition-all transform translate-y-4 opacity-0";
+      toast.innerHTML = `<i class="fas fa-info-circle text-teal-400"></i><span>${message}</span>`;
+      
+      container.appendChild(toast);
 
-      function prevSlide() {
-        const prevIndex = (currentIndex - 1 + slideCount) % slideCount;
-        showSlide(prevIndex);
-      }
+      setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      }, 50);
 
-      function resetAutoSlide() {
-        clearInterval(slideInterval);
-        if (slideCount > 1) { // Only auto-slide if there's more than 1 slide
-            slideInterval = setInterval(nextSlide, autoSlideDelay);
-        }
-      }
-
-      // Event listeners for manual navigation (re-enabled)
-      prevBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        prevSlide();
-        resetAutoSlide();
-      });
-
-      nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        nextSlide();
-        resetAutoSlide();
-      });
-
-      // Start auto slideshow and initialize dots
-      showSlide(currentIndex);
-      resetAutoSlide();
-
-      // App card click handler with smooth feedback
-      document.addEventListener('DOMContentLoaded', () => {
-        const appCards = document.querySelectorAll('.app-card');
-
-        appCards.forEach(card => {
-          const url = card.getAttribute('data-url');
-          const cardInner = card.querySelector('.card-inner');
-
-          // 3D Tilt Effect (JavaScript for mouse position)
-          card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = ((y - centerY) / centerY) * varToNum('--card-tilt-degree');
-            const rotateY = ((x - centerX) / centerX) * -varToNum('--card-tilt-degree');
-
-            cardInner.style.transform = `translateY(-10px) scale(1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-          });
-
-          card.addEventListener('mouseleave', () => {
-            cardInner.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)';
-          });
-
-          card.addEventListener('click', e => {
-            e.preventDefault();
-            if (url) {
-              cardInner.style.transform = 'translateY(-5px) scale(0.98)';
-              setTimeout(() => {
-                window.open(url, '_blank');
-              }, 200);
-            }
-          });
-
-          // Keyboard accessibility for cards
-          card.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              card.click();
-            }
-          });
-        });
-      });
-
-      // Helper function to convert CSS variable to number
-      function varToNum(varName) {
-        const root = document.documentElement;
-        const style = getComputedStyle(root);
-        const value = style.getPropertyValue(varName).trim();
-        return parseFloat(value);
-      }
-
-      // Optional: Pause auto-slide on hover (enhances user experience)
-      document.addEventListener('DOMContentLoaded', () => {
-        const slideshow = document.querySelector('.slideshow-container');
-        slideshow.addEventListener('mouseenter', () => clearInterval(slideInterval));
-        slideshow.addEventListener('mouseleave', () => resetAutoSlide());
-
-        // Header shadow on scroll
-        const siteHeader = document.querySelector('.site-header');
-        window.addEventListener('scroll', () => {
-          if (window.scrollY > 50) {
-            siteHeader.style.boxShadow = '0 8px 25px var(--shadow-medium)';
-          } else {
-            siteHeader.style.boxShadow = '0 6px 20px var(--shadow-light)';
-          }
-        });
-      });
-
-    })();
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
   </script>
 </body>
 </html>
