@@ -1,552 +1,98 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Mainmenu Genetek</title>
-  <script>(function(){try{var t=localStorage.getItem('theme');var h=document.documentElement;if(t==='light')h.classList.remove('dark');else if(t==='dark')h.classList.add('dark');}catch(e){}})();</script>
+  <script>try{var t=localStorage.getItem("gt-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <style>
-    /* ===== Opsi 3 — Orbit Launcher ===== */
-    :root{
-      --bg:#EDEFFA; --bg-2:#DEE3F6; --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.9); --line:rgba(20,24,60,.10);
-      --ink:#141838; --muted:#5B6287; --teal:#0EA597; --violet:#6B5BE0; --node:20,24,60;
-      --shadow:0 20px 50px -24px rgba(40,44,110,.35);
-      --display:'Unbounded','Segoe UI',system-ui,sans-serif;
-      --body:'Manrope','Segoe UI',system-ui,sans-serif;
-    }
-    .dark{
-      --bg:#090D20; --bg-2:#10163A; --glass:rgba(255,255,255,.05); --glass-2:rgba(255,255,255,.08); --line:rgba(255,255,255,.09);
-      --ink:#EEF0FF; --muted:#99A0C8; --teal:#2BD9CA; --violet:#8F80FA; --node:200,210,255;
-      --shadow:0 24px 60px -24px rgba(0,0,0,.8);
-    }
-    *,*::before,*::after{box-sizing:border-box}
-    html{background:var(--bg)}
-    body{margin:0;min-height:100vh;font-family:var(--body);color:var(--ink)}
-    .bgfx{position:fixed;inset:0;z-index:-2;pointer-events:none;
-      background:radial-gradient(1000px 600px at 15% -10%,color-mix(in srgb,var(--violet) 22%,transparent),transparent 70%),
-                 radial-gradient(900px 600px at 100% 30%,color-mix(in srgb,var(--teal) 16%,transparent),transparent 70%),
-                 linear-gradient(180deg,var(--bg),var(--bg-2))}
-    a{color:inherit}
-    button{font:inherit;color:inherit}
-    :focus-visible{outline:2px solid var(--teal);outline-offset:3px;border-radius:14px}
-    #net{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
-    .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
-
-    /* Header */
-    .topbar{position:sticky;top:0;z-index:50;padding-top:env(safe-area-inset-top,0px);
-      background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 90%,transparent),color-mix(in srgb,var(--bg) 0%,transparent));}
-    .bar{height:76px;display:flex;align-items:center;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
-    .logo{display:block;line-height:0}
-    .logo img{width:200px;height:auto;display:block}
-    .tools{display:flex;gap:8px}
-    .tool{width:46px;height:46px;border-radius:16px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      cursor:pointer;display:grid;place-items:center;transition:transform .3s cubic-bezier(.3,1.6,.5,1),border-color .3s,color .3s}
-    .tool:hover{transform:translateY(-2px);border-color:var(--teal);color:var(--teal)}
-    .tool:active{transform:scale(.9)}
-
-    /* Jam besar */
-    .intro{text-align:center;padding:18px 0 8px}
-    .clock{display:inline-flex;flex-direction:column;align-items:center;gap:8px}
-    .clock-time{font-family:var(--display);font-weight:500;font-size:clamp(38px,7vw,78px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;
-      background:linear-gradient(180deg,var(--ink) 30%,color-mix(in srgb,var(--ink) 45%,transparent));-webkit-background-clip:text;background-clip:text;color:transparent;
-      animation:fadeDown .9s cubic-bezier(.2,.9,.2,1) both}
-    .clock-meta{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;color:var(--muted);animation:fadeDown .9s .1s cubic-bezier(.2,.9,.2,1) both}
-    .sec-ring{height:3px;width:min(260px,60vw);border-radius:3px;background:var(--line);overflow:hidden}
-    .sec-ring span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--violet));transition:width 1s linear}
-
-    /* Carousel 3D */
-    .orbit{position:relative;margin-top:26px;height:clamp(380px,40vw,450px);perspective:1600px;touch-action:pan-y;user-select:none;-webkit-user-select:none;
-      overflow:hidden;outline:none;animation:fadeUp 1s .2s cubic-bezier(.2,.9,.2,1) both}
-    .orbit:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;border-radius:30px}
-    .card{position:absolute;top:10px;left:50%;width:min(780px,84vw);height:calc(100% - 20px);margin-left:calc(min(780px,84vw) / -2);
-      border-radius:28px;overflow:hidden;background:#0B1030;cursor:pointer;
-      transition:transform .9s cubic-bezier(.2,.9,.2,1),opacity .7s,filter .7s;will-change:transform}
-    .card.is-active{cursor:default;box-shadow:0 30px 80px -30px rgba(43,217,202,.45),0 30px 80px -30px rgba(143,128,250,.5)}
-    .card::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
-      background:linear-gradient(135deg,rgba(43,217,202,.9),rgba(143,128,250,.2) 40%,rgba(143,128,250,.9));
-      -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .6s}
-    .card.is-active::after{opacity:1}
-    .card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5}
-    .card .shade{position:absolute;inset:0;background:linear-gradient(200deg,rgba(9,13,32,.1),rgba(9,13,32,.55) 45%,rgba(9,13,32,.95))}
-    .card-copy{position:absolute;left:0;right:0;bottom:0;padding:clamp(22px,4vw,44px);color:#fff}
-    .card-copy>*{opacity:0;transform:translateY(18px);transition:opacity .5s,transform .7s cubic-bezier(.2,.9,.2,1)}
-    .card.is-active .card-copy>*{opacity:1;transform:none}
-    .card.is-active .card-copy>:nth-child(2){transition-delay:.08s}
-    .card.is-active .card-copy>:nth-child(3){transition-delay:.16s}
-    .card.is-active .card-copy>:nth-child(4){transition-delay:.24s}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:700;font-size:12.5px;border:1px solid;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-    .pill.feature{color:#7FF0E5;border-color:rgba(43,217,202,.4);background:rgba(43,217,202,.12)}
-    .pill.cert{color:#D7CCFF;border-color:rgba(167,139,250,.45);background:rgba(143,128,250,.16)}
-    .card-copy h2{font-family:var(--display);font-weight:700;font-size:clamp(24px,3.6vw,42px);line-height:1.08;letter-spacing:-.02em;margin:14px 0 10px}
-    .card-copy p{margin:0 0 22px;font-size:clamp(14px,1.3vw,16px);line-height:1.6;color:rgba(230,233,255,.78);max-width:52ch}
-    .cta{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:16px;text-decoration:none;color:#fff;
-      font-weight:800;font-size:14px;transition:transform .3s cubic-bezier(.3,1.6,.5,1),box-shadow .3s}
-    .cta.feature{background:linear-gradient(135deg,#14B8A6,#059669);box-shadow:0 12px 30px -10px rgba(20,184,166,.7)}
-    .cta.cert{background:linear-gradient(135deg,#8B5CF6,#DB2777);box-shadow:0 12px 30px -10px rgba(168,85,247,.7)}
-    .cta:hover{transform:translateY(-2px) scale(1.02)}
-    .cta i{font-size:12px;transition:transform .3s}
-    .cta:hover i.fa-arrow-right{transform:translateX(4px)}
-    .cta:hover i.fa-download{animation:bob .6s ease-in-out infinite alternate}
-    @keyframes bob{to{transform:translateY(3px)}}
-    .cta:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:16px}
-
-    .orbit-ctrl{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:14px}
-    .nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-      cursor:pointer;display:grid;place-items:center;transition:transform .3s cubic-bezier(.3,1.6,.5,1),border-color .3s,color .3s}
-    .nav:hover{border-color:var(--teal);color:var(--teal);transform:scale(1.08)}
-    .dots{display:flex;gap:8px;align-items:center}
-    .dot{width:10px;height:10px;padding:0;border:0;border-radius:999px;background:color-mix(in srgb,var(--ink) 22%,transparent);cursor:pointer;overflow:hidden;
-      transition:width .5s cubic-bezier(.2,.9,.2,1),background .3s}
-    .dot span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--violet))}
-    .dot.is-active{width:46px}
-
-    /* Menu aplikasi (gaya Bento — Opsi 2) */
-    :root{--surface:#FFFFFF;--surface-2:#E7EAF7;--shadow-lg:0 2px 4px rgba(40,44,110,.06),0 30px 60px -20px rgba(40,44,110,.35)}
-    .dark{--surface:#131937;--surface-2:#1C2348;--shadow-lg:0 2px 4px rgba(0,0,0,.3),0 30px 60px -20px rgba(0,0,0,.8)}
-    .apps{margin-top:64px}
-    .sec-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
-    .sec-head h3{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(24px,3vw,34px);letter-spacing:-.02em;display:flex;align-items:center;gap:14px}
-    .sec-head h3 i{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:19px;color:#fff;
-      background:linear-gradient(135deg,var(--teal),var(--violet));box-shadow:0 10px 24px -10px var(--violet)}
-    .count{white-space:nowrap;padding:8px 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-weight:700;font-size:13px;color:var(--muted)}
-
-    .apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;perspective:1200px}
-    .app{--rx:0deg;--ry:0deg;position:relative;display:flex;flex-direction:column;border-radius:24px;background:var(--surface);box-shadow:var(--shadow);
-      border:1px solid var(--line);transform:rotateX(var(--rx)) rotateY(var(--ry));transform-style:preserve-3d;
-      transition:transform .5s cubic-bezier(.2,.9,.2,1),box-shadow .4s;
-      animation:rise .8s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--i)*60ms + 550ms)}
-    .app:hover{box-shadow:var(--shadow-lg);transition:transform .12s linear,box-shadow .4s}
-    .app-top{position:relative;height:118px;margin:8px 8px 0;border-radius:18px;overflow:hidden;
-      background:color-mix(in srgb,var(--c) 15%,var(--surface));display:flex;align-items:center;padding:0 18px}
-    .dark .app-top{background:color-mix(in srgb,var(--c) 20%,var(--surface))}
-    .app-top .ghost{position:absolute;right:-14px;bottom:-26px;font-size:112px;color:var(--c);opacity:.16;transform:rotate(-14deg);
-      transition:transform .7s cubic-bezier(.2,.9,.2,1),opacity .4s}
-    .app:hover .ghost{transform:rotate(0) scale(1.12);opacity:.26}
-    .app-ic{position:relative;width:58px;height:58px;border-radius:50%;background:var(--surface);color:var(--c);display:grid;place-items:center;font-size:22px;
-      box-shadow:0 8px 20px -8px color-mix(in srgb,var(--c) 70%,transparent);transform:translateZ(30px);transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
-    .app:hover .app-ic{transform:translateZ(40px) scale(1.1)}
-    .app-body{padding:18px 20px 6px;flex:1}
-    .app-body h4{margin:0 0 6px;font-family:var(--display);font-weight:500;font-size:16.5px;line-height:1.2;letter-spacing:-.01em}
-    .app-body p{margin:0;font-size:14px;line-height:1.55;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .app-go{margin:14px 20px 20px;display:flex;align-items:center;justify-content:space-between;padding:6px 6px 6px 16px;border-radius:999px;
-      background:var(--surface-2);text-decoration:none;font-weight:700;font-size:14px;transition:background .3s,color .3s}
-    .app-go::after{content:"";position:absolute;inset:0;border-radius:24px}
-    .app-go .ci{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--surface);color:var(--c);font-size:11px;
-      transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
-    .app:hover .app-go{background:var(--c);color:#fff}
-    .app:hover .app-go .ci{transform:rotate(-45deg)}
-    .app-go:focus-visible{outline:none}
-    .app:has(.app-go:focus-visible){outline:2px solid var(--teal);outline-offset:3px}
-
-    .apps-grid.is-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:12px}
-    .is-list .app{flex-direction:row;align-items:center;border-radius:22px}
-    .is-list .app-top{width:76px;height:76px;flex:none;margin:8px;padding:0;justify-content:center}
-    .is-list .app-top .ghost{display:none}
-    .is-list .app-ic{width:48px;height:48px;font-size:18px}
-    .is-list .app-body{padding:8px 4px;min-width:0}
-    .is-list .app-body h4{font-size:15.5px;margin-bottom:2px}
-    .is-list .app-body p{-webkit-line-clamp:1;font-size:13.5px}
-    .is-list .app-go{margin:0 14px 0 8px;flex:none;gap:10px}
-    @keyframes rise{from{transform:translateY(30px) rotateX(10deg);opacity:0}}
-    footer{margin-top:84px;padding:28px 20px 34px;text-align:center;font-size:13px;color:var(--muted);line-height:1.8;border-top:1px solid var(--line)}
-    footer p{margin:0}
-    footer b{color:var(--ink)}
-    footer a{color:var(--teal);font-weight:700;text-decoration:none}
-    footer a:hover{text-decoration:underline}
-
-    #toastContainer{position:fixed;right:20px;top:calc(86px + env(safe-area-inset-top,0px));z-index:60;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-    .toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:16px;background:var(--glass-2);border:1px solid var(--line);
-      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow);font-weight:700;font-size:13.5px;
-      transform:translateY(-14px) scale(.95);opacity:0;transition:transform .45s cubic-bezier(.3,1.5,.5,1),opacity .3s}
-    .toast i{color:var(--teal)}
-    .toast.show{transform:none;opacity:1}
-    .toast.hide{transform:translateX(30px);opacity:0}
-
-    @keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}}
-    @keyframes pop{from{opacity:0;transform:scale(.85) translateY(16px)}}
-    ::view-transition-group(*){animation-duration:.5s;animation-timing-function:cubic-bezier(.2,.9,.2,1)}
-    .vt-theme::view-transition-old(root),.vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
-    .vt-theme .app{view-transition-name:none!important}
-
-    @media (max-width:640px){
-      .bar{height:66px}
-      .tool{width:42px;height:42px;border-radius:14px}
-      .orbit{height:420px}
-      .sec-head h3{font-size:22px;gap:10px}.sec-head h3 i{width:38px;height:38px;font-size:16px}
-      .app-top{height:96px}
-      .is-list .app-go span{display:none}
-      .is-list .app-go{padding:6px}
-      #toastContainer{left:20px;right:20px;align-items:center}
-    }
-    @media (prefers-reduced-motion:reduce){
-      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
-    }
-  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+  <link rel="stylesheet" href="/assets/app.css">
 </head>
-<body>
-  <div class="bgfx" aria-hidden="true"></div>
-  <canvas id="net" aria-hidden="true"></canvas>
-
-  <header class="topbar">
-    <div class="wrap bar">
-      <a class="brand" href="#" aria-label="Genetek">
-        <span class="logo"><img src="https://i.imgur.com/XjT4AO0.png" alt="Genetek Logo"></span>
-      </a>
-      <div class="tools">
-        <button id="viewToggle" class="tool" type="button" onclick="toggleLayoutView()" title="Ganti Tampilan Grid/List" aria-label="Ganti tampilan grid/list"><i class="fas fa-th-large" id="viewIcon"></i></button>
-        <button id="themeToggle" class="tool" type="button" onclick="toggleTheme(event)" title="Ganti Mode Gelap/Terang" aria-label="Ganti mode gelap/terang"><i class="fas fa-moon" id="themeIcon"></i></button>
-      </div>
+<body data-mode="public">
+<div class="bgfx" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="tbar">
+    <a class="brand" id="brand" href="/" aria-label="Genetek">
+      <span class="logo"><img src="https://i.imgur.com/XjT4AO0.png" alt="Genetek" onerror="document.getElementById('brand').classList.add('nologo')"></span>
+      <span class="wm"><span class="mk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M20 8.5A8.5 8.5 0 1 0 20.5 13H13"/></svg></span><span><b>GENETEK</b><small>Mainmenu</small></span></span>
+    </a>
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="gsearch" type="search" placeholder="Cari aplikasi, divisi, atau karyawan…" autocomplete="off" aria-label="Cari aplikasi, divisi, atau karyawan">
+      <div class="sres" id="gres" hidden></div>
     </div>
-  </header>
+    <div class="tools">
+      <div class="clk"><b id="clockTime">--.--</b><span id="clockDay">—</span><i class="sun" id="sun"></i></div>
+      <button class="tool" id="themeBtn" type="button" aria-label="Ganti mode gelap atau terang" title="Ganti mode gelap/terang"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+    </div>
+  </div>
+</header>
 
-  <main class="wrap">
-    <section class="intro">
-      <div class="clock">
-        <div class="clock-time" id="liveClock">00:00:00 AM</div>
-        <div class="clock-meta"><span id="liveDate"></span></div>
-        <div class="sec-ring" aria-hidden="true"><span id="secBar"></span></div>
+<div class="wrap" id="top">
+  <section class="hero">
+    <div><h1>Selamat datang di <em>kantor Genetek</em></h1><p>Klik divisi di bawah, atau klik karyawan di gedung, untuk membuka aplikasi yang dipakai divisi tersebut.</p></div>
+    <span class="mode" id="mode" hidden>Menghubungkan…</span>
+  </section>
+
+  <nav class="divbar" id="divbar" aria-label="Divisi dan aplikasinya"></nav>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="main solo">
+    <div class="stage" id="stage">
+      <canvas id="cv" aria-label="Gedung kantor 4 lantai. Klik karyawan atau divisi untuk membuka aplikasinya."></canvas>
+      <div class="hud tl">
+        <div class="seg" role="group" aria-label="Lantai" id="floorSeg">
+          <button data-view="out" aria-pressed="false">Gedung</button>
+          <button data-view="0" aria-pressed="true">Lt 1</button>
+          <button data-view="1" aria-pressed="false">Lt 2</button>
+          <button data-view="2" aria-pressed="false">Lt 3</button>
+          <button data-view="3" aria-pressed="false">Lt 4</button>
+        </div>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Label di atas kepala" id="labelSeg">
+          <span class="lbl">Label</span>
+          <button data-lab="full" aria-pressed="true">Lengkap</button>
+          <button data-lab="div" aria-pressed="false">Divisi</button>
+          <button data-lab="off" aria-pressed="false">Mati</button>
+        </div>
+        <button class="hudbtn" id="plaqBtn" aria-pressed="true">Nama ruang</button>
       </div>
-    </section>
-
-    <section aria-label="Pengumuman">
-      <div class="orbit" id="orbit" tabindex="0" aria-roledescription="carousel"></div>
-      <div class="orbit-ctrl">
-        <button class="nav" type="button" id="prevBtn" aria-label="Slide sebelumnya"><i class="fas fa-chevron-left"></i></button>
-        <div class="dots" id="dots"></div>
-        <button class="nav" type="button" id="nextBtn" aria-label="Slide berikutnya"><i class="fas fa-chevron-right"></i></button>
+      <div class="follow" id="follow" hidden></div>
+      <div class="hub" id="hub" hidden></div>
+      <div class="hud bl">
+        <button class="hudbtn" id="zin" aria-label="Perbesar">＋</button>
+        <button class="hudbtn" id="zout" aria-label="Perkecil">－</button>
+        <button class="hudbtn" id="zfit">Pusatkan</button>
+        <span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Waktu" id="daySeg"><button data-day="auto" aria-pressed="true">Otomatis</button><button data-day="day" aria-pressed="false">Siang</button><button data-day="night" aria-pressed="false">Malam</button></div>
       </div>
-    </section>
+      <div class="tip" id="tip" hidden></div>
+    </div>
 
-    <section class="apps">
-      <div class="sec-head">
-        <h3><i class="fas fa-cubes"></i><span>Aplikasi Utama</span></h3>
-        <span class="count" id="appCount">10 Aplikasi</span>
-      </div>
-      <div id="appsContainer" class="apps-grid"></div>
-    </section>
-  </main>
+  </div>
 
-  <div id="toastContainer" aria-live="polite"></div>
+  <section class="apps" id="apps">
+    <div class="sec-head"><h2><span class="i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg></span>Aplikasi Utama</h2><span class="count" id="appCount">—</span></div>
+    <div class="afilter" id="afilter" role="group" aria-label="Saring aplikasi per divisi"></div>
+    <div class="apps-grid" id="appsGrid"></div>
+  </section>
+
+  <section class="apps" aria-label="Info dan sertifikat">
+    <div class="sec-head"><h2><span class="i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg></span>Info & Sertifikat</h2></div>
+    <div class="info" id="info"></div>
+  </section>
 
   <footer>
     <p>&copy; 2026 <b>Genetek</b>. All rights reserved.</p>
     <p>Engineered by <a href="https://effrensindokencana.com" target="_blank" rel="noopener">Effrensindo Kencana</a></p>
   </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
 
-  <script>
-  /* ===================================================================
-     DATA KONTEN — ubah isi slide & aplikasi cukup di sini
-     =================================================================== */
-  const SLIDES = [
-    { img: 'https://i.imgur.com/AYL5RTd.png', alt: 'Email Signature', tag: 'Feature Highlight', tone: 'feature',
-      title: 'Email Signature Generator',
-      desc: 'Format standar tanda tangan email resmi Genetek. Buat profil profesional Anda secara otomatis hanya dalam beberapa klik.',
-      cta: 'Buat Signature', icon: 'fa-arrow-right', href: 'https://forms.gle/PrdDHmJugaxzD4mW9' },
-    { img: 'https://i.imgur.com/crcDAJA.png', alt: 'ISO 14001', tag: 'Certification', tone: 'cert',
-      title: 'ISO 14001:2015 Accredited', desc: 'Environmental Management Systems',
-      cta: 'Unduh Sertifikat PDF', icon: 'fa-download',
-      href: 'https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2014%20IA.pdf' },
-    { img: 'https://i.imgur.com/P4fLT1j.png', alt: 'ISO 9001', tag: 'Certification', tone: 'cert',
-      title: 'ISO 9001:2015 Accredited', desc: 'Quality Management Systems',
-      cta: 'Unduh Sertifikat PDF', icon: 'fa-download',
-      href: 'https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%209K%20IA.pdf' },
-    { img: 'https://i.imgur.com/BPEP5C0.png', alt: 'ISO 45001', tag: 'Certification', tone: 'cert',
-      title: 'ISO 45001:2018 Accredited', desc: 'Health And Safety Management Systems',
-      cta: 'Unduh Sertifikat PDF', icon: 'fa-download',
-      href: 'https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2045K%20IA.pdf' }
-  ];
-
-  const APPS = [
-    { title: 'Guides & Manuals', icon: 'fa-book-open', color: '#3b82f6', href: 'https://panduan.genetek.co.id',
-      desc: 'Akses cepat ke panduan pengguna dan manual operasional lengkap.' },
-    { title: 'Office Supply (ATK)', icon: 'fa-boxes-packing', color: '#10b981', href: 'https://orderatk.genetek.co.id',
-      desc: 'Pengelolaan dan permintaan alat tulis kantor secara terstruktur.' },
-    { title: 'General Affair', icon: 'fa-building-user', color: '#f59e0b', href: 'https://ga.genetek.co.id',
-      desc: 'Layanan fasilitas umum dan pengelolaan kebutuhan umum kantor.' },
-    { title: 'Secure Gear (APD)', icon: 'fa-shield-halved', color: '#f97316', href: 'https://formapd.genetek.co.id',
-      desc: 'Manajemen peminjaman Alat Pelindung Diri & standar K3.' },
-    { title: 'Pipeline Sales Manager', icon: 'fa-chart-line', color: '#a855f7', href: 'https://pipelines.genetek.co.id',
-      desc: 'Monitoring dan manajemen proyek peluang sales secara real-time.' },
-    { title: 'Work Order', icon: 'fa-list-check', color: '#06b6d4', href: 'https://workorder.genetek.co.id',
-      desc: 'Sistem tiket instruksi kerja dan penugasan maintenance teknis.' },
-    { title: 'Engineering Monitor', icon: 'fa-microchip', color: '#6366f1', href: 'https://monitoringeng.genetek.co.id',
-      desc: 'Monitoring teknis operasi engineering & keandalan alat.' },
-    { title: 'Supply Chain App', icon: 'fa-truck-ramp-box', color: '#0ea5e9', href: 'https://supplychain.genetek.co.id',
-      desc: 'Pelacakan arus kargo, rantai pasok, dan stok gudang.' },
-    { title: 'Medical Claim', icon: 'fa-heart-pulse', color: '#f43f5e', href: 'https://medicalclaim.genetek.co.id',
-      desc: 'Pengajuan penggantian klaim medis dan biaya kesehatan.' },
-    { title: 'Monitoring Finance', icon: 'fa-chart-pie', color: '#14b8a6', href: 'https://monfinance.genetek.co.id',
-      desc: 'Pemantauan arus kas dan pelaporan keuangan terpadu.' }
-  ];
-
-  /* ===================================================================
-     UTILITAS INTI (jam, tema, tampilan grid/list, toast, slider)
-     =================================================================== */
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const store = {
-    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage tidak tersedia */ } }
-  };
-
-  // Jam realtime
-  function startClock(extra) {
-    const el = $('#liveClock');
-    const tick = () => {
-      const now = new Date();
-      el.textContent = now.toLocaleTimeString('en-US', { hour12: true });
-      if (extra) extra(now);
-    };
-    tick();
-    setInterval(tick, 1000);
-  }
-
-  // Toast
-  function showToast(message, icon = 'fa-circle-info') {
-    const box = $('#toastContainer');
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.setAttribute('role', 'status');
-    t.innerHTML = `<i class="fas ${icon}"></i><span>${esc(message)}</span>`;
-    box.appendChild(t);
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-    setTimeout(() => {
-      t.classList.remove('show');
-      t.classList.add('hide');
-      setTimeout(() => t.remove(), 400);
-    }, 2500);
-  }
-
-  // Tema gelap / terang (tersimpan di localStorage)
-  function syncThemeIcon() {
-    const dark = document.documentElement.classList.contains('dark');
-    $('#themeIcon').className = 'fas ' + (dark ? 'fa-moon' : 'fa-sun');
-    $('#themeToggle').setAttribute('aria-pressed', String(dark));
-  }
-  let themeTransition = null; // desain bisa memasang efek transisi sendiri
-  function toggleTheme(ev) {
-    const html = document.documentElement;
-    const toDark = !html.classList.contains('dark');
-    const apply = () => {
-      html.classList.toggle('dark', toDark);
-      store.set('theme', toDark ? 'dark' : 'light');
-      syncThemeIcon();
-    };
-    if (themeTransition && !reduceMotion) themeTransition(apply, ev); else apply();
-    showToast(toDark ? 'Switched to Dark Mode 🌙' : 'Switched to Light Mode ☀️', toDark ? 'fa-moon' : 'fa-sun');
-  }
-
-  // Tampilan grid / list (tersimpan di localStorage)
-  let isGridView = store.get('appView') !== 'list';
-  function applyView() {
-    $('#appsContainer').classList.toggle('is-list', !isGridView);
-    $('#viewIcon').className = 'fas ' + (isGridView ? 'fa-th-large' : 'fa-list');
-    $('#viewToggle').setAttribute('aria-pressed', String(!isGridView));
-  }
-  function toggleLayoutView() {
-    isGridView = !isGridView;
-    store.set('appView', isGridView ? 'grid' : 'list');
-    if (document.startViewTransition && !reduceMotion) document.startViewTransition(applyView);
-    else applyView();
-    showToast(isGridView ? 'Tampilan Grid' : 'Tampilan List', isGridView ? 'fa-th-large' : 'fa-list');
-  }
-
-  // Slider: autoplay 4.5 detik, jeda saat kursor di atasnya, swipe, keyboard
-  function createSlider({ root, count, delay = 4500, onChange, onProgress }) {
-    let index = -1, elapsed = 0, last = performance.now(), hover = false, focus = false, dragging = false;
-    const go = i => {
-      const prev = index;
-      index = ((i % count) + count) % count;
-      elapsed = 0;
-      if (index !== prev) onChange(index, prev);
-    };
-    const frame = t => {
-      const dt = Math.min(t - last, 100); last = t;
-      if (!hover && !focus && !dragging && !document.hidden) {
-        elapsed += dt;
-        if (elapsed >= delay) go(index + 1);
-      }
-      if (onProgress) onProgress(Math.min(elapsed / delay, 1), index);
-      requestAnimationFrame(frame);
-    };
-    root.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') hover = true; });
-    root.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hover = false; });
-    root.addEventListener('focusin', () => { focus = true; });
-    root.addEventListener('focusout', e => { if (!root.contains(e.relatedTarget)) focus = false; });
-    root.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight') { go(index + 1); e.preventDefault(); }
-      if (e.key === 'ArrowLeft') { go(index - 1); e.preventDefault(); }
-    });
-    // Swipe / drag
-    let x0 = 0, y0 = 0, moved = false;
-    root.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      x0 = e.clientX; y0 = e.clientY; dragging = true; moved = false;
-    });
-    root.addEventListener('pointermove', e => {
-      if (dragging && Math.abs(e.clientX - x0) > 8) moved = true;
-    });
-    const end = e => {
-      if (!dragging) return;
-      dragging = false;
-      const dx = e.clientX - x0, dy = e.clientY - y0;
-      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(index + (dx < 0 ? 1 : -1));
-    };
-    root.addEventListener('pointerup', end);
-    root.addEventListener('pointercancel', () => { dragging = false; });
-    // cegah link ikut terbuka setelah swipe
-    root.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
-    root.addEventListener('dragstart', e => e.preventDefault());
-
-    go(0);
-    requestAnimationFrame(frame);
-    return { go, next: () => go(index + 1), prev: () => go(index - 1), get index() { return index; } };
-  }
-
-  function updateAppCount() { const c = $('#appCount'); if (c) c.textContent = APPS.length + ' Aplikasi'; }
-
-
-  /* ===== Render: Opsi 3 ===== */
-  $('#orbit').innerHTML = SLIDES.map((s, i) => `
-    <article class="card" role="group" aria-roledescription="slide" aria-label="${i + 1} dari ${SLIDES.length}">
-      <img src="${s.img}" alt="${esc(s.alt)}" draggable="false">
-      <div class="shade"></div>
-      <div class="card-copy">
-        <span class="pill ${s.tone}"><i class="fas ${s.tone === 'cert' ? 'fa-award' : 'fa-bolt'}"></i>${esc(s.tag)}</span>
-        <h2>${esc(s.title)}</h2>
-        <p>${esc(s.desc)}</p>
-        <a class="cta ${s.tone}" href="${s.href}" target="_blank" rel="noopener" draggable="false"><span>${esc(s.cta)}</span><i class="fas ${s.icon}"></i></a>
-      </div>
-    </article>`).join('');
-
-  $('#dots').innerHTML = SLIDES.map((s, i) => `<button class="dot" type="button" aria-label="Ke slide ${i + 1}"><span></span></button>`).join('');
-
-  $('#appsContainer').innerHTML = APPS.map((a, i) => `
-    <article class="app" style="--c:${a.color};--i:${i};view-transition-name:app-${i}">
-      <div class="app-top"><i class="fas ${a.icon} ghost" aria-hidden="true"></i><div class="app-ic"><i class="fas ${a.icon}"></i></div></div>
-      <div class="app-body"><h4>${esc(a.title)}</h4><p>${esc(a.desc)}</p></div>
-      <a class="app-go" href="${a.href}" target="_blank" rel="noopener" aria-label="Buka Aplikasi ${esc(a.title)}"><span>Buka Aplikasi</span><span class="ci"><i class="fas fa-arrow-right"></i></span></a>
-    </article>`).join('');
-
-  // Efek tilt 3D mengikuti kursor (hanya mouse, tidak di mode list)
-  if (!reduceMotion) $$('.app').forEach(card => {
-    card.addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse' || !isGridView) return;
-      const r = card.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-      card.style.setProperty('--ry', (x * 10) + 'deg');
-      card.style.setProperty('--rx', (-y * 10) + 'deg');
-    });
-    card.addEventListener('pointerleave', () => { card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg'); });
-  });
-
-  // Transisi tema: lingkaran membesar dari tombol tema
-  themeTransition = (apply) => {
-    if (!document.startViewTransition) return apply();
-    const b = $('#themeToggle').getBoundingClientRect();
-    const x = b.left + b.width / 2, y = b.top + b.height / 2;
-    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    const html = document.documentElement;
-    html.classList.add('vt-theme');
-    const vt = document.startViewTransition(apply);
-    vt.ready.then(() => html.animate(
-      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
-      { duration: 700, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' }
-    )).catch(() => {});
-    vt.finished.finally(() => html.classList.remove('vt-theme'));
-  };
-
-  // Carousel 3D
-  const cards = $$('.card'), dots = $$('.dot');
-  const n = SLIDES.length;
-  const rel = (k, i) => { let d = k - i; if (d > n / 2) d -= n; if (d < -n / 2) d += n; return d; };
-  function layout(i) {
-    const narrow = innerWidth < 640;
-    cards.forEach((el, k) => {
-      const d = rel(k, i), a = Math.abs(d);
-      const x = d * (narrow ? 72 : 58), s = 1 - Math.min(a, 2) * .14, rot = -d * (narrow ? 18 : 26);
-      el.style.transform = `translateX(${x}%) translateZ(${-a * 120}px) rotateY(${rot}deg) scale(${s})`;
-      el.style.opacity = a > 1.5 ? 0 : (a ? .55 : 1);
-      el.style.filter = a ? 'saturate(.6) brightness(.75)' : 'none';
-      el.style.zIndex = 10 - a;
-      el.style.pointerEvents = a > 1.5 ? 'none' : 'auto';
-    });
-  }
-  const slider = createSlider({
-    root: $('#orbit'),
-    count: n,
-    onChange(i) {
-      cards.forEach((el, k) => {
-        const on = k === i;
-        el.classList.toggle('is-active', on);
-        el.setAttribute('aria-hidden', String(!on));
-        const a = el.querySelector('.cta'); if (on) a.removeAttribute('tabindex'); else a.setAttribute('tabindex', '-1');
-      });
-      dots.forEach((el, k) => { el.classList.toggle('is-active', k === i); el.setAttribute('aria-current', String(k === i)); });
-      layout(i);
-    },
-    onProgress(p, i) { dots.forEach((el, k) => { el.firstChild.style.width = k === i ? (p * 100) + '%' : '0%'; }); }
-  });
-  // klik kartu samping = pindah ke kartu tersebut
-  cards.forEach((el, k) => el.addEventListener('click', e => {
-    if (k !== slider.index) { e.preventDefault(); slider.go(k); }
-  }));
-  dots.forEach((el, k) => el.addEventListener('click', () => slider.go(k)));
-  $('#prevBtn').addEventListener('click', () => slider.prev());
-  $('#nextBtn').addEventListener('click', () => slider.next());
-  addEventListener('resize', () => layout(slider.index));
-
-  // Latar jaringan partikel
-  (function network() {
-    const cv = $('#net'), ctx = cv.getContext('2d');
-    let W, H, dpr, pts = [], mouse = { x: -999, y: -999 };
-    function resize() {
-      dpr = Math.min(devicePixelRatio || 1, 2);
-      W = innerWidth; H = innerHeight;
-      cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(70, Math.round(W * H / 22000));
-      pts = Array.from({ length: count }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3 }));
-    }
-    function draw() {
-      const cs = getComputedStyle(document.documentElement);
-      const node = cs.getPropertyValue('--node').trim(), teal = cs.getPropertyValue('--teal').trim();
-      ctx.clearRect(0, 0, W, H);
-      for (const p of pts) {
-        if (!reduceMotion) { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1; }
-        ctx.fillStyle = `rgba(${node},.35)`; ctx.beginPath(); ctx.arc(p.x, p.y, 1.4, 0, 6.283); ctx.fill();
-      }
-      for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) {
-        const dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y, d = Math.hypot(dx, dy);
-        if (d < 130) { ctx.strokeStyle = `rgba(${node},${(1 - d / 130) * .14})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); }
-      }
-      for (const p of pts) {
-        const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
-        if (d < 170) { ctx.globalAlpha = (1 - d / 170) * .6; ctx.strokeStyle = teal; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke(); ctx.globalAlpha = 1; }
-      }
-      if (!reduceMotion) requestAnimationFrame(draw);
-    }
-    addEventListener('resize', () => { resize(); if (reduceMotion) draw(); });
-    addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; } });
-    resize(); draw();
-  })();
-
-  updateAppCount();
-  applyView();
-  syncThemeIcon();
-  startClock(now => {
-    $('#liveDate').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const bar = $('#secBar'), sec = now.getSeconds();
-    bar.style.transition = sec === 0 ? 'none' : '';
-    bar.style.width = (sec === 0 ? 0 : (sec + 1) / 60 * 100) + '%';
-  });
-  </script>
+  <script type="module" src="/assets/firebase.js"></script>
+  <script src="/assets/app.js" defer></script>
 </body>
 </html>
