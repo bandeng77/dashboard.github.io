@@ -665,7 +665,8 @@ function recWorld(){const pal=PAL();ZF=0;
     g3("cyl",t.r,t.c,8*s,.07*s,8*s,.07*s,"#7a5434");g3("sph",t.r,t.c,26*s,.5*s,13*s,.5*s,g[0]);g3("sph",t.r-.12*s,t.c-.15*s,32*s,.32*s,8*s,.32*s,g[1])}
   for(const car of CARS){const r0=car.r-.38,c0=car.c-.62;prism(r0,c0,.76,1.24,2,8,car.col);prism(r0+.08,c0+.3,.6,.62,10,6,car.col,{left:"#9fd0ea",right:"#86bcd9",top:car.col});
     for(const[a,b]of[[0,.25],[0,1],[.76,.25],[.76,1]])g3("cyl",r0+a,c0+b,3,.11,1.4,.11,"#1d1f22",Math.PI/2)}
-  prism(DD+1.4,11,.3,1.8,0,22,"#3a4450");signL(DD+1.701,11.1,12.7,6,13,"#0f7c72","EFFRENSINDO")}
+  prism(DD+1.4,11,.3,1.8,0,22,"#3a4450");signL(DD+1.701,11.1,12.7,6,13,"#0f7c72","EFFRENSINDO");
+  for(const r of[-3.5,3.5,10.5,17.5]){prism(r-.05,WW+3.05,.1,.1,0,92,"#5a636e");prism(r-.04,WW+3.05,.08,.6,90,3,"#5a636e");g3("sph",r,WW+3.55,88,.12,4,.12,NIGHT?"!#ffe9a8":"#e8eef2");if(NIGHT){STUB.globalAlpha=.16;g3("disc",r,WW+3.6,.3,.9,1,.9,"!#ffe9a8");STUB.globalAlpha=1}}}
 const winCol=(lit,k)=>NIGHT?(lit?"!#ffd77a":"#2d3d55"):(k%3===0?"#a9d6ea":"#8ec6e0");
 function recFacade(nf){const pal=PAL();ZF=0;if(nf<=0)return;const top=FZ(nf);
   prism(0,0,DD,WW,0,top-.6,pal.wall,{left:pal.wall,right:pal.wallR,top:"#98a3ac"});prism(-.02,-.02,DD+.04,WW+.04,0,8,"#6f7a84",{noTop:true});
@@ -776,6 +777,53 @@ function nodeDraws(node,Pm,al,lod,op,tr){if(node.hide||(node.det&&!lod))return;l
   if(node.r[1])W=M4.mul(W,M4.RY(node.r[1]));if(node.r[0])W=M4.mul(W,M4.RX(node.r[0]));if(node.r[2])W=M4.mul(W,M4.RZ(node.r[2]));if(node.k)W=M4.mul(W,M4.S(node.k,node.k,node.k));
   if(node.mesh){const a=(node.a??1)*al;(a<.99?tr:op).push({m:MESH[node.mesh],M:M4.mul(W,M4.S(node.s[0],node.s[1],node.s[2])),c:parseCol(node.col),a})}
   for(const k of node.kids)nodeDraws(k,W,al,lod,op,tr)}
+/* =========================================================
+   SUASANA LUAR GEDUNG: mobil & motor lewat, pejalan kaki, burung, kucing, awan
+   ========================================================= */
+const AMB={};
+function mkCar(col){const r=ND(),L=[],T=[];
+  ADD(r,ND("rb",col,[0,.23,0],[.34,.13,.66]),ND("rb",col,[0,.42,-.06],[.3,.12,.38]),ND("rb","#1d2228",[0,.12,0],[.33,.03,.6]),
+    ND("box","#9fd0ea",[0,.43,.315],[.27,.08,.01]),ND("box","#86bcd9",[0,.43,-.435],[.27,.08,.01]),ND("box","#8ec6e0",[.302,.43,-.06],[.004,.08,.3]),ND("box","#8ec6e0",[-.302,.43,-.06],[.004,.08,.3]));
+  for(const sx of[-1,1])for(const sz of[-1,1])ADD(r,ND("cyl","#1d1f22",[sx*.31,.11,sz*.42],[.11,.05,.11],[0,0,Math.PI/2]));
+  for(const sx of[-1,1]){const h=ND("sphL","#fff6d0",[sx*.22,.25,.655],[.06,.035,.015]),t=ND("sphL","#b42318",[sx*.24,.26,-.655],[.05,.03,.015]);L.push(h);T.push(t);ADD(r,h,t)}
+  r.L=L;r.T=T;return r}
+function mkMotor(col,look){const r=ND(),bike=ND();ADD(r,bike);
+  ADD(bike,ND("rb",col,[0,.3,.02],[.07,.09,.34]),ND("rb","#20242a",[0,.4,-.1],[.075,.03,.17]),ND("box","#30353c",[0,.52,.3],[.17,.012,.012]),ND("box","#30353c",[0,.4,.3],[.012,.12,.012]));
+  for(const z of[-.33,.33])ADD(bike,ND("cyl","#1d1f22",[0,.15,z],[.15,.03,.15],[0,0,Math.PI/2]));
+  const h=ND("sphL","#fff6d0",[0,.44,.37],[.045,.045,.02]);ADD(bike,h);r.L=[h];r.T=[];
+  const rider=buildPerson({_col:"#2f6fd6",gender:"L",_h:4242,look});ADD(rider.j.head,ND("sph",col==="#1f2430"?"#c0392b":"#f2f4f5",[0,.07,-.01],[.31,.3,.31]));rider.p=[0,.08,-.06];r.rider=rider;ADD(r,rider);return r}
+function mkBird(col){const r=ND(),wl=ND(null,0,[-.05,.02,0]),wr=ND(null,0,[.05,.02,0]);
+  ADD(wl,ND("box",col,[-.15,0,0],[.15,.008,.07]));ADD(wr,ND("box",col,[.15,0,0],[.15,.008,.07]));
+  ADD(r,ND("sphL",col,[0,0,0],[.08,.065,.16]),ND("sphL",col,[0,.04,.14],[.055,.055,.055]),ND("box","#e0a030",[0,.035,.2],[.012,.01,.03]),ND("box",col,[0,.005,-.19],[.05,.006,.06]),wl,wr);r.wl=wl;r.wr=wr;return r}
+function mkCat(col,dark){const r=ND(),legs=[],tail=ND(null,0,[0,.2,-.18]);
+  ADD(r,ND("soft",col,[0,.17,0],[.085,.08,.19]),ND("sph",col,[0,.28,.19],[.085,.078,.078]),ND("rb",col,[-.05,.36,.19],[.024,.04,.014],[0,0,.2]),ND("rb",col,[.05,.36,.19],[.024,.04,.014],[0,0,-.2]),
+    ND("sphL","#2a2a2a",[-.03,.29,.262],[.012,.016,.006]),ND("sphL","#2a2a2a",[.03,.29,.262],[.012,.016,.006]),ND("sphL","#e8a0a0",[0,.265,.268],[.01,.008,.006]),ND("soft",dark,[0,.24,.02],[.07,.02,.12]));
+  ADD(tail,ND("limb",col,[0,.1,-.04],[.022,.11,.022],[-.4,0,0]));
+  for(const[x,z]of[[-.05,.12],[.05,.12],[-.05,-.12],[.05,-.12]]){const l=ND(null,0,[x,.13,z]);ADD(l,ND("limb",col,[0,-.065,0],[.024,.07,.024]));legs.push(l);ADD(r,l)}
+  ADD(r,tail);r.legs=legs;r.tail=tail;return r}
+function mkCloud(){const r=ND();for(const[x,y,z,s]of[[0,0,0,1],[.9,-.1,.2,.75],[-.85,-.15,-.1,.7],[.3,.35,-.2,.65],[-.3,.25,.3,.6]])ADD(r,ND("sph","#ffffff",[x,y,z],[s*1.1,s*.6,s*.8]));return r}
+function ambInit(){if(AMB.ok)return;AMB.ok=true;
+  AMB.cars=[{n:mkCar("#e9ecef"),lane:0,P:24,o:0},{n:mkMotor("#c0392b","hijab"),lane:0,P:24,o:6,moto:true},{n:mkCar("#c0392b"),lane:0,P:24,o:12},{n:mkCar("#3f7f5a"),lane:0,P:24,o:18},
+    {n:mkCar("#2c3e57"),lane:1,P:21,o:0},{n:mkMotor("#1f2430","pria_kc"),lane:1,P:21,o:7,moto:true},{n:mkCar("#f2b632"),lane:1,P:21,o:14}];
+  AMB.peds=[{n:buildPerson({_col:"#e76f51",gender:"P",_h:91,look:"hijab"}),P:46,o:0},{n:buildPerson({_col:"#457b9d",gender:"L",_h:1234,look:"pria_peci"}),P:58,o:20},{n:buildPerson({_col:"#2a9d8f",gender:"P",_h:555,look:"wanita"}),P:52,o:38}];
+  AMB.birds=Array.from({length:6},(_,i)=>({n:mkBird(["#3b3f46","#5a4a3a","#2f3640"][i%3]),i}));
+  AMB.cats=[{n:mkCat("#e39b4f","#b8692a"),walk:true},{n:mkCat("#6b6f76","#43474d"),walk:false}];
+  AMB.clouds=Array.from({length:5},(_,i)=>({n:mkCloud(),i}))}
+const LANE=[WW+4.2,WW+5.8];
+function ambientDraws(t,op,tr){ambInit();const push=(n,lod=false)=>nodeDraws(n,ID4,1,lod,op,tr),R0=-5.6,R1=21.6,len=R1-R0;
+  for(const c of AMB.cars){const u=((t+c.o)%c.P)/c.P,r=c.lane===0?R0+u*len:R1-u*len,n=c.n;
+    n.p=[LANE[c.lane],0,r];n.r[1]=c.lane===0?0:Math.PI;n.k=c.moto?1:1;
+    for(const h of n.L)h.col=NIGHT?"!#fff2b0":"#f5f1dc";for(const x of n.T)x.col=NIGHT?"!#ff4d4d":"#b42318";
+    if(c.moto){poseP(n.rider,"type",t,0);n.rider.j.head.r=[-.05,0,0];n.rider.j.aL.el.r[0]=n.rider.j.aR.el.r[0]=-.7;n.rider.j.aL.r[0]=n.rider.j.aR.r[0]=-.9;n.r[2]=Math.sin(t*1.3+c.o)*.03}
+    push(n);if(NIGHT){STUB.globalAlpha=1;tr.push({m:MESH.disc,M:M4.mul(M4.T(LANE[c.lane],.02,r+(c.lane===0?1.3:-1.3)),M4.S(.45,1,.9)),c:parseCol("!#fff2b0"),a:.18})}}
+  for(const p of AMB.peds){const u=((t+p.o)%p.P)/p.P,fw=u<.5,k=fw?u*2:(1-u)*2,r=R0+.5+k*(len-1);const n=p.n;poseP(n,"walk",t,fw?0:Math.PI);n.p=[WW+3.17,0,r];push(n)}
+  if(!NIGHT){for(const b of AMB.birds){const a=t*.22+b.i*.55,R=11+Math.sin(b.i*1.7)*2.5,cx=WW/2,cz=DD/2,y=11.5+Math.sin(t*.7+b.i)*.5+b.i*.25;const n=b.n;
+      n.p=[cx+Math.cos(a)*R,y,cz+Math.sin(a)*R];n.r[1]=Math.atan2(-Math.sin(a),Math.cos(a));n.r[2]=-.25;const f=Math.sin(t*13+b.i*2)*.75;n.wl.r[2]=f;n.wr.r[2]=-f;push(n)}
+    for(const c of AMB.clouds){const ang=cam.az+Math.PI+(c.i-2)*.42+Math.sin(t*.03+c.i*1.3)*.12,R=38+c.i%2*6,n=c.n;n.p=[WW/2+Math.sin(ang)*R,16+c.i%3*3,DD/2+Math.cos(ang)*R];n.r[1]=c.i;n.k=2+c.i%2*.6;push(n)}}
+  {const cat=AMB.cats[0],n=cat.n,P=34,u=(t%P);let c=0,face=Math.PI/2,walk=false;
+    if(u<12){c=.6+u/12*6;walk=true}else if(u<17){c=6.6;face=0}else if(u<29){c=6.6-(u-17)/12*6;walk=true;face=-Math.PI/2}else{c=.6;face=0}
+    n.p=[c,0,18.5];n.r[1]=face;const w=t*9;n.legs.forEach((l,i)=>l.r[0]=walk?Math.sin(w+(i%2?Math.PI:0)+(i>1?Math.PI:0))*.5:0);n.tail.r[0]=walk?.2:Math.sin(t*2)*.3;n.tail.r[1]=Math.sin(t*1.7)*.4;push(n,true)}
+  {const n=AMB.cats[1].n;n.p=[ENTRANCE[1]+1.2,0,DD+1.1];n.r[1]=-.6;n.legs[2].r[0]=n.legs[3].r[0]=-1.2;n.tail.r[1]=Math.sin(t*1.5)*.6;push(n,true)}}
 function personDraws(o,t,al,op,tr){const Pn=personOf(o.p),sit=o.pose==="sit";
   const mode=sit?(o.typing?"type":"sit"):o.pose==="walk"?"walk":o.talking?"talk":o.ak==="brk"?"drink":"idle";
   poseP(Pn,mode,t,YAW[o.face]??0);const y=FZ(o.f)/PXU;Pn.p=[o.c,y,o.r];
@@ -877,7 +925,7 @@ function draw(t){
   if(fb){for(const o of S.poses){if(o.f!==S.view||o.hidden)continue;o.sel=S.sel?.type==="person"&&S.sel.id===o.p.id;o.hov=S.hover?.type==="person"&&S.hover.id===o.p.id;
       const dim=!!(S.focusDiv&&o.p.div!==S.focusDiv);o.dim=dim;personDraws(o,t/1000,dim?.28:1,op,tr)}
     if(S.view===0)for(const g of S.guestPoses||[])personDraws(g,t/1000,g.alpha*(S.focusDiv?.28:1)*.999,op,tr)}
-  drawNodes(op);gl.depthMask(false);
+  ambientDraws(t/1000,op,tr);drawNodes(op);gl.depthMask(false);
   for(const b of stat)drawParts(b.decal);for(const b of stat)drawTexts(b,VPm,true);gl.useProgram(GLS.L);
   for(const b of stat)drawParts(b.trans);for(const b of stat)drawTexts(b,VPm,false);gl.useProgram(GLS.L);
   drawNodes(tr);if(BAT.gh){drawParts(BAT.gh.solid,.5);drawParts(BAT.gh.trans,.5)}
