@@ -282,3 +282,16 @@ code{font-family:var(--f-mono);font-size:12px;background:var(--panel-2);padding:
 .linkbtn{background:none;border:0;color:var(--teal);font-weight:800;cursor:pointer;padding:0;align-self:flex-start}
 .kinds button span{font-size:11px;line-height:1.15;text-align:center}
 .kinds button:disabled{opacity:.4;cursor:not-allowed}
+
+/* pilihan karakter */
+.looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.looks button{font:700 11px var(--f-body);padding:4px 4px 6px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,var(--teal) 6%,var(--panel)),var(--panel));color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.looks button img{width:64px;height:80px;object-fit:contain;display:block}
+.looks button span{line-height:1.15;text-align:center}
+.looks button[aria-pressed="true"]{border-color:var(--teal);box-shadow:0 0 0 2px color-mix(in srgb,var(--teal) 35%,transparent);background:color-mix(in srgb,var(--teal) 14%,var(--panel))}
+.swrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;font:700 12px var(--f-body);color:var(--muted)}
+.swrow > span{min-width:96px}
+.sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--teal)}
+.sw.auto{background:var(--panel-2,var(--panel));color:var(--muted);font:800 10px var(--f-body)}
+.avimg{width:48px;height:60px;object-fit:contain;flex:none;border-radius:12px;background:color-mix(in srgb,var(--teal) 8%,transparent)}
