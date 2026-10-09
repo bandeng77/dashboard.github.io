@@ -375,7 +375,7 @@ const faceOf=(dr,dc)=>Math.abs(dr)>Math.abs(dc)?(dr>0?"down":"up"):(dc>0?"right"
 /* =========================================================
    STATE & DATA
    ========================================================= */
-const R={divs:{},people:[],layouts:{}};
+const R={divs:{},people:[],layouts:{},rooms:{}};
 const S={afilter:"",hub:null,focusDiv:null,view:0,lab:"full",plaques:true,dayMode:"auto",tab:"sum",sel:null,hover:null,follow:null,form:null,armed:null,
   live:false,loaded:false,q:"",fdiv:"",ffl:"",editDiv:null,divDraft:null,newDiv:{name:"",color:PALETTE[0]},
   seat:{},roomPeople:{},seatOcc:{},divCount:{},poses:[],pending:false,cache:new Map(),edit:null,ghost:null};
@@ -475,7 +475,7 @@ const SKIN=["#f1c9a5","#e3b089","#cf9467","#b07a4c","#8d5a36"],HAIR=["#1f1a17","
 const DIRV={up:[.89,-.45],down:[-.89,.45],left:[-.89,-.45],right:[.89,.45]};
 function drawPerson(o,t){
   const b=Q(o.r,o.c,0),x=b[0],y=b[1],h=o.p._h,shirt=o.p._col;
-  const skin=SKIN[h%5],hair=HAIR[(h>>>3)%5],pants=PANTS[(h>>>6)%5],style=(h>>>9)%3;
+  const skin=SKIN[h%5],hair=HAIR[(h>>>3)%5],pants=PANTS[(h>>>6)%5],g=o.p.gender,style=g==="L"?0:g==="P"?((h>>>9)%2?1:2):(h>>>9)%3;
   const sit=o.pose==="sit",walk=o.pose==="walk",dv=DIRV[o.face]||DIRV.down,toward=o.face==="down"||o.face==="right";
   const ph=(h%97)/10,sw=walk?Math.sin(t/120+ph)*3.4:0,bob=walk?Math.abs(Math.sin(t/120+ph))*1.3:0;
   if(o.sel||o.hov){const pu=1+.08*Math.sin(t/220);ctx.beginPath();ctx.ellipse(x,y,14*pu,7*pu,0,0,7);ctx.strokeStyle=o.sel?"#12c08a":"rgba(255,255,255,.95)";ctx.lineWidth=o.sel?2.6:1.8;ctx.stroke()}
@@ -545,18 +545,24 @@ function drawFloor(f,t){
    OVERLAYS
    ========================================================= */
 function toScreen(w){return[(w[0]-cam.x)*cam.s+SW/2,(w[1]-cam.y)*cam.s+SH/2]}
-let HIT_BUBBLES=[],HIT_PEOPLE=[],HIT_FLOORS=[],HIT_PLAQ=[];
+let HIT_BUBBLES=[],HIT_PEOPLE=[],HIT_FLOORS=[],HIT_PLAQ=[],HIT_DIVS=[];
 function fitText(t,max){if(ctx.measureText(t).width<=max)return t;while(t.length>2&&ctx.measureText(t+"…").width>max)t=t.slice(0,-1);return t+"…"}
-function drawPlaques(f){HIT_PLAQ=[];if(!S.plaques)return;ctx.textBaseline="middle";ZF=FZ(f);
+function drawPlaques(f){HIT_PLAQ=[];HIT_DIVS=[];if(!S.plaques)return;ctx.textBaseline="middle";ZF=FZ(f);
   for(const Rm of FL[f].rooms){if(Rm.type==="area")continue;
     const w=Q(Rm.r0+Rm.dr*.5,Rm.c0+Rm.dc*.5,Rm.type==="toilet"?64:Rm.type==="stairs"?70:Rm.zone||Rm.open?2:44),s=toScreen(w);
     const cap=Rm.seats.length,n=(S.roomPeople[Rm.id]||[]).length;
     ctx.font="800 11px Manrope, sans-serif";const t1=fitText(Rm.name,150),w1=ctx.measureText(t1).width;
-    const t2=cap?`${n}/${cap} kursi terisi`:"";ctx.font="700 9.5px Manrope, sans-serif";const w2=t2?ctx.measureText(t2).width:0;
-    const bw=Math.max(w1,w2)+16,bh=t2?28:18,x=s[0]-bw/2,y=s[1]-bh/2;
-    ctx.globalAlpha=.86;ctx.fillStyle="rgba(20,34,40,1)";rrect(x,y,bw,bh,8);ctx.fill();ctx.globalAlpha=1;
-    ctx.textAlign="left";ctx.fillStyle="#fff";ctx.font="800 11px Manrope, sans-serif";ctx.fillText(t1,x+8,y+(t2?9.5:9.5));
-    if(t2){ctx.fillStyle=n>cap?"#ffb36b":"rgba(255,255,255,.72)";ctx.font="700 9.5px Manrope, sans-serif";ctx.fillText(t2,x+8,y+20.5)}
+    const t2=MODE==="admin"&&cap?`${n}/${cap} kursi terisi`:"";ctx.font="700 9.5px Manrope, sans-serif";const w2=t2?ctx.measureText(t2).width:0;
+    ctx.font="800 9.5px Manrope, sans-serif";const chips=roomDivs(Rm.id).map(id=>{const d=R.divs[id],t=fitText(d.name,90);return{id,t,c:d.color,w:ctx.measureText(t).width+22}});
+    const cw=chips.reduce((a,c)=>a+c.w,0)+Math.max(0,chips.length-1)*4;
+    const bw=Math.max(w1,w2,cw)+16,bh=18+(t2?11:0)+(chips.length?19:0),x=s[0]-bw/2,y=s[1]-bh/2;
+    ctx.globalAlpha=.88;ctx.fillStyle="rgba(20,34,40,1)";rrect(x,y,bw,bh,8);ctx.fill();ctx.globalAlpha=1;
+    ctx.textAlign="left";ctx.fillStyle="#fff";ctx.font="800 11px Manrope, sans-serif";ctx.fillText(t1,x+8,y+9.5);let yy=y+17;
+    if(t2){ctx.fillStyle=n>cap?"#ffb36b":"rgba(255,255,255,.72)";ctx.font="700 9.5px Manrope, sans-serif";ctx.fillText(t2,x+8,yy+3);yy+=11}
+    let cx=x+8;for(const ch of chips){const hov=S.hover?.type==="div"&&S.hover.id===ch.id&&S.hover.room===Rm.id;
+      ctx.fillStyle=ch.c;rrect(cx,yy,ch.w,15,7.5);ctx.fill();if(hov){ctx.strokeStyle="#fff";ctx.lineWidth=1.5;rrect(cx,yy,ch.w,15,7.5);ctx.stroke()}
+      ctx.fillStyle="#fff";ctx.font="800 9.5px Manrope, sans-serif";ctx.fillText(ch.t,cx+7,yy+8);ctx.font="800 10px Manrope, sans-serif";ctx.fillText("›",cx+ch.w-10,yy+7.5);
+      HIT_DIVS.push({id:ch.id,room:Rm.id,x:cx,y:yy,w:ch.w,h:15});cx+=ch.w+4}
     HIT_PLAQ.push({id:Rm.id,x,y,w:bw,h:bh})}}
 function drawBubbles(list,t){
   HIT_BUBBLES=[];HIT_PEOPLE=[];if(!list.length)return;
@@ -612,7 +618,7 @@ function draw(t){
   for(const c of CARS)drawCar(c);for(const tr of TREES)if(!(tr.r<0||tr.c<0))drawTree(tr,t);
   ZF=0;prism(DD+1.4,11,.3,1.8,0,22,"#3a4450");signL(DD+1.701,11.1,12.7,6,13,"#0f7c72","EFFRENSINDO");
   ctx.setTransform(DPR,0,0,DPR,0,0);
-  if(S.view==="out"){HIT_BUBBLES=[];HIT_PEOPLE=[];HIT_PLAQ=[];drawFloorBadges(S.hover?.type==="floor"?S.hover.f:-1)}
+  if(S.view==="out"){HIT_BUBBLES=[];HIT_PEOPLE=[];HIT_PLAQ=[];HIT_DIVS=[];drawFloorBadges(S.hover?.type==="floor"?S.hover.f:-1)}
   else{HIT_FLOORS=[];drawPlaques(S.view);drawBubbles(bubbles,t)}
 }
 function loop(t){try{draw(t)}catch(e){console.error(e)}requestAnimationFrame(loop)}
@@ -626,6 +632,7 @@ function inPoly(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j
 const inRect=(x,y,r)=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;
 function pick(mx,my){
   if(S.view==="out"){for(const fl of HIT_FLOORS)if(fl.badge&&inRect(mx,my,fl.badge))return{type:"floor",f:fl.f};for(let i=HIT_FLOORS.length-1;i>=0;i--)if(HIT_FLOORS[i].polys.some(p=>inPoly([mx,my],p)))return{type:"floor",f:HIT_FLOORS[i].f};return null}
+  for(let i=HIT_DIVS.length-1;i>=0;i--)if(inRect(mx,my,HIT_DIVS[i]))return{type:"div",id:HIT_DIVS[i].id,room:HIT_DIVS[i].room};
   for(let i=HIT_BUBBLES.length-1;i>=0;i--)if(inRect(mx,my,HIT_BUBBLES[i]))return{type:"person",id:HIT_BUBBLES[i].id};
   let best=null;for(const h of HIT_PEOPLE)if(inRect(mx,my,h)){if(!best||h.y+h.h>best.y+best.h)best=h}if(best)return{type:"person",id:best.id};
   for(let i=HIT_PLAQ.length-1;i>=0;i--)if(inRect(mx,my,HIT_PLAQ[i]))return{type:"room",id:HIT_PLAQ[i].id};
@@ -637,6 +644,7 @@ function showTip(h,mx,my){if(!h){tip.hidden=true;return}let html="";
   if(h.type==="person"){const p=personBy(h.id),o=S.poses.find(o=>o.p.id===h.id);if(!p){tip.hidden=true;return}const dv=divOf(p.div),st=S.seat[p.id];
     html=`<b>${esc(p.name)}</b><br><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span><br>${esc(p.bagian||"—")}${p.jabatan?` · ${esc(p.jabatan)}`:""}<br><span style="color:var(--muted)">${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`):"Belum punya kursi"}</span>${o?`<br><span class="act"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${esc(o.act)}</span>`:""}`}
   else if(h.type==="room"){const Rm=ROOMS[h.id],n=(S.roomPeople[h.id]||[]).length;html=`<b>${esc(Rm.id)} · ${esc(Rm.name)}</b><br>${Rm.seats.length?`${n} dari ${Rm.seats.length} kursi terisi<br><span style="color:var(--muted)">${MODE==="admin"?"Klik untuk melihat dan mengisi kursi":"Ruang kerja"}</span>`:`<span style="color:var(--muted)">${esc(TYPE[Rm.type].name)}</span>`}`}
+  else if(h.type==="div"){const d=R.divs[h.id],n=appsOf(h.id).length;html=`<b>${esc(d?.name||"")}</b><br><span style="color:var(--muted)">${n?`Klik untuk membuka ${n} aplikasi divisi ini`:"Divisi ini belum punya aplikasi khusus"}</span>`}
   else if(h.type==="floor")html=`<b>Lantai ${h.f+1}</b><br><span style="color:var(--muted)">Klik untuk masuk ke lantai ini</span>`;
   tip.innerHTML=html;tip.hidden=false;const tw=tip.offsetWidth,th=tip.offsetHeight;tip.style.left=Math.min(SW-tw-8,mx+14)+"px";tip.style.top=Math.max(8,Math.min(SH-th-8,my+14))+"px"}
 cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
@@ -660,7 +668,7 @@ cv.addEventListener("pointercancel",e=>{ptrs.delete(e.pointerId);pinch=null;drag
 cv.addEventListener("pointerleave",()=>{S.hover=null;S.ghost=null;tip.hidden=true});
 cv.addEventListener("wheel",e=>{e.preventDefault();cam.z=Math.max(.5,Math.min(3.2,cam.z*Math.exp(-e.deltaY*.0015)))},{passive:false});
 function onPick(h){if(!h){if(S.hub){closeHub();return}if(S.form)return;if(S.sel){S.sel=null;renderDrawer();renderBody()}return}
-  if(h.type==="floor"){setView(h.f);return}if(h.type==="person"){const p=personBy(h.id);selectPerson(h.id,false);if(p)openHub(p.div,p.id,false);return}if(h.type==="room")selectRoom(h.id,false)}
+  if(h.type==="floor"){setView(h.f);return}if(h.type==="div"){openHub(h.id,null,false);return}if(h.type==="person"){const p=personBy(h.id);selectPerson(h.id,false);if(p)openHub(p.div,p.id,false);return}if(h.type==="room")selectRoom(h.id,false)}
 $("zin").onclick=()=>cam.z=Math.min(3.2,cam.z*1.25);$("zout").onclick=()=>cam.z=Math.max(.5,cam.z/1.25);$("zfit").onclick=()=>{stopFollow();cam.z=1;fit(false)};
 function setView(v,keepFollow){S.view=v;if(!keepFollow)stopFollow();document.querySelectorAll("#floorSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===String(v))));
   if(!keepFollow){cam.z=1;fit(false)}S.hover=null;tip.hidden=true}
@@ -723,7 +731,7 @@ function editorHTML(){const E=S.edit,Rm=ROOMS[E.room],it=E.items[E.sel],nd=E.ite
 /* =========================================================
    STORES
    ========================================================= */
-function localStore(){let n=1;const arr=c=>c==="people"?R.people:c==="apps"?APPS:c==="slides"?SLIDES:null,obj=c=>c==="layouts"?R.layouts:R.divs;return{
+function localStore(){let n=1;const arr=c=>c==="people"?R.people:c==="apps"?APPS:c==="slides"?SLIDES:null,obj=c=>c==="layouts"?R.layouts:c==="rooms"?R.rooms:R.divs;return{
   add:async(c,d)=>{const id="loc"+Date.now().toString(36)+(n++),a=arr(c);if(a)a.push({...d,id});else obj(c)[id]=d;changed();return id},
   set:async(c,id,d)=>{const a=arr(c);if(a){const i=a.findIndex(x=>x.id===id);if(i>=0)a[i]={...d,id};else a.push({...d,id})}else obj(c)[id]=d;changed()},
   update:async(c,id,p)=>{const a=arr(c);if(a){const x=a.find(x=>x.id===id);if(x)Object.assign(x,p)}else if(obj(c)[id])Object.assign(obj(c)[id],p);changed()},
@@ -758,7 +766,7 @@ function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s
   <div class="kpi"><span>Kursi kosong</span><b>${TOTAL_SEATS-seated}</b><small>siap diisi</small></div>
   <div class="kpi"><span>Sedang bekerja</span><b>${counts.work}</b><small>${n?Math.round(counts.work/n*100)+"% dari karyawan":"—"}</small></div>
   <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span></div></div>`}
-function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",...pre}}}
+function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",gender:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",...pre}}}
 function renderDrawer(){if(!drawer)return;
   if(MODE==="admin"&&!S.edit){const ad=adminDrawer();if(ad){drawer.hidden=false;drawer.innerHTML=ad;return}}
   if(S.edit){drawer.hidden=false;drawer.innerHTML=editorHTML();return}
@@ -770,6 +778,7 @@ function renderDrawer(){if(!drawer)return;
       <label>ID karyawan <small>opsional, NIK / ID Talenta</small><input id="f-nik" data-f="nik" value="${esc(d.nik)}" autocomplete="off"></label></div>
       <div class="two"><label>Divisi<select id="f-div" data-f="div">${divOptions(d.div)}</select></label>
       <label>Jabatan<select id="f-jab" data-f="jabatan">${opt("","— Pilih —",d.jabatan)+JABATAN.map(j=>opt(j,j,d.jabatan)).join("")}</select></label></div>
+      <label>Jenis kelamin<select id="f-gen" data-f="gender">${opt("","— Pilih —",d.gender)+opt("L","Laki-laki",d.gender)+opt("P","Perempuan",d.gender)}</select></label>
       <label>Bagian <small>tampil di label atas kepala</small><input id="f-bag" data-f="bagian" value="${esc(d.bagian)}" placeholder="mis. Pajak, Rekrutmen, Drafter" autocomplete="off"></label>
       <div class="two"><label>Lantai<select id="f-fl" data-f="f" data-re="1">${[0,1,2,3].map(f=>opt(f,"Lantai "+(f+1),d.f)).join("")}</select></label>
       <label>Ruangan<select id="f-room" data-f="room" data-re="1">${roomOptions(+d.f,d.room)}</select></label></div>
@@ -780,13 +789,14 @@ function renderDrawer(){if(!drawer)return;
   if(S.sel?.type==="person"){const p=personBy(S.sel.id);if(!p){S.sel=null;renderDrawer();return}
     const dv=divOf(p.div),o=S.poses.find(o=>o.p.id===p.id),following=S.follow===p.id,st=S.seat[p.id];
     drawer.innerHTML=`<div class="row"><div style="display:flex;gap:10px;align-items:center;min-width:0"><span class="av" style="background:${dv.color};width:40px;height:40px;font-size:14px">${esc(initials(p.name))}</span><div style="min-width:0"><h3>${esc(p.name)}</h3><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span></div></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
-    <div class="kv"><span>ID karyawan</span><b>${esc(p.nik||"—")}</b><span>Bagian</span><b>${esc(p.bagian||"—")}</b><span>Jabatan</span><b>${esc(p.jabatan||"—")}</b>
+    <div class="kv"><span>ID karyawan</span><b>${esc(p.nik||"—")}</b><span>Jenis kelamin</span><b>${p.gender==="L"?"Laki-laki":p.gender==="P"?"Perempuan":"—"}</b><span>Bagian</span><b>${esc(p.bagian||"—")}</b><span>Jabatan</span><b>${esc(p.jabatan||"—")}</b>
       <span>Tempat</span><b>${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`)+(st.over?" (berdiri, ruangan penuh)":st.si!=null?" · "+esc(st.room.seats[st.si].label):""):"Belum punya kursi"}</b>
       <span>Sekarang</span><b id="nowAct"><i class="dot" style="background:${o?ACT_COL[o.ak]:"#8a95a0"}"></i> ${esc(o?o.act:"—")}</b></div>
     <div class="acts"><button class="btn primary" data-act="${following?"unfollow":"follow"}">${following?"Berhenti mengikuti":"Ikuti di gedung"}</button><button class="btn" data-act="editPerson">Ubah</button>
       <button class="btn danger${S.armed==="delp"?" armed":""}" data-act="delPerson">${S.armed==="delp"?"Klik lagi untuk hapus":"Hapus"}</button></div>`;return}
   if(S.sel?.type==="room"){const Rm=ROOMS[S.sel.id],occ=S.seatOcc[Rm.id]||[],extra=(S.roomPeople[Rm.id]||[]).filter(p=>S.seat[p.id]?.over);
-    drawer.innerHTML=`<div class="row"><div style="min-width:0"><div class="sec" style="margin:0">Lantai ${Rm.f+1} · No. ${esc(Rm.id)}</div><h3>${esc(Rm.name)}</h3></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
+    drawer.innerHTML=`<div class="row"><div style="min-width:0"><div class="sec" style="margin:0">Lantai ${Rm.f+1}</div><h3>${esc(Rm.name)}</h3></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
+    ${roomDivEditor(Rm)}
     ${EDITABLE.has(Rm.type)?`<div class="acts" style="align-items:center"><button class="btn" data-act="startEdit">Atur meja & kursi</button>${R.layouts[Rm.id]?`<span class="pill">Tata letak manual</span>`:""}</div>`:""}
     ${Rm.seats.length?`<div class="meta">${occ.filter(Boolean).length} dari ${Rm.seats.length} kursi terisi. Kursi kosong ditandai <b style="color:#12c08a">+</b> di gedung.</div>
     <div class="plist">${Rm.seats.map((s,i)=>{const p=occ[i];return p?`<button class="prow" data-act="pickPerson" data-id="${esc(p.id)}"><span class="av" style="background:${divOf(p.div).color}">${esc(initials(p.name))}</span><div><div class="nm">${esc(p.name)}</div><div class="sb">${esc(s.label)} · ${esc(divOf(p.div).name)}</div></div><span class="loc">${esc(p.bagian||"")}</span></button>`
@@ -820,10 +830,10 @@ function renderBody(force){if(!body)return;
       .sort((a,b)=>(divOf(a.div).order??99)-(divOf(b.div).order??99)||RANK(a.jabatan)-RANK(b.jabatan)||a.name.localeCompare(b.name));
     h+=`<div class="sec">${list.length} karyawan</div>`+(list.length?`<div class="plist">${list.map(personRow).join("")}</div>`:`<div class="empty">${R.people.length?"Tidak ada yang cocok dengan pencarian.":"Belum ada karyawan. Tambahkan yang pertama."}</div>`)}
   else if(S.tab==="room"){
-    h+=`<div class="note">Ruangan mengikuti layout kantor (nomor 1–34). Klik ruangan untuk melihat kursi dan mengisinya.</div>`;
+    h+=`<div class="note">Ruangan mengikuti layout kantor. Klik ruangan untuk melihat kursi dan mengisinya.</div>`;
     for(let f=FLOORS-1;f>=0;f--){h+=`<div class="sec">Lantai ${f+1}<button class="btn sm" data-act="goFloor" data-f="${f}">Lihat lantai</button></div>`;
       h+=FL[f].rooms.filter(r=>r.type!=="area").map(Rm=>{const n=(S.seatOcc[Rm.id]||[]).filter(Boolean).length,cap=Rm.seats.length,sel=S.sel?.type==="room"&&S.sel.id===Rm.id;
-        return`<button class="card click${sel?" sel":""}" data-act="pickRoom" data-id="${esc(Rm.id)}"><div class="top"><h3><i class="sw" style="background:${TYPE[Rm.type].chip}"></i>${esc(Rm.id)} · ${esc(Rm.name)}</h3>${cap?`<span class="pill" style="${n>=cap?"color:var(--ok)":""}">${n}/${cap} kursi</span>`:`<span class="pill">${esc(TYPE[Rm.type].name)}</span>`}</div></button>`}).join("")}}
+        return`<button class="card click${sel?" sel":""}" data-act="pickRoom" data-id="${esc(Rm.id)}"><div class="top"><h3><i class="sw" style="background:${TYPE[Rm.type].chip}"></i>${esc(Rm.name)}</h3>${cap?`<span class="pill" style="${n>=cap?"color:var(--ok)":""}">${n}/${cap} kursi</span>`:`<span class="pill">${esc(TYPE[Rm.type].name)}</span>`}</div></button>`}).join("")}}
   else if(S.tab==="div"){const nd=S.newDiv;
     h+=`<div class="card"><div class="sec" style="margin:0">Tambah divisi</div><div class="form"><label>Nama divisi<input id="nd-name" value="${esc(nd.name)}" placeholder="mis. QHSE" autocomplete="off"></label>
       <div class="swatches" role="group" aria-label="Warna divisi">${PALETTE.map(c=>`<button data-act="ndColor" data-c="${c}" style="background:${c}" aria-label="Warna ${c}" aria-pressed="${nd.color===c}"></button>`).join("")}</div>
@@ -848,7 +858,7 @@ async function savePerson(more){const d=S.form.d,name=d.name.trim();if(!name){to
   if(!d.div){toast("Pilih divisinya dulu");return}
   const seat=d.room&&d.seat!=="auto"&&d.seat!==""?+d.seat:null;const editId=S.form.id;
   if(seat!=null){const occ=(S.seatOcc[d.room]||[])[seat];if(occ&&occ.id!==editId){toast(`Kursi itu sudah dipakai ${occ.name}. Pilih kursi lain.`);return}}
-  const doc={name,nik:d.nik.trim(),div:d.div,bagian:d.bagian.trim(),jabatan:d.jabatan||"",room:d.room||"",seat};
+  const doc={name,nik:d.nik.trim(),gender:d.gender||"",div:d.div,bagian:d.bagian.trim(),jabatan:d.jabatan||"",room:d.room||"",seat};
   let newId=null;const ok=await safe(async()=>{if(editId)await store.update("people",editId,doc);else{doc.createdAt=Date.now();newId=await store.add("people",doc)}},editId?"Perubahan disimpan":`${name} ditambahkan`);
   if(!ok)return;
   if(more){S.form=newForm({div:d.div,f:d.f,room:d.room,jabatan:d.jabatan});renderDrawer();$("f-name")?.focus();return}
@@ -873,7 +883,7 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
   if(a==="newPerson"){S.sel=null;S.form=newForm();renderDrawer();$("f-name")?.focus();panel.scrollIntoView({behavior:"smooth",block:"start"});return}
   if(a==="fillSeat"){const Rm=ROOMS[b.dataset.room];const dv=divList().find(d=>Rm.seats[+b.dataset.seat]?.group&&d.name.toLowerCase()===Rm.seats[+b.dataset.seat].group.toLowerCase());
     S.sel=null;S.form=newForm({f:String(Rm.f),room:Rm.id,seat:b.dataset.seat,div:dv?dv.id:""});renderDrawer();$("f-name")?.focus();return}
-  if(a==="editPerson"){const p=personBy(S.sel.id),st=S.seat[p.id];S.form={kind:"person",id:p.id,d:{name:p.name,nik:p.nik||"",div:p.div||"",bagian:p.bagian||"",jabatan:p.jabatan||"",f:String(ROOMS[p.room]?.f??0),room:p.room||"",seat:Number.isInteger(p.seat)?String(p.seat):st?.si!=null?String(st.si):"auto"}};S.sel=null;renderDrawer();return}
+  if(a==="editPerson"){const p=personBy(S.sel.id),st=S.seat[p.id];S.form={kind:"person",id:p.id,d:{name:p.name,nik:p.nik||"",gender:p.gender||"",div:p.div||"",bagian:p.bagian||"",jabatan:p.jabatan||"",f:String(ROOMS[p.room]?.f??0),room:p.room||"",seat:Number.isInteger(p.seat)?String(p.seat):st?.si!=null?String(st.si):"auto"}};S.sel=null;renderDrawer();return}
   if(a==="savePerson"){await savePerson(false);return}
   if(a==="savePersonMore"){await savePerson(true);return}
   if(a==="delPerson"){if(!armed("delp"))return;const id=S.sel.id;if(await safe(()=>store.del("people",id),"Karyawan dihapus")){if(S.follow===id)stopFollow();S.sel=null;renderDrawer();renderBody()}return}
@@ -931,6 +941,9 @@ const DEFAULT_SLIDES=[
   {id:"iso9001",tag:"Certification",tone:"cert",title:"ISO 9001:2015 Accredited",desc:"Quality Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%209K%20IA.pdf",img:"https://i.imgur.com/P4fLT1j.png",order:2},
   {id:"iso45001",tag:"Certification",tone:"cert",title:"ISO 45001:2018 Accredited",desc:"Health And Safety Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2045K%20IA.pdf",img:"https://i.imgur.com/BPEP5C0.png",order:3},
 ];
+/* Label divisi bawaan per ruangan (bisa diubah di /admin → klik ruangan) */
+const DEFAULT_ROOM_DIVS={"3":["hccs"],"4":["hccs"],"10":["direksi"],"12":["komisaris"],"15":["finance"],"19":["scm"],"21":["finance"],"22":["scm"],"23":["engineering"],"24":["sales"],"25":["finance"],"26":["hccs"],"27":["engineering","sales"],"34":["hccs"]};
+const roomDivs=id=>(Array.isArray(R.rooms[id]?.divs)?R.rooms[id].divs:DEFAULT_ROOM_DIVS[id]||[]).filter(d=>R.divs[d]);
 /* Daftar aplikasi & info ditulis langsung di kode (link langsung), tidak diambil dari database. */
 let APPS=DEFAULT_APPS.map(a=>({...a})),SLIDES=DEFAULT_SLIDES.map(x=>({...x}));
 const byOrder=(a,b)=>(a.order??99)-(b.order??99)||String(a.title).localeCompare(String(b.title));
@@ -941,11 +954,11 @@ const ICON_KEYS=["book","box","building","shield","chart","check","chip","truck"
 const abbr=n=>{n=String(n||"?").trim();if(n.length<=4)return n.toUpperCase();const w=n.split(/[\s&]+/).filter(Boolean);return(w.length>1?w[0][0]+w[1][0]:n.slice(0,2)).toUpperCase()};
 const appTile=a=>`<a class="happ" style="--c:${a.color}" href="${esc(a.href)}" target="_blank" rel="noopener"><span class="ic">${svg(a.icon,22)}</span><div><b>${esc(a.title)}</b><small>${esc(a.desc)}</small></div><span class="go">${svg("arrow",14)}</span></a>`;
 
-function renderDivbar(){const el=$("divbar"),dl=divList();
+function renderDivbar(){const el=$("divbar"),dl=divList();if(!el)return;
   el.innerHTML=dl.length?dl.map(d=>{const na=appsOf(d.id).length,np=S.divCount[d.id]||0;
     return`<button class="dchip" style="--c:${d.color}" data-div="${esc(d.id)}" aria-pressed="${S.hub?.div===d.id}"><span class="ic">${esc(abbr(d.name))}</span><span><b>${esc(d.name)}</b><small>${na?na+" aplikasi":"Tanpa aplikasi"} · ${np} orang</small></span></button>`}).join("")
     :`<span class="meta">Belum ada divisi. Tambahkan di tab Divisi.</span>`}
-$("divbar").addEventListener("click",e=>{const b=e.target.closest("[data-div]");if(!b)return;const id=b.dataset.div;if(S.hub?.div===id&&!S.hub.person)closeHub();else openHub(id,null,true)});
+$("divbar")?.addEventListener("click",e=>{const b=e.target.closest("[data-div]");if(!b)return;const id=b.dataset.div;if(S.hub?.div===id&&!S.hub.person)closeHub();else openHub(id,null,true)});
 function openHub(div,person,moveCam){S.hub={div,person:person||null};S.focusDiv=div;
   if(moveCam&&!S.follow){const cnt=[0,0,0,0];for(const p of R.people)if(p.div===div){const s=S.seat[p.id];if(s&&!s.none)cnt[s.f]++}
     const mx=Math.max(...cnt);if(mx>0){const best=cnt.indexOf(mx);if(S.view!==best)setView(best)}}
@@ -1007,6 +1020,9 @@ $("themeBtn").onclick=()=>{const root=document.documentElement,cur=root.dataset.
 /* =========================================================
    ADMIN: aplikasi, info & sertifikat, pengaturan, login
    ========================================================= */
+function roomDivEditor(Rm){const mine=S.rdiv&&S.rdiv.room===Rm.id,cur=mine?S.rdiv.list:roomDivs(Rm.id),dirty=mine&&S.rdiv.dirty;
+  return`<div class="sec">Label divisi ruangan</div><div class="acts">${divList().map(d=>{const on=cur.includes(d.id);return`<button class="btn sm" data-act="rdiv" data-id="${esc(d.id)}" aria-pressed="${on}" style="${on?`background:${d.color};color:#fff;border-color:${d.color}`:""}">${esc(d.name)}</button>`}).join("")||`<span class="meta">Belum ada divisi.</span>`}</div>
+  ${dirty?`<div class="acts"><button class="btn primary sm" data-act="saveRdiv">Simpan label divisi</button><button class="btn sm" data-act="cancelRdiv">Batal</button></div>`:`<div class="meta">Klik divisi untuk memasang atau melepas label. Di halaman utama, klik label ini membuka menu aplikasi divisinya.</div>`}`}
 const APP_COLORS=["#3b82f6","#10b981","#f59e0b","#f97316","#a855f7","#6366f1","#0ea5e9","#06b6d4","#f43f5e","#14b8a6","#8b5cf6","#64748b"];
 function appForm(d){return`<div class="form">
   <label>Nama aplikasi<input id="a-title" data-f="title" value="${esc(d.title)}" placeholder="mis. Work Order" autocomplete="off"></label>
@@ -1057,6 +1073,9 @@ async function moveItem(col,list,id,dir){const arr=[...list].sort(byOrder);arr.f
   const a=arr[i],b=arr[j];await safe(async()=>{await store.update(col,a.id,{order:j});await store.update(col,b.id,{order:i});
     for(const x of arr)if(x!==a&&x!==b&&x.order!==x._o)await store.update(col,x.id,{order:x._o})})}
 async function adminAction(a,b){
+  if(a==="rdiv"){const id=S.sel?.id;if(!id)return true;if(!S.rdiv||S.rdiv.room!==id)S.rdiv={room:id,list:[...roomDivs(id)],dirty:false};const l=S.rdiv.list,k=l.indexOf(b.dataset.id);if(k>=0)l.splice(k,1);else l.push(b.dataset.id);S.rdiv.dirty=true;renderDrawer();return true}
+  if(a==="saveRdiv"){const r=S.rdiv;if(!r)return true;if(await safe(()=>store.set("rooms",r.room,{divs:r.list,updatedAt:Date.now()}),"Label divisi disimpan")){S.rdiv=null;renderDrawer()}return true}
+  if(a==="cancelRdiv"){S.rdiv=null;renderDrawer();return true}
   if(a==="newApp"){S.sel=null;S.form={kind:"app",id:null,d:{title:"",desc:"",href:"https://",divId:"",icon:"book",color:APP_COLORS[0]}};renderDrawer();$("a-title")?.focus();return true}
   if(a==="editApp"){const x=APPS.find(z=>z.id===b.dataset.id);if(!x)return true;S.sel=null;S.form={kind:"app",id:x.id,d:{title:x.title||"",desc:x.desc||"",href:x.href||"",divId:x.divId||"",icon:x.icon||"book",color:x.color||APP_COLORS[0]}};renderDrawer();return true}
   if(a==="aIcon"){S.form.d.icon=b.dataset.k;renderDrawer();return true}
@@ -1103,12 +1122,13 @@ function setMode(t,show){if(!modeEl)return;modeEl.textContent=t;modeEl.hidden=MO
 recompute();renderKpis();renderBody(true);renderDivbar();renderApps();renderInfo();requestAnimationFrame(loop);
 function useLocal(msg){R.divs=JSON.parse(JSON.stringify(DEFAULT_DIVS));APPS=DEFAULT_APPS.map(a=>({...a}));SLIDES=DEFAULT_SLIDES.map(x=>({...x}));store=localStore();S.loaded=true;S.live=false;setMode(msg,true);changed()}
 function startFirestore(G){store=dbStore(G.db);S.live=true;setMode("Tersinkron",false);
-  const need=new Set(["divisions","people","layouts"]);const done=c=>{if(need.delete(c)&&!need.size)S.loaded=true;if(S.loaded)changed()};
+  const need=new Set(["divisions","people","layouts","rooms"]);const done=c=>{if(need.delete(c)&&!need.size)S.loaded=true;if(S.loaded)changed()};
   const err=e=>{console.error(e);setMode("Gagal memuat data · muat ulang halaman",true)};
   const list=s=>s.docs.map(d=>({id:d.id,...d.data()})),map=s=>{const o={};for(const d of s.docs)o[d.id]=d.data();return o};
   const pub=MODE==="public";
   G.db.collection("divisions").onSnapshot(s=>{const m=map(s);R.divs=Object.keys(m).length||!pub?m:JSON.parse(JSON.stringify(DEFAULT_DIVS));done("divisions")},err);
   G.db.collection("layouts").onSnapshot(s=>{R.layouts=map(s);done("layouts")},err);
+  G.db.collection("rooms").onSnapshot(s=>{R.rooms=map(s);done("rooms")},err);
   G.db.collection("people").onSnapshot(s=>{R.people=list(s);done("people")},err);}
 const gtReady=()=>new Promise(res=>{if(window.GT!==undefined)return res(window.GT);addEventListener("gt-ready",()=>res(window.GT),{once:true});setTimeout(()=>res(window.GT||null),9000)});
 (async()=>{const G=await gtReady(),ok=!!(G&&G.db);if(MODE==="admin")setupAdminGate(ok?G:null);if(!ok){useLocal("Mode demo · Firebase belum diatur");return}startFirestore(G)})();
