@@ -72,8 +72,8 @@ const HOME_ACT={cluster:"Bekerja",office:"Bekerja",exec:"Bekerja",reception:"Mel
 const JABATAN=["Direktur","Komisaris","Manager","Supervisor","Staf"];
 const RANK=j=>{const i=JABATAN.indexOf(j);return i<0?9:i};
 const PALETTE=["#3b3f8f","#c2477a","#2e8b57","#d17f22","#2f6fd6","#7b4fc4","#d14b3c","#168f9c","#8a6d2f","#5b6b7a","#b5368f","#4f8a2b"];
-const ACT_COL={work:"#2fae61",meet:"#3b82f6",brk:"#f2a20c",talk:"#a35be0",move:"#8a95a0",none:"#8a95a0"};
-const ACT_NAME={work:"Bekerja",meet:"Rapat",brk:"Istirahat",talk:"Diskusi",move:"Berjalan",none:"Belum punya kursi"};
+const ACT_COL={work:"#2fae61",meet:"#3b82f6",brk:"#f2a20c",talk:"#a35be0",move:"#8a95a0",out:"#f97316",none:"#8a95a0"};
+const ACT_NAME={work:"Bekerja",meet:"Rapat",brk:"Istirahat",talk:"Diskusi",move:"Berjalan",out:"Di luar kantor",none:"Belum punya kursi"};
 
 /* =========================================================
    CANVAS PRIMITIVES
@@ -429,29 +429,95 @@ function recompute(){
   for(const F of FL)for(const s of F.spots){s.taken=false;if(s.room){const occ=S.seatOcc[s.room.id];if(occ&&s.room.seats.some((x,i)=>occ[i]&&Math.abs(x.r-s.r)<.01&&Math.abs(x.c-s.c)<.01))s.taken=true}}
 }
 
-/* schedule */
-const SPEED=1.2,cycleT=p=>62+(p._h%45);
+/* schedule — karyawan boleh lintas lantai lewat tangga; jam 12:00–14:00 istirahat makan siang */
+const SPEED=1.2,cycleT=p=>96+(p._h%70);
+const EMO_HOME={cluster:"💻",office:"💻",exec:"💼",reception:"🛎️",logbook:"📒",server:"🖥️",arsip:"📁",service:"🧹",pantry:"🍳",meeting:"🗣️",mushola:"🤲"};
+function emoOf(label,kind){const l=String(label||"").toLowerCase();
+  if(l.includes("makan siang di luar"))return"🍜";if(l.includes("makan"))return"🍱";if(l.includes("kopi"))return"☕";if(l.includes("minum"))return"💧";
+  if(l.includes("toilet"))return"🚻";if(l.includes("ibadah")||l.includes("mushola"))return"🤲";if(l.includes("rapat")||l.includes("menghadap"))return"🗣️";
+  if(l.includes("diskusi"))return"💬";if(l.includes("resepsionis"))return"👋";if(l.includes("tamu"))return"🤝";if(l.includes("server"))return"🖥️";
+  if(l.includes("dokumen")||l.includes("arsip")||l.includes("gudang"))return"📁";if(l.includes("fotokopi"))return"🖨️";if(l.includes("sofa"))return"🛋️";
+  if(l.includes("istirahat"))return"☕";if(l.includes("mampir"))return"👀";return kind==="move"?"🚶":"🙂"}
+const stairsOf=f=>FL[f]?.spots.find(s=>s.kind==="move"&&s.hide);
+function legsTo(home,dest){
+  if(dest.f===home.f){const p=gridPath(FL[home.f],home,dest);return[{f:home.f,path:p,dur:p.len/SPEED}]}
+  const s1=stairsOf(home.f),s2=stairsOf(dest.f);if(!s1||!s2)return null;
+  const a=gridPath(FL[home.f],home,s1),b=gridPath(FL[dest.f],s2,dest);
+  return[{f:home.f,path:a,dur:a.len/SPEED},{st:true,from:home.f,to:dest.f,dur:3+3.5*Math.abs(dest.f-home.f)},{f:dest.f,path:b,dur:b.len/SPEED}]}
+const legsDur=L=>L.reduce((a,x)=>a+x.dur,0);
+function legPose(base,L,k,back,dest,home){
+  if(L.st){const to=back?L.from:L.to,from=back?L.to:L.from,up=to>from;
+    return{...base,f:from,r:0,c:0,hidden:true,pose:"walk",act:(up?"Naik":"Turun")+" tangga ke Lt "+(to+1),ak:"move",emo:up?"⬆️":"⬇️"}}
+  const a=along(L.path,back?L.path.len-k*SPEED:k*SPEED);
+  return{...base,f:L.f,r:a.r,c:a.c,face:back?faceOf(-a.dr,-a.dc):faceOf(a.dr,a.dc),pose:"walk",act:back?"Kembali ke "+home.room.name:"Menuju: "+dest.label,ak:"move",emo:"🚶"}}
+function tripPose(base,home,legs,dest,stay,u){
+  for(const L of legs){if(u<L.dur)return legPose(base,L,u,false,dest,home);u-=L.dur}
+  if(u<stay)return{...base,f:dest.f,r:dest.r,c:dest.c,face:dest.face,pose:dest.sit?"sit":"stand",hidden:!!dest.hide,act:dest.label,ak:dest.kind,talking:dest.kind==="talk",emo:dest.emo||emoOf(dest.label,dest.kind)};
+  u-=stay;for(let i=legs.length-1;i>=0;i--){const L=legs[i];if(u<L.dur)return legPose(base,L,u,true,dest,home);u-=L.dur}
+  return null}
+function candidates(p,home){const out=[];
+  for(let f=0;f<FLOORS;f++){const cross=f!==home.f;
+    for(const s of FL[f].spots){if(s.taken||s.kind==="move"||(s.room&&s.room===home.room))continue;
+      if(cross&&!(s.kind==="brk"||s.kind==="meet"||s.room?.type==="reception"))continue;
+      out.push({...s,f,w:(s.w||0)*(cross?.22:1)})}}
+  for(const q of R.people){if(q.id===p.id)continue;const s=S.seat[q.id];if(!s||s.none||!s.desk)continue;const cross=s.f!==home.f;
+    if(cross&&q.div!==p.div)continue;if(!cross&&q.div!==p.div&&hash(q.id+p.id)%4!==0)continue;
+    const off=s.face==="down"?-.45:.45;out.push({f:s.f,r:s.r+off,c:s.c+.38,face:s.face==="down"?"down":"up",sit:false,label:"Diskusi dengan "+q.name.split(" ")[0],kind:"talk",w:cross?.12:(q.div===p.div?.45:.2)})}
+  return out}
 function planFor(p,n,home){
   const key=p.id+":"+n;let pl=S.cache.get(key);if(pl)return pl;const h=hash(key);pl={trip:null};
-  if(h%5!==0&&!home.none){const F=FL[home.f];const cands=F.spots.filter(s=>!s.taken&&s.room!==home.room);
-    for(const q of R.people){if(q.id===p.id)continue;const s=S.seat[q.id];if(!s||s.none||s.f!==home.f||!s.desk)continue;
-      if(q.div===p.div||hash(q.id+p.id)%4===0){const off=s.face==="down"?-.45:.45;cands.push({r:s.r+off,c:s.c+.38,face:s.face==="down"?"down":"up",sit:false,label:"Diskusi dengan "+q.name.split(" ")[0],kind:"talk",w:q.div===p.div?.45:.2})}}
-    let tot=0;for(const c of cands)tot+=c.w||0;
+  if(h%5!==0&&!home.none){const cands=candidates(p,home);let tot=0;for(const c of cands)tot+=c.w||0;
     if(tot>0){let x=(h>>>4)%10000/10000*tot,dest=null;for(const c of cands){x-=c.w||0;if(x<=0){dest=c;break}}dest=dest||cands[cands.length-1];
-      const path=gridPath(F,home,dest);if(path.pts.length>=2&&path.len>.3){const tOut=path.len/SPEED,stay=dest.sit?16+h%12:7+h%7,T=cycleT(p),work=T-2*tOut-stay;if(work>14)pl={trip:{dest,path,tOut,stay,work}}}}}
+      const legs=legsTo(home,dest);if(legs){const D=legsDur(legs),stay=dest.sit?16+h%12:7+h%7,work=cycleT(p)-2*D-stay;if(D>.3&&work>10)pl={trip:{dest,legs,stay,work}}}}}
   if(S.cache.size>4000)S.cache.clear();S.cache.set(key,pl);return pl;
 }
+const LUNCH0=12*3600,LUNCH1=14*3600;
+function lunchPlan(p,home,day){
+  const key="L:"+p.id+":"+day;let pl=S.cache.get(key);if(pl)return pl;const h=hash(key),start=LUNCH0+(h%35)*60+((h>>>6)%60),mode=h%10;
+  pl={start,end:start+(20+h%20)*60,dest:null,legs:null};
+  if(mode<5){let best=null;for(let f=0;f<FLOORS;f++){const st=FL[f].spots.filter(s=>s.sit&&s.room?.type==="pantry");if(st.length&&(!best||Math.abs(f-home.f)<Math.abs(best.f-home.f)))best={f,st}}
+    if(best){const s=best.st[(h>>>3)%best.st.length];pl.dest={...s,f:best.f,label:"Makan siang di "+s.room.name,kind:"brk",emo:"🍱"};pl.end=start+(25+h%20)*60}}
+  else if(mode<8){pl.dest={f:0,r:DD-.3,c:(ENTRANCE[0]+ENTRANCE[1])/2,face:"down",sit:false,hide:true,label:"Makan siang di luar kantor",kind:"out",emo:"🍜",room:null};pl.end=Math.min(LUNCH1-60,start+(40+h%25)*60)}
+  if(pl.dest){pl.legs=legsTo(home,pl.dest);if(!pl.legs)pl.dest=null}
+  S.cache.set(key,pl);return pl}
+/* =========================================================
+   TAMU (NPC) — datang dari pintu masuk, ke resepsionis, menunggu di ruang tunggu, lalu pulang.
+   Paling banyak 2 tamu sekaligus; jadwal mengikuti jam supaya semua orang melihat hal yang sama.
+   ========================================================= */
+const GUEST_COLS=["#6b7280","#b45309","#0f766e","#7c3aed","#be123c","#1d4ed8"];
+const GUEST_TRACKS=[{P:180,off:0},{P:240,off:113}];
+function guestPoses(tSec){const out=[],F=FL[0],R4=ROOMS["4"],RT=ROOMS["RT"];if(!F||!R4||!RT)return out;
+  const ent={r:DD-.25,c:(ENTRANCE[0]+ENTRANCE[1])/2},desk={r:R4.r0+1.45,c:R4.c0},seats=RT.spots.filter(s=>s.sit);if(!seats.length)return out;
+  GUEST_TRACKS.forEach((tr,ti)=>{const x=tSec+tr.off,n=Math.floor(x/tr.P),u=x-n*tr.P,h=hash("tamu"+ti+":"+n);if(h%3===0)return;
+    const seat=seats[(h+ti*2)%seats.length],p1=gridPath(F,ent,desk),p2=gridPath(F,desk,seat),p3=gridPath(F,seat,ent),sp=1.0;
+    const t1=p1.len/sp,w1=5+h%4,t2=p2.len/sp,w2=18+h%14,t3=p3.len/sp,total=t1+w1+t2+w2+t3;if(u>total)return;
+    let r,c,face,pose,act,k=u;
+    if(k<t1){const a=along(p1,k*sp);r=a.r;c=a.c;face=faceOf(a.dr,a.dc);pose="walk";act="Datang ke resepsionis"}
+    else if((k-=t1)<w1){r=desk.r;c=desk.c-.45;face="right";pose="stand";act="Melapor di resepsionis"}
+    else if((k-=w1)<t2){const a=along(p2,k*sp);r=a.r;c=a.c;face=faceOf(a.dr,a.dc);pose="walk";act="Menuju ruang tunggu"}
+    else if((k-=t2)<w2){r=seat.r;c=seat.c;face=seat.face;pose="sit";act="Menunggu di ruang tunggu"}
+    else{k-=w2;const a=along(p3,k*sp);r=a.r;c=a.c;face=faceOf(a.dr,a.dc);pose="walk";act="Pulang"}
+    const alpha=Math.max(0,Math.min(1,u/1.5,(total-u)/1.5));
+    out.push({p:{id:"tamu"+ti,_h:h,_col:GUEST_COLS[h%GUEST_COLS.length],gender:h%2?"L":"P",name:"Tamu"},f:0,r,c,face,pose,act,alpha,guest:true})});
+  return out}
+function drawGuestTags(list){if(S.lab==="off")return;ctx.textBaseline="middle";ctx.textAlign="center";ctx.font="800 9.5px Manrope, sans-serif";
+  for(const g of list){if(!g.head)continue;const s=toScreen(g.head),w=40,x=s[0]-w/2,y=s[1]-24;ctx.globalAlpha=g.alpha;
+    ctx.fillStyle="#64748b";rrect(x,y,w,15,7.5);ctx.fill();ctx.fillStyle="#fff";ctx.fillText("TAMU",s[0],y+8);ctx.globalAlpha=1}}
+
 function poseOf(p,tSec){
   const home=S.seat[p.id];if(!home)return null;const base={p,f:home.f};
-  if(home.none)return{...base,r:home.r,c:home.c,face:"down",pose:"stand",act:"Belum ditempatkan di kursi",ak:"none"};
+  if(home.none)return{...base,r:home.r,c:home.c,face:"down",pose:"stand",act:"Belum ditempatkan di kursi",ak:"none",emo:"❔"};
   const kind=home.room.type;
-  const atHome={...base,r:home.r,c:home.c,face:home.face,pose:home.sit?"sit":"stand",typing:home.sit&&!!(home.desk||home.boss||kind==="reception"),act:home.over?(home.room.seats.length?"Berdiri (ruangan penuh)":"Di "+home.room.name):HOME_ACT[kind]||"Bekerja",ak:kind==="meeting"?"meet":kind==="pantry"||kind==="mushola"?"brk":"work"};
+  const atHome={...base,r:home.r,c:home.c,face:home.face,pose:home.sit?"sit":"stand",typing:home.sit&&!!(home.desk||home.boss||kind==="reception"),act:home.over?(home.room.seats.length?"Berdiri (ruangan penuh)":"Di "+home.room.name):HOME_ACT[kind]||"Bekerja",ak:kind==="meeting"?"meet":kind==="pantry"||kind==="mushola"?"brk":"work",emo:home.over?"🧍":EMO_HOME[kind]||"💻"};
+  // istirahat makan siang 12:00–14:00 (jam lokal)
+  const d=new Date(tSec*1000),sod=d.getHours()*3600+d.getMinutes()*60+d.getSeconds()+(tSec%1);
+  if(sod>=LUNCH0&&sod<LUNCH1){const L=lunchPlan(p,home,d.toDateString());
+    if(sod>=L.start&&sod<L.end){if(!L.dest)return{...atHome,typing:false,act:"Makan siang di meja",ak:"brk",emo:"🍱"};
+      const D=legsDur(L.legs),stay=Math.max(30,L.end-L.start-2*D),r=tripPose(base,home,L.legs,L.dest,stay,sod-L.start);if(r)return r}
+    else if(sod>=L.start-120&&sod<L.end+120)return atHome}
   const T=cycleT(p),x=tSec+(p._h%997)/997*T,n=Math.floor(x/T),u=x-n*T,pl=planFor(p,n,home);
   if(!pl.trip||u<pl.trip.work)return atHome;
-  const tr=pl.trip;let k=u-tr.work;
-  if(k<tr.tOut){const a=along(tr.path,k*SPEED);return{...base,r:a.r,c:a.c,face:faceOf(a.dr,a.dc),pose:"walk",act:"Menuju: "+tr.dest.label,ak:"move"}}
-  k-=tr.tOut;if(k<tr.stay)return{...base,r:tr.dest.r,c:tr.dest.c,face:tr.dest.face,pose:tr.dest.sit?"sit":"stand",hidden:!!tr.dest.hide,act:tr.dest.label,ak:tr.dest.kind,talking:tr.dest.kind==="talk"};
-  k-=tr.stay;const a=along(tr.path,tr.path.len-k*SPEED);return{...base,r:a.r,c:a.c,face:faceOf(-a.dr,-a.dc),pose:"walk",act:"Kembali ke "+home.room.name,ak:"move"};
+  return tripPose(base,home,pl.trip.legs,pl.trip.dest,pl.trip.stay,u-pl.trip.work)||atHome;
 }
 
 /* =========================================================
@@ -555,6 +621,7 @@ function drawFloor(f,t){
   const items=[...F.items,...F.walls],bubbles=[];
   for(const o of S.poses){if(o.f!==f||o.hidden)continue;o.sel=S.sel?.type==="person"&&S.sel.id===o.p.id;o.hov=S.hover?.type==="person"&&S.hover.id===o.p.id;
     const dim=!!(S.focusDiv&&o.p.div!==S.focusDiv);items.push({k:o.r+o.c+.01,d:()=>{if(dim)ctx.globalAlpha=.28;o.head=drawPerson(o,t);ctx.globalAlpha=1;if(!dim)bubbles.push(o)}})}
+  if(f===0)for(const g of S.guestPoses||[]){const dim=!!S.focusDiv;items.push({k:g.r+g.c+.01,d:()=>{ctx.globalAlpha=g.alpha*(dim?.28:1);g.head=drawPerson(g,t);ctx.globalAlpha=1}})}
   items.sort((a,b)=>a.k-b.k);for(const it of items)it.d();
   for(const Rm of F.rooms){const sel=S.sel?.type==="room"&&S.sel.id===Rm.id;if(!sel)continue;const occ=S.seatOcc[Rm.id]||[];
     Rm.seats.forEach((s,i)=>{if(occ[i])return;const b=Q(s.r,s.c,30+Math.sin(t/300+i)*2);ctx.fillStyle="rgba(18,192,138,.9)";ctx.beginPath();ctx.arc(b[0],b[1],5,0,7);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(b[0]-2.6,b[1]-.7,5.2,1.4);ctx.fillRect(b[0]-.7,b[1]-2.6,1.4,5.2)})}
@@ -605,7 +672,7 @@ function drawBubbles(list,t){
     const bw=Math.max(w1+14,w2+12,w0+14),hTop=showName?17:0,bh=hTop+15+(full?16:0),bobY=Math.sin(t/600+(o.p._h%50))*1.6;
     let x=it.s[0]-bw/2,y=it.s[1]-bh-9+bobY;
     for(let pass=0;pass<6;pass++){let moved=false;for(const r of placed){if(x<r.x+r.w+2&&x+bw+2>r.x&&y<r.y+r.h+2&&y+bh+2>r.y){y=r.y-bh-3;moved=true}}if(!moved)break}
-    placed.push({x,y,w:bw,h:bh});const ax=it.s[0],ay=it.s[1]+bobY-4;
+    placed.push({x:x-18,y,w:bw+18,h:bh});const ax=it.s[0],ay=it.s[1]+bobY-4;
     if(y+bh<ay-8){ctx.strokeStyle="rgba(20,34,40,.45)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ax,y+bh);ctx.lineTo(ax,ay);ctx.stroke()}
     ctx.save();ctx.shadowColor="rgba(0,0,0,.22)";ctx.shadowBlur=6;ctx.shadowOffsetY=2;ctx.fillStyle="#ffffff";rrect(x,y,bw,bh,7);ctx.fill();ctx.restore();
     if(o.sel){ctx.strokeStyle="#12c08a";ctx.lineWidth=2;rrect(x,y,bw,bh,7);ctx.stroke()}
@@ -614,6 +681,8 @@ function drawBubbles(list,t){
     if(showName){ctx.fillStyle="#1a2a2e";ctx.font="800 12px Manrope, sans-serif";ctx.fillText(l0,x+bw/2,y+9.5)}
     ctx.fillStyle=dv.color;rrect(x+3,y+hTop+2,bw-6,13,5);ctx.fill();ctx.fillStyle="#ffffff";ctx.font="800 10px Manrope, sans-serif";ctx.fillText(l1,x+bw/2,y+hTop+9);
     if(full){ctx.fillStyle=ACT_COL[o.ak]||"#8a95a0";ctx.beginPath();ctx.arc(x+bw/2-w2/2+3,y+hTop+24,3,0,7);ctx.fill();ctx.fillStyle="#2b3a40";ctx.font="700 10.5px Manrope, sans-serif";ctx.textAlign="left";ctx.fillText(l2,x+bw/2-w2/2+10,y+hTop+24.5)}
+    if(o.emo){const ex=x-7,ey=y+bh/2;ctx.save();ctx.shadowColor="rgba(0,0,0,.25)";ctx.shadowBlur=5;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.arc(ex,ey,10.5,0,7);ctx.fill();ctx.restore();
+      ctx.font='13px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(o.emo,ex,ey+1)}
     HIT_BUBBLES.push({id:o.p.id,x,y,w:bw,h:bh})}}
 function drawFloorBadges(hover){HIT_FLOORS=[];ZF=0;ctx.textBaseline="middle";
   for(let g=0;g<FLOORS;g++){const polys=[[P(DD,0,FZ(g)-8),P(DD,WW,FZ(g)-8),P(DD,WW,FZ(g+1)-8),P(DD,0,FZ(g+1)-8)],[P(0,WW,FZ(g)-8),P(DD,WW,FZ(g)-8),P(DD,WW,FZ(g+1)-8),P(0,WW,FZ(g+1)-8)]].map(pl=>pl.map(toScreen));
@@ -634,6 +703,7 @@ new ResizeObserver(resize).observe(stage);resize();
 function draw(t){
   NIGHT=isNight();const pal=PAL(),tSec=Date.now()/1000;
   S.poses=R.people.map(p=>poseOf(p,tSec)).filter(Boolean);
+  S.guestPoses=S.view===0?guestPoses(tSec):[];
   if(S.follow){const o=S.poses.find(o=>o.p.id===S.follow);if(o){if(S.view!==o.f)setView(o.f,true);ZF=FZ(o.f);const w=Q(o.r,o.c,30);cam.tx=w[0];cam.ty=w[1]}}
   const k=.14;cam.x+=(cam.tx-cam.x)*k;cam.y+=(cam.ty-cam.y)*k;cam.s+=(baseScale()*cam.z-cam.s)*k;
   ctx.setTransform(DPR,0,0,DPR,0,0);const g=ctx.createLinearGradient(0,0,0,SH);g.addColorStop(0,pal.sky1);g.addColorStop(1,pal.sky2);ctx.fillStyle=g;ctx.fillRect(0,0,SW,SH);
@@ -647,7 +717,7 @@ function draw(t){
   ZF=0;prism(DD+1.4,11,.3,1.8,0,22,"#3a4450");signL(DD+1.701,11.1,12.7,6,13,"#0f7c72","EFFRENSINDO");
   ctx.setTransform(DPR,0,0,DPR,0,0);
   if(S.view==="out"){HIT_BUBBLES=[];HIT_PEOPLE=[];HIT_PLAQ=[];HIT_DIVS=[];drawFloorBadges(S.hover?.type==="floor"?S.hover.f:-1)}
-  else{HIT_FLOORS=[];drawPlaques(S.view);drawBubbles(bubbles,t)}
+  else{HIT_FLOORS=[];drawPlaques(S.view);drawBubbles(bubbles,t);if(S.view===0)drawGuestTags(S.guestPoses||[])}
 }
 function loop(t){try{draw(t)}catch(e){console.error(e)}requestAnimationFrame(loop)}
 
@@ -670,7 +740,7 @@ function pick(mx,my){
 const tip=$("tip");
 function showTip(h,mx,my){if(!h){tip.hidden=true;return}let html="";
   if(h.type==="person"){const p=personBy(h.id),o=S.poses.find(o=>o.p.id===h.id);if(!p){tip.hidden=true;return}const dv=divOf(p.div),st=S.seat[p.id];
-    html=`<b>${esc(p.name)}</b><br><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span><br>${esc(p.bagian||"—")}${p.jabatan?` · ${esc(p.jabatan)}`:""}<br><span style="color:var(--muted)">${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`):"Belum punya kursi"}</span>${o?`<br><span class="act"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${esc(o.act)}</span>`:""}`}
+    html=`<b>${esc(p.name)}</b><br><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span><br>${esc(p.bagian||"—")}${p.jabatan?` · ${esc(p.jabatan)}`:""}<br><span style="color:var(--muted)">${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`):"Belum punya kursi"}</span>${o?`<br><span class="act"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${o.emo?o.emo+" ":""}${esc(o.act)}</span>`:""}`}
   else if(h.type==="room"){const Rm=ROOMS[h.id],n=(S.roomPeople[h.id]||[]).length;html=`<b>${esc(Rm.name)}</b><br><span style="color:var(--muted)">${MODE==="admin"?"Klik untuk mengatur ruangan ini":esc(TYPE[Rm.type].name)}</span>`}
   else if(h.type==="div"){const d=R.divs[h.id],n=appsOf(h.id).length;html=`<b>${esc(d?.name||"")}</b><br><span style="color:var(--muted)">${n?`Klik untuk membuka ${n} aplikasi divisi ini`:"Divisi ini belum punya aplikasi khusus"}</span>`}
   else if(h.type==="floor")html=`<b>Lantai ${h.f+1}</b><br><span style="color:var(--muted)">Klik untuk masuk ke lantai ini</span>`;
@@ -790,13 +860,13 @@ function personRow(p){const dv=divOf(p.div),sel=S.sel?.type==="person"&&S.sel.id
   return`<button class="prow${sel?" sel":""}" data-act="pickPerson" data-id="${esc(p.id)}"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span>
     <div><div class="nm">${esc(p.name)}</div><div class="sb">${esc(dv.name)} · ${esc(p.bagian||p.jabatan||"—")}</div></div><span class="loc">${h&&!h.none?"Lt "+(h.f+1):"—"}</span></button>`}
 function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s=S.seat[p.id];return s&&!s.none&&!s.over}).length,unassigned=R.people.filter(p=>S.seat[p.id]?.none).length;
-  const counts={work:0,meet:0,brk:0,talk:0,move:0,none:0};for(const o of S.poses)counts[o.ak]=(counts[o.ak]||0)+1;
+  const counts={work:0,meet:0,brk:0,talk:0,move:0,out:0,none:0};for(const o of S.poses)counts[o.ak]=(counts[o.ak]||0)+1;
   $("kpis").innerHTML=`<div class="kpi"><span>Karyawan</span><b>${n}</b><small>${n?unassigned?unassigned+" belum punya kursi":"semua sudah punya kursi":"belum ada data"}</small></div>
   <div class="kpi"><span>Divisi</span><b>${divList().length}</b><small>${esc(divList().slice(0,3).map(d=>d.name).join(", "))||"belum ada"}</small></div>
   <div class="kpi"><span>Kursi terisi</span><b>${seated}<small style="font-size:14px"> / ${TOTAL_SEATS}</small></b><small>di 4 lantai</small></div>
   <div class="kpi"><span>Kursi kosong</span><b>${TOTAL_SEATS-seated}</b><small>siap diisi</small></div>
   <div class="kpi"><span>Sedang bekerja</span><b>${counts.work}</b><small>${n?Math.round(counts.work/n*100)+"% dari karyawan":"—"}</small></div>
-  <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span></div></div>`}
+  <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span><span><i style="background:${ACT_COL.out}"></i>Di luar ${counts.out||0}</span></div></div>`}
 function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",gender:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",...pre}}}
 function renderDrawer(){if(!drawer)return;
   if(MODE==="admin"&&!S.edit){const ad=adminDrawer();if(ad){drawer.hidden=false;drawer.innerHTML=ad;return}}
@@ -822,7 +892,7 @@ function renderDrawer(){if(!drawer)return;
     drawer.innerHTML=`<div class="row"><div style="display:flex;gap:10px;align-items:center;min-width:0"><span class="av" style="background:${dv.color};width:40px;height:40px;font-size:14px">${esc(initials(p.name))}</span><div style="min-width:0"><h3>${esc(p.name)}</h3><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span></div></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
     <div class="kv"><span>ID karyawan</span><b>${esc(p.nik||"—")}</b><span>Jenis kelamin</span><b>${p.gender==="L"?"Laki-laki":p.gender==="P"?"Perempuan":"—"}</b><span>Bagian</span><b>${esc(p.bagian||"—")}</b><span>Jabatan</span><b>${esc(p.jabatan||"—")}</b>
       <span>Tempat</span><b>${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`)+(st.over?" (berdiri, ruangan penuh)":st.si!=null?" · "+esc(st.room.seats[st.si].label):""):"Belum punya kursi"}</b>
-      <span>Sekarang</span><b id="nowAct"><i class="dot" style="background:${o?ACT_COL[o.ak]:"#8a95a0"}"></i> ${esc(o?o.act:"—")}</b></div>
+      <span>Sekarang</span><b id="nowAct"><i class="dot" style="background:${o?ACT_COL[o.ak]:"#8a95a0"}"></i> ${o?.emo||""} ${esc(o?o.act:"—")}</b></div>
     <div class="acts"><button class="btn primary" data-act="${following?"unfollow":"follow"}">${following?"Berhenti mengikuti":"Ikuti di gedung"}</button><button class="btn" data-act="editPerson">Ubah</button>
       <button class="btn danger${S.armed==="delp"?" armed":""}" data-act="delPerson">${S.armed==="delp"?"Klik lagi untuk hapus":"Hapus"}</button></div>`;return}
   if(S.sel?.type==="room"){const Rm=ROOMS[S.sel.id],occ=S.seatOcc[Rm.id]||[],extra=(S.roomPeople[Rm.id]||[]).filter(p=>S.seat[p.id]?.over);
@@ -978,13 +1048,22 @@ const DEFAULT_SLIDES=[
 ];
 /* Label divisi bawaan per ruangan (bisa diubah di /admin → klik ruangan) */
 const DEFAULT_ROOM_DIVS={"3":["hccs"],"4":["hccs"],"10":["direksi"],"12":["komisaris"],"15":["finance"],"19":["scm"],"21":["finance"],"22":["scm"],"23":["engineering"],"24":["sales"],"25":["finance"],"26":["hccs"],"27":["engineering","sales"],"34":["hccs"]};
-const roomDivs=id=>(Array.isArray(R.rooms[id]?.divs)?R.rooms[id].divs:DEFAULT_ROOM_DIVS[id]||[]).filter(d=>R.divs[d]);
+const roomDivs=id=>[...new Set((Array.isArray(R.rooms[id]?.divs)?R.rooms[id].divs:DEFAULT_ROOM_DIVS[id]||[]).map(resolveDiv).filter(Boolean))];
 /* Daftar aplikasi & info ditulis langsung di kode (link langsung), tidak diambil dari database. */
 let APPS=DEFAULT_APPS.map(a=>({...a})),SLIDES=DEFAULT_SLIDES.map(x=>({...x}));
 const byOrder=(a,b)=>(a.order??99)-(b.order??99)||String(a.title).localeCompare(String(b.title));
 const appsSorted=()=>[...APPS].sort(byOrder);
-const appsOf=divId=>appsSorted().filter(a=>a.divId===divId);
-const divOfApp=a=>R.divs[a.divId]?{id:a.divId,...R.divs[a.divId]}:null;
+const DIV_HINT={hccs:["humancapital","hrd","hrga","hr"],scm:["supplychain","procurement","logistik"],teknik:["teknik","technical","maintenance"],finance:["keuangan","accounting"]};
+const DIV_ALIAS={hr:"hccs",humancapital:"hccs",humancapitalcorporateservice:"hccs",humancapitalcorporateservices:"hccs",hrd:"hccs",hrga:"hccs",hrdga:"hccs",supplychain:"scm",supplychainmanagement:"scm",engineer:"engineering",tehnik:"teknik"};
+const divKey=n=>{const k=String(n||"").toLowerCase().replace(/[^a-z]/g,"");return DIV_ALIAS[k]||k};
+/* cocokkan kode divisi bawaan (mis. "hccs") ke divisi di database, lewat ID atau nama */
+const resolveDiv=key=>{if(!key)return null;if(R.divs[key])return key;const k=divKey(key);
+  for(const id in R.divs)if(divKey(R.divs[id].name)===k||divKey(id)===k)return id;
+  if(k.length>=3)for(const id in R.divs){const n=String(R.divs[id].name||"").toLowerCase().replace(/[^a-z]/g,"");if(n.includes(k)||(DIV_HINT[k]||[]).some(x=>n.includes(x)))return id}
+  return null};
+const appOwner=a=>resolveDiv(a.divId);
+const appsOf=divId=>appsSorted().filter(a=>appOwner(a)===divId);
+const divOfApp=a=>{const id=appOwner(a);return id?{id,...R.divs[id]}:null};
 const ICON_KEYS=["book","box","building","shield","chart","check","chip","truck","heart","pie","pen","award"];
 const abbr=n=>{n=String(n||"?").trim();if(n.length<=4)return n.toUpperCase();const w=n.split(/[\s&]+/).filter(Boolean);return(w.length>1?w[0][0]+w[1][0]:n.slice(0,2)).toUpperCase()};
 const appTile=a=>`<a class="happ" style="--c:${a.color}" href="${esc(a.href)}" target="_blank" rel="noopener"><span class="ic">${svg(a.icon,22)}</span><div><b>${esc(a.title)}</b><small>${esc(a.desc)}</small></div><span class="go">${svg("arrow",14)}</span></a>`;
@@ -1000,7 +1079,7 @@ function openHub(div,person,moveCam){S.hub={div,person:person||null};S.focusDiv=
   renderHub();renderDivbar()}
 function closeHub(){S.hub=null;S.focusDiv=null;renderHub();renderDivbar()}
 function personMini(p){const dv=divOf(p.div),st=S.seat[p.id],o=S.poses.find(o=>o.p.id===p.id);
-  return`<div class="hub-person"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span><div><div style="font-weight:800">${esc(p.name)}</div><div class="meta">${esc([p.bagian,p.jabatan].filter(Boolean).join(" · ")||"—")} · ${st&&!st.none?esc("Lt "+(st.f+1)+" · "+st.room.name):"belum punya kursi"}</div></div>${o?`<span class="pill"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${esc(ACT_NAME[o.ak]||"")}</span>`:""}</div>`}
+  return`<div class="hub-person"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span><div><div style="font-weight:800">${esc(p.name)}</div><div class="meta">${esc([p.bagian,p.jabatan].filter(Boolean).join(" · ")||"—")} · ${st&&!st.none?esc("Lt "+(st.f+1)+" · "+st.room.name):"belum punya kursi"}</div></div>${o?`<span class="pill"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${o.emo||""} ${esc(ACT_NAME[o.ak]||"")}</span>`:""}</div>`}
 function renderHub(){const el=$("hub");if(!S.hub){el.hidden=true;el.innerHTML="";return}const d=R.divs[S.hub.div];if(!d){S.hub=null;S.focusDiv=null;el.hidden=true;return}
   const apps=appsOf(S.hub.div),p=S.hub.person?personBy(S.hub.person):null,np=S.divCount[S.hub.div]||0;el.style.setProperty("--c",d.color);el.hidden=false;
   el.innerHTML=`<div class="hub-head"><span class="big">${esc(abbr(d.name))}</span><div style="min-width:0"><div class="eb">Menu divisi</div><h3>${esc(d.name)}</h3><div class="meta">${np} karyawan · ${apps.length} aplikasi</div></div><button class="x" data-hub="close" aria-label="Tutup menu divisi">×</button></div>
@@ -1014,10 +1093,10 @@ $("hub").addEventListener("click",e=>{const b=e.target.closest("[data-hub]");if(
   else if(a==="follow"){const id=S.hub.person;if(S.follow===id)stopFollow();else startFollow(id);renderHub()}
   else if(a==="detail"){selectPerson(S.hub.person,false);$("panel")?.scrollIntoView({behavior:"smooth",block:"nearest"})}});
 
-function renderApps(){if(!$("appsGrid"))return;const dl=divList(),keys=dl.map(d=>d.id).filter(id=>APPS.some(a=>a.divId===id)),f=S.afilter||"";
+function renderApps(){if(!$("appsGrid"))return;const dl=divList(),keys=dl.map(d=>d.id).filter(id=>appsOf(id).length),f=S.afilter||"";
   $("afilter").innerHTML=`<button data-af="" aria-pressed="${!f}">Semua</button>`+keys.map(k=>{const d=R.divs[k];
     return`<button data-af="${k}" style="--c:${d?d.color:"#8a95a0"}" aria-pressed="${f===k}"><i></i>${esc(d?d.name:k.toUpperCase())}</button>`}).join("");
-  const list=appsSorted().filter(a=>!f||a.divId===f);$("appCount").textContent=list.length+" Aplikasi";
+  const list=appsSorted().filter(a=>!f||appOwner(a)===f);$("appCount").textContent=list.length+" Aplikasi";
   $("appsGrid").innerHTML=list.map(a=>{const d=divOfApp(a);return`<article class="app" style="--c:${a.color};--dc:${d?d.color:a.color}">
     <div class="app-top"><span class="ghost">${svg(a.icon,104)}</span><div class="app-ic">${svg(a.icon,24)}</div><span class="app-div"><i></i>${esc(d?d.name:"Umum")}</span></div>
     <div class="app-body"><h4>${esc(a.title)}</h4><p>${esc(a.desc)}</p></div>
@@ -1151,7 +1230,7 @@ function setupAdminGate(G){const gate=$("gate");if(!gate)return;
 function changed(){buildFloors();recompute();S.poses=R.people.map(p=>poseOf(p,Date.now()/1000)).filter(Boolean);
   if(S.sel?.type==="person"&&!personBy(S.sel.id))S.sel=null;
   renderKpis();if(!(S.form&&drawer.contains(document.activeElement)))renderDrawer();renderBody();renderDivbar();renderApps();renderInfo();renderHub()}
-setInterval(()=>{renderKpis();if(S.sel?.type==="person"){const o=S.poses.find(o=>o.p.id===S.sel.id),el=$("nowAct");if(o&&el)el.innerHTML=`<i class="dot" style="background:${ACT_COL[o.ak]}"></i> ${esc(o.act)}`}},1500);
+setInterval(()=>{renderKpis();if(S.sel?.type==="person"){const o=S.poses.find(o=>o.p.id===S.sel.id),el=$("nowAct");if(o&&el)el.innerHTML=`<i class="dot" style="background:${ACT_COL[o.ak]}"></i> ${o.emo||""} ${esc(o.act)}`}},1500);
 function tickClock(){const d=new Date();$("clockTime").textContent=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"});$("clockDay").textContent=d.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"short"});
   $("sun").style.background=isNight()?"radial-gradient(circle at 35% 35%,#f2f4ff,#9aa7d6)":"radial-gradient(circle at 35% 35%,#ffe58a,#f6b52e)"}
 tickClock();setInterval(tickClock,1000);
