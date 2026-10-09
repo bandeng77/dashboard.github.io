@@ -321,6 +321,7 @@ function buildRoom(R){
   if(R.custom){R.custom.forEach((it,i)=>{const s={r:it.r,c:it.c,face:it.face||"up",desk:it.t==="desk",ds:it.ds||"std",cs:it.cs||"office",label:"Kursi "+(i+1)};
     if(s.desk){const u=unitDesk(s);out.push({k:(u[0]+u[2])/2+(u[1]+u[3])/2,d:()=>drawUnitDesk(s,seed+i)});for(const q of deskRects(s))blk(q[0],q[1],q[2],q[3])}
     home(s)})}
+  if(R.noSeats)seats.length=0;
   if(!seats.length&&EDITABLE.has(R.type)){const pts=[];
     for(let rr=r0+.6;rr<r1-.4;rr+=.9)for(let cc=c0+.6;cc<c1-.4;cc+=1.1){if(blocks.some(b=>rr>=b[0]-.2&&rr<=b[2]+.2&&cc>=b[1]-.2&&cc<=b[3]+.2))continue;pts.push([rr,cc])}
     const pick=pts.filter((_,i)=>i%Math.max(1,Math.floor(pts.length/4))===0).slice(0,4);
@@ -340,6 +341,7 @@ function buildFloors(){
   for(const k in ROOMS)delete ROOMS[k];
   for(let f=0;f<FLOORS;f++)FL[f]={rooms:[],items:[],floorItems:[],blocks:[],spots:[],hw:new Map(),vw:new Map()};
   for(const d of ROOM_DEFS){const Rm={...d,doors:d.doors||[]};
+    Rm.noSeats=!!R.rooms[d.id]?.noSeats;
     Rm.custom=S.edit&&S.edit.room===d.id?S.edit.items:(EDITABLE.has(d.type)&&Array.isArray(R.layouts[d.id]?.items)?R.layouts[d.id].items:null);
     const b=buildRoom(Rm);Rm.seats=b.seats.map((s,i)=>({...s,i,label:s.label||((s.group?s.group+" · ":"")+"Kursi "+(i+1))}));Rm.spots=b.spots;Rm.doorOut=b.doorOut;
     ROOMS[Rm.id]=Rm;const F=FL[Rm.f];F.rooms.push(Rm);for(const it of b.items)(it.floor?F.floorItems:F.items).push(it);F.blocks.push(...b.blocks);F.spots.push(...b.spots);
@@ -596,8 +598,8 @@ function drawBubbles(list,t){
   for(const it of items)HIT_PEOPLE.push({id:it.o.p.id,x:it.b[0]-9*cam.s,y:it.s[1]-2*cam.s,w:18*cam.s,h:it.b[1]-it.s[1]+4*cam.s});
   let show=items;if(S.lab==="off")show=items.filter(it=>it.o.sel||it.o.hov);
   show.sort((a,b)=>b.s[1]-a.s[1]);const placed=[];
-  for(const it of show){const o=it.o,dv=divOf(o.p.div),full=S.lab==="full"||o.sel||o.hov,showName=o.sel||o.hov;
-    ctx.font="800 10px Manrope, sans-serif";const l1=fitText(dv.name.toUpperCase(),130),w1=ctx.measureText(l1).width;
+  for(const it of show){const o=it.o,dv=divOf(o.p.div),byName=S.lab==="name",full=S.lab==="full"||o.sel||o.hov,showName=(o.sel||o.hov)&&!byName;
+    ctx.font="800 10px Manrope, sans-serif";const l1=byName?fitText(o.p.name,150):fitText(dv.name.toUpperCase(),130),w1=ctx.measureText(l1).width;
     ctx.font="700 10.5px Manrope, sans-serif";const l2=full?fitText(o.p.bagian||o.p.jabatan||"—",140):"",w2=full?ctx.measureText(l2).width+12:0;
     ctx.font="800 12px Manrope, sans-serif";const l0=showName?fitText(o.p.name,160):"",w0=showName?ctx.measureText(l0).width:0;
     const bw=Math.max(w1+14,w2+12,w0+14),hTop=showName?17:0,bh=hTop+15+(full?16:0),bobY=Math.sin(t/600+(o.p._h%50))*1.6;
@@ -702,7 +704,7 @@ document.querySelectorAll("#floorSeg button").forEach(b=>b.onclick=()=>setView(b
 document.querySelectorAll("#labelSeg button[data-lab]").forEach(b=>b.onclick=()=>{S.lab=b.dataset.lab;document.querySelectorAll("#labelSeg button[data-lab]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));try{localStorage.setItem("ke-lab",S.lab)}catch{}});
 $("plaqBtn").onclick=()=>{S.plaques=!S.plaques;$("plaqBtn").setAttribute("aria-pressed",String(S.plaques))};
 document.querySelectorAll("#daySeg button").forEach(b=>b.onclick=()=>{S.dayMode=b.dataset.day;document.querySelectorAll("#daySeg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)))});
-try{const l=localStorage.getItem("ke-lab");if(l&&["full","div","off"].includes(l)){S.lab=l;document.querySelectorAll("#labelSeg button[data-lab]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.lab===l)))}}catch{}
+try{const l=localStorage.getItem("ke-lab");if(l&&["full","div","name","off"].includes(l)){S.lab=l;document.querySelectorAll("#labelSeg button[data-lab]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.lab===l)))}}catch{}
 const followEl=$("follow");
 function stopFollow(){if(!S.follow)return;S.follow=null;followEl.hidden=true}
 function startFollow(id){const p=personBy(id);if(!p)return;S.follow=id;cam.z=Math.max(cam.z,1.5);followEl.hidden=false;
@@ -786,7 +788,7 @@ function seatOptions(roomId,sel,selfId){const Rm=ROOMS[roomId];if(!Rm)return opt
   return opt("auto","Otomatis (kursi kosong pertama)",sel)+Rm.seats.map((s,i)=>{const p=occ[i];return opt(i,`${s.label} — ${p?(p.id===selfId?"(kursi saat ini)":"terisi: "+p.name):"kosong"}`,sel)}).join("")}
 function personRow(p){const dv=divOf(p.div),sel=S.sel?.type==="person"&&S.sel.id===p.id,h=S.seat[p.id];
   return`<button class="prow${sel?" sel":""}" data-act="pickPerson" data-id="${esc(p.id)}"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span>
-    <div><div class="nm">${esc(p.name)}</div><div class="sb">${esc(dv.name)} · ${esc(p.bagian||p.jabatan||"—")}</div></div><span class="loc">${h&&!h.none?"Lt "+(h.f+1)+" · "+esc(h.room.id):"—"}</span></button>`}
+    <div><div class="nm">${esc(p.name)}</div><div class="sb">${esc(dv.name)} · ${esc(p.bagian||p.jabatan||"—")}</div></div><span class="loc">${h&&!h.none?"Lt "+(h.f+1):"—"}</span></button>`}
 function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s=S.seat[p.id];return s&&!s.none&&!s.over}).length,unassigned=R.people.filter(p=>S.seat[p.id]?.none).length;
   const counts={work:0,meet:0,brk:0,talk:0,move:0,none:0};for(const o of S.poses)counts[o.ak]=(counts[o.ak]||0)+1;
   $("kpis").innerHTML=`<div class="kpi"><span>Karyawan</span><b>${n}</b><small>${n?unassigned?unassigned+" belum punya kursi":"semua sudah punya kursi":"belum ada data"}</small></div>
@@ -826,6 +828,7 @@ function renderDrawer(){if(!drawer)return;
   if(S.sel?.type==="room"){const Rm=ROOMS[S.sel.id],occ=S.seatOcc[Rm.id]||[],extra=(S.roomPeople[Rm.id]||[]).filter(p=>S.seat[p.id]?.over);
     drawer.innerHTML=`<div class="row"><div style="min-width:0"><div class="sec" style="margin:0">Lantai ${Rm.f+1}</div><h3>${esc(Rm.name)}</h3></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
     ${roomDivEditor(Rm)}
+    ${SEATABLE.has(Rm.type)?`<div class="sec">Kursi kerja</div><div class="kinds" style="grid-template-columns:repeat(2,1fr)"><button data-act="seatMode" data-v="on" aria-pressed="${!Rm.noSeats}">Ada kursi kerja</button><button data-act="seatMode" data-v="off" aria-pressed="${!!Rm.noSeats}">Tanpa kursi kerja</button></div><div class="meta">${Rm.noSeats?"Ruangan ini tidak dihitung sebagai tempat duduk. Karyawan tetap bisa datang ke sini.":"Pilih <b>Tanpa kursi kerja</b> untuk ruangan seperti pantry yang tidak perlu diisi karyawan."}</div>`:""}
     ${EDITABLE.has(Rm.type)?`<div class="acts" style="align-items:center"><button class="btn" data-act="startEdit">Atur meja & kursi</button>${R.layouts[Rm.id]?`<span class="pill">Tata letak manual</span>`:""}</div>`:""}
     ${Rm.seats.length?`<div class="meta">${occ.filter(Boolean).length} dari ${Rm.seats.length} kursi terisi. Kursi kosong ditandai <b style="color:#12c08a">+</b> di gedung.</div>
     <div class="plist">${Rm.seats.map((s,i)=>{const p=occ[i];return p?`<button class="prow" data-act="pickPerson" data-id="${esc(p.id)}"><span class="av" style="background:${divOf(p.div).color}">${esc(initials(p.name))}</span><div><div class="nm">${esc(p.name)}</div><div class="sb">${esc(s.label)} · ${esc(divOf(p.div).name)}</div></div><span class="loc">${esc(p.bagian||"")}</span></button>`
@@ -1052,6 +1055,7 @@ $("themeBtn").onclick=()=>{const root=document.documentElement,cur=root.dataset.
 /* =========================================================
    ADMIN: aplikasi, info & sertifikat, pengaturan, login
    ========================================================= */
+const SEATABLE=new Set(["cluster","office","exec","reception","logbook","server","arsip","service","pantry"]);
 function roomDivEditor(Rm){const mine=S.rdiv&&S.rdiv.room===Rm.id,cur=mine?S.rdiv.list:roomDivs(Rm.id),dirty=mine&&S.rdiv.dirty;
   return`<div class="sec">Label divisi ruangan</div><div class="acts">${divList().map(d=>{const on=cur.includes(d.id);return`<button class="btn sm" data-act="rdiv" data-id="${esc(d.id)}" aria-pressed="${on}" style="${on?`background:${d.color};color:#fff;border-color:${d.color}`:""}">${esc(d.name)}</button>`}).join("")||`<span class="meta">Belum ada divisi.</span>`}</div>
   ${dirty?`<div class="acts"><button class="btn primary sm" data-act="saveRdiv">Simpan label divisi</button><button class="btn sm" data-act="cancelRdiv">Batal</button></div>`:`<div class="meta">Klik divisi untuk memasang atau melepas label. Di halaman utama, klik label ini membuka menu aplikasi divisinya.</div>`}`}
@@ -1106,8 +1110,10 @@ async function moveItem(col,list,id,dir){const arr=[...list].sort(byOrder);arr.f
     for(const x of arr)if(x!==a&&x!==b&&x.order!==x._o)await store.update(col,x.id,{order:x._o})})}
 async function adminAction(a,b){
   if(a==="rdiv"){const id=S.sel?.id;if(!id)return true;if(!S.rdiv||S.rdiv.room!==id)S.rdiv={room:id,list:[...roomDivs(id)],dirty:false};const l=S.rdiv.list,k=l.indexOf(b.dataset.id);if(k>=0)l.splice(k,1);else l.push(b.dataset.id);S.rdiv.dirty=true;renderDrawer();return true}
-  if(a==="saveRdiv"){const r=S.rdiv;if(!r)return true;if(await safe(()=>store.set("rooms",r.room,{divs:r.list,updatedAt:Date.now()}),"Label divisi disimpan")){S.rdiv=null;renderDrawer()}return true}
+  if(a==="saveRdiv"){const r=S.rdiv;if(!r)return true;if(await safe(()=>store.set("rooms",r.room,{...(R.rooms[r.room]||{}),divs:r.list,updatedAt:Date.now()}),"Label divisi disimpan")){S.rdiv=null;renderDrawer()}return true}
   if(a==="cancelRdiv"){S.rdiv=null;renderDrawer();return true}
+  if(a==="seatMode"){const id=S.sel?.id;if(!id)return true;const off=b.dataset.v==="off";if(!!ROOMS[id]?.noSeats===off)return true;
+    if(await safe(()=>store.set("rooms",id,{...(R.rooms[id]||{}),noSeats:off,updatedAt:Date.now()}),off?"Kursi kerja di ruangan ini dihilangkan":"Kursi kerja diaktifkan lagi"))renderDrawer();return true}
   if(a==="newApp"){S.sel=null;S.form={kind:"app",id:null,d:{title:"",desc:"",href:"https://",divId:"",icon:"book",color:APP_COLORS[0]}};renderDrawer();$("a-title")?.focus();return true}
   if(a==="editApp"){const x=APPS.find(z=>z.id===b.dataset.id);if(!x)return true;S.sel=null;S.form={kind:"app",id:x.id,d:{title:x.title||"",desc:x.desc||"",href:x.href||"",divId:x.divId||"",icon:x.icon||"book",color:x.color||APP_COLORS[0]}};renderDrawer();return true}
   if(a==="aIcon"){S.form.d.icon=b.dataset.k;renderDrawer();return true}
