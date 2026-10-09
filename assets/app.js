@@ -125,7 +125,7 @@ function boxMesh(){const Pp=[],Nn=[],I=[];const F=[[[1,0,0],[0,1,0],[0,0,1]],[[-
   return{P:new Float32Array(Pp),N:new Float32Array(Nn),I:new Uint16Array(I)}}
 function discMesh(n=24,inner=0){const Pp=[],Nn=[],I=[];for(let i=0;i<=n;i++){const a=i/n*Math.PI*2,c=Math.cos(a),s=Math.sin(a);Pp.push(c,0,s,c*inner,0,s*inner);Nn.push(0,1,0,0,1,0);if(i<n){const k=i*2;I.push(k,k+2,k+1,k+1,k+2,k+3)}}
   return{P:new Float32Array(Pp),N:new Float32Array(Nn),I:new Uint16Array(I)}}
-const MESH={sph:superE(1,1,16,10),sphL:superE(1,1,10,7),rb:superE(.35,.35,14,10),soft:superE(.6,.6,14,10),limb:superE(1,.45,10,8),cyl:superE(1,.15,16,8),box:boxMesh(),disc:discMesh(24,0),ring:discMesh(32,.72)};
+const MESH={sph:superE(1,1,16,10),sphL:superE(1,1,10,7),rb:superE(.35,.35,14,10),soft:superE(.6,.6,14,10),limb:superE(1,.45,10,8),cyl:superE(1,.15,16,8),box:boxMesh(),disc:discMesh(24,0),ring:discMesh(32,.72),flare:surf((u,v)=>{const a=u*Math.PI*2,r=v<.92?.6+.4*v/.92:1-(v-.92)/.08*.15,y=v<.92?1-2*v/.92:-1-(v-.92)/.08*.06;return[Math.cos(a)*r,y,Math.sin(a)*r]},18,8)};
 /* ---- warna ---- */
 const COLC=new Map();
 function parseCol(s){let k=COLC.get(s);if(k)return k;let em=0,t=String(s);if(t[0]==="!"){em=1;t=t.slice(1)}let r=0,g=0,b=0,a=1;
@@ -694,13 +694,13 @@ const ND=(mesh,col,p,s,r,x)=>Object.assign({mesh,col,p:p||[0,0,0],s:s||[1,1,1],r
 const ADD=(a,...k)=>{a.kids.push(...k);return a};
 function makePerson(o){
   const sk=o.skin,sh=o.shirt,pa=o.pants,hr=o.hair,D={det:true};
-  const root=ND(),hips=ND("rb",pa,[0,.80,0],[.17,.10,.12]);ADD(root,hips);root.k=PS;
-  const leg=sx=>{const top=ND(null,0,[sx*.088,-.03,0]),th=ND("limb",pa,[0,-.18,0],[.078,.2,.085]),knee=ND(null,0,[0,-.36,0]),
-      sn=ND("limb",pa,[0,-.17,0],[.068,.19,.074]),ft=ND(null,0,[0,-.35,0]),sho=ND("soft","#26221f",[0,-.035,.045],[.075,.045,.125]);
+  const lp=o.skirt||pa;const root=ND(),hips=ND("rb",o.tunic?sh:lp,[0,.80,0],[.17,.10,.12]);ADD(root,hips);root.k=PS;
+  const leg=sx=>{const top=ND(null,0,[sx*.088,-.03,0]),th=ND("limb",lp,[0,-.18,0],[.078,.2,.085]),knee=ND(null,0,[0,-.36,0]),
+      sn=ND("limb",lp,[0,-.17,0],[.068,.19,.074]),ft=ND(null,0,[0,-.35,0]),sho=ND("soft","#26221f",[0,-.035,.045],[.075,.045,.125]);
     ADD(ft,sho);ADD(knee,sn,ft);ADD(top,th,knee);top.knee=knee;return top};
-  const lL=leg(-1),lR=leg(1);ADD(hips,lL,lR);
+  const lL=leg(-1),lR=leg(1);ADD(hips,lL,lR);let skirt=null;if(o.skirt){skirt=ND("flare",o.skirt,[0,-.33,0],[.26,.36,.22]);ADD(hips,skirt)}if(o.tunic)ADD(hips,ND("flare",sh,[0,-.15,0],[.215,.19,.165]));
   const spine=ND(null,0,[0,.03,0]);ADD(hips,spine);
-  ADD(spine,ND("soft",sh,[0,.23,0],[.2,.25,.135]),ND("rb","#2b2623",[0,0,0],[.185,.03,.128],0,D),ND("soft","#f5f3ee",[0,.445,.045],[.1,.035,.07],0,D),
+  ADD(spine,ND("soft",sh,[0,.23,0],[.2,.25,.135]),ND("rb",o.tunic||o.skirt===sh?sh:"#2b2623",[0,0,0],[.185,.03,.128],0,D),ND("soft","#f5f3ee",[0,.445,.045],[.1,.035,.07],0,D),
     ND("box","#1d3557",[0,.36,.128],[.012,.06,.004],0,D),ND("box","#ffffff",[0,.27,.136],[.045,.055,.006],0,D),ND("limb",sk,[0,.49,0],[.07,.06,.07]));
   const head=ND(null,0,[0,.71,0]);ADD(spine,head);const hijab=o.style==="hijab";
   ADD(head,ND("sph",sk,[0,0,0],[.27,.27,.255]));
@@ -712,7 +712,11 @@ function makePerson(o){
   if(o.glasses){for(const sx of[-1,1]){const g=ND(null,0,[sx*.095,0,fz+.022],0,0,D);ADD(head,g);
     ADD(g,ND("box","#1e2328",[0,.052,0],[.072,.009,.006]),ND("box","#1e2328",[0,-.05,0],[.072,.009,.006]),ND("box","#1e2328",[-.068,0,0],[.009,.052,.006]),ND("box","#1e2328",[.068,0,0],[.009,.052,.006]))}
     ADD(head,ND("box","#1e2328",[0,.02,fz+.022],[.03,.007,.006],0,D))}
-  if(hijab){const hj=o.hijab;ADD(head,ND("sph",hj,[0,.02,-.06],[.305,.31,.30]),ND("soft",hj,[0,-.25,-.03],[.29,.15,.25]),ND("soft",hj,[0,-.27,.06],[.21,.1,.15]))}
+  if(hijab){const hj=o.hijab,hs=o.hstyle||"segi";ADD(head,ND("sph",hj,[0,.02,-.06],[.305,.31,.30]));
+    if(hs==="syari")ADD(head,ND("soft",hj,[0,-.33,-.02],[.33,.21,.26]),ND("soft",hj,[0,-.48,.07],[.23,.2,.1]),ND("soft",hj,[0,-.27,.06],[.22,.1,.16]));
+    else if(hs==="pashmina")ADD(head,ND("soft",hj,[0,-.24,-.01],[.27,.095,.23]),ND("soft",hj,[.13,-.43,.14],[.07,.2,.035],[0,0,-.12]),ND("soft",hj,[-.15,-.37,-.13],[.06,.15,.04]),ND("soft",hj,[-.06,-.27,.12],[.12,.06,.07],[0,0,.4]));
+    else if(hs==="instan")ADD(head,ND("soft",hj,[0,-.24,-.02],[.27,.11,.23]),ND("soft",hj,[0,-.3,.11],[.15,.11,.08]),ND("soft",hj,[0,.2,.16],[.2,.045,.06],[-.4,0,0]));
+    else ADD(head,ND("soft",hj,[0,-.25,-.03],[.29,.15,.25]),ND("soft",hj,[0,-.27,.06],[.21,.1,.15]))}
   else if(o.style==="buzz")ADD(head,ND("sph",hr,[0,.07,-.025],[.278,.255,.27]));
   else{ADD(head,ND("sph",hr,[0,.055,-.04],[.287,.27,.275]));
     if(o.style==="long")ADD(head,ND("soft",hr,[0,-.14,-.13],[.25,.25,.13]),ND("soft",hr,[-.22,-.08,.02],[.06,.2,.1]),ND("soft",hr,[.22,-.08,.02],[.06,.2,.1]),ND("soft",hr,[0,.17,.15],[.24,.075,.1],[-.45,0,0]));
@@ -721,17 +725,17 @@ function makePerson(o){
     else ADD(head,ND("soft",hr,[.03,.19,.15],[.2,.06,.085],[-.75,0,.1]))}
   if(o.beard)ADD(head,ND("soft",hr,[0,-.17,.08],[.19,.09,.15]),ND("soft",hr,[0,-.075,.225],[.07,.016,.016],0,D));
   if(o.peci)ADD(head,ND("cyl","#1c1c1f",[0,.2,-.01],[.245,.075,.245],[-.12,0,0]));
-  const arm=sx=>{const s0=ND(null,0,[sx*.245,.40,0],0,[0,0,sx*.1]),el=ND(null,0,[0,-.25,0]);ADD(el,ND("limb",sk,[0,-.1,0],[.055,.12,.055]),ND("sphL",sk,[0,-.235,0],[.058,.066,.052]));
+  const arm=sx=>{const s0=ND(null,0,[sx*.245,.40,0],0,[0,0,sx*.1]),el=ND(null,0,[0,-.25,0]);ADD(el,ND("limb",o.longSleeve?sh:sk,[0,-.1,0],[o.longSleeve?.06:.055,.12,o.longSleeve?.06:.055]),ND("sphL",sk,[0,-.235,0],[.058,.066,.052]));
     ADD(s0,ND("limb",sh,[0,-.12,0],[.072,.15,.072]),el);s0.el=el;return s0};
   const aL=arm(-1),aR=arm(1);ADD(spine,aL,aR);
   const shadow=ND("disc","#000000",[0,.006,0],[.32,1,.26],0,{a:.2});ADD(root,shadow);
-  root.j={hips,lL,lR,spine,head,aL,aR,shadow};root.ph=o.ph||0;return root}
+  root.j={hips,lL,lR,spine,head,aL,aR,shadow,skirt};root.ph=o.ph||0;return root}
 function poseP(Pn,mode,t,yaw){const j=Pn.j,ph=Pn.ph;Pn.r[1]=yaw;
-  j.hips.p[1]=.80;j.spine.r[0]=0;j.head.r=[0,0,0];j.shadow.hide=false;
+  j.hips.p[1]=.80;j.spine.r[0]=0;j.head.r=[0,0,0];j.shadow.hide=false;if(j.skirt)j.skirt.hide=mode==="sit"||mode==="type";const sw=j.skirt?.36:.55;
   for(const[a,sx]of[[j.aL,-1],[j.aR,1]]){a.r=[0,0,sx*.1];a.el.r=[0,0,0]}
   for(const l of[j.lL,j.lR]){l.r=[0,0,0];l.knee.r=[0,0,0]}
   if(mode==="walk"){const w=t*7.5+ph,s=Math.sin(w);j.hips.p[1]=.80+Math.abs(Math.cos(w))*.025;
-    j.lL.r[0]=s*.55;j.lR.r[0]=-s*.55;j.lL.knee.r[0]=Math.max(0,Math.sin(w-1.3))*.85;j.lR.knee.r[0]=Math.max(0,-Math.sin(w-1.3))*.85;
+    j.lL.r[0]=s*sw;j.lR.r[0]=-s*sw;j.lL.knee.r[0]=Math.max(0,Math.sin(w-1.3))*.85;j.lR.knee.r[0]=Math.max(0,-Math.sin(w-1.3))*.85;
     j.aL.r[0]=-s*.5;j.aR.r[0]=s*.5;j.aL.el.r[0]=-.3;j.aR.el.r[0]=-.3;j.spine.r[0]=.05}
   else if(mode==="sit"||mode==="type"){j.hips.p[1]=.53;j.lL.r[0]=j.lR.r[0]=-1.5;j.lL.knee.r[0]=j.lR.knee.r[0]=1.45;j.lL.r[2]=-.04;j.lR.r[2]=.04;j.shadow.hide=true;
     if(mode==="type"){const k=t*14+ph;j.aL.r[0]=j.aR.r[0]=-.55;j.aL.el.r[0]=-1+Math.sin(k)*.06;j.aR.el.r[0]=-1+Math.sin(k+2.1)*.06;j.aL.r[2]=.06;j.aR.r[2]=-.06;j.head.r[0]=.12+Math.sin(t*.7+ph)*.03;j.head.r[1]=Math.sin(t*.4+ph)*.08}
@@ -744,8 +748,8 @@ const LOOKS={
   pria:{name:"Pria",style:"short"},pria_kc:{name:"Pria berkacamata",style:"short",glasses:true},pria_cepak:{name:"Pria cepak",style:"buzz"},
   pria_jenggot:{name:"Pria berjenggot",style:"short",beard:true},pria_peci:{name:"Pria berpeci",style:"buzz",peci:true},pria_jkc:{name:"Pria jenggot & kacamata",style:"buzz",beard:true,glasses:true},
   wanita:{name:"Wanita rambut panjang",style:"long",fem:true},wanita_kc:{name:"Wanita berkacamata",style:"long",glasses:true,fem:true},wanita_bob:{name:"Wanita rambut pendek",style:"bob",fem:true},
-  wanita_cepol:{name:"Wanita rambut dicepol",style:"bun",fem:true},hijab:{name:"Berhijab",style:"hijab",fem:true},hijab_kc:{name:"Berhijab berkacamata",style:"hijab",glasses:true,fem:true}};
-const LOOK_AUTO={L:["pria","pria","pria_kc","pria_cepak","pria_jenggot","pria_kc"],P:["hijab","hijab","hijab_kc","wanita","wanita_kc","wanita_cepol","hijab","wanita_bob"]};
+  wanita_cepol:{name:"Wanita rambut dicepol",style:"bun",fem:true},hijab:{name:"Berhijab",style:"hijab",fem:true},hj_lp:{name:"Hijab lengan panjang",style:"hijab",fem:true,ls:true},hj_rok:{name:"Hijab & rok panjang",style:"hijab",fem:true,ls:true,skirt:true},hj_pash:{name:"Pashmina & rok",style:"hijab",hs:"pashmina",fem:true,ls:true,skirt:true},hj_syari:{name:"Hijab syar'i & gamis",style:"hijab",hs:"syari",fem:true,ls:true,gamis:true},hj_tunik:{name:"Hijab instan & tunik",style:"hijab",hs:"instan",fem:true,ls:true,tunic:true},hijab_kc:{name:"Berhijab berkacamata",style:"hijab",glasses:true,fem:true}};
+const LOOK_AUTO={L:["pria","pria","pria_kc","pria_cepak","pria_jenggot","pria_kc"],P:["hj_lp","hj_rok","hijab_kc","wanita","wanita_kc","wanita_cepol","hj_pash","wanita_bob","hj_syari","hj_tunik","hijab"]};
 const HAIRC=[["#1f1a17","Hitam"],["#3d2b1f","Coklat tua"],["#6b4428","Coklat"],["#8a4b2a","Merah bata"],["#8d8d8d","Abu-abu"]];
 const HIJABC=[["#7c5aa6","Ungu"],["#2f6f8f","Biru"],["#a0522d","Coklat"],["#3f6b4f","Hijau"],["#8b3a5a","Marun"],["#c08a3e","Mustard"],["#1f2430","Hitam"],["#d8c7ad","Krem"]];
 const SKINN=["Terang","Kuning langsat","Sawo matang","Coklat","Gelap"];
@@ -755,17 +759,17 @@ function lookOf(p){const h=p._h||0,g=p.gender==="L"||p.gender==="P"?p.gender:(h>
   const hc=Number.isInteger(+p.hc)&&p.hc!==""&&p.hc!=null?+p.hc:-1;
   return{key,...L,skin,hair:HAIRC[(hc>=0&&hc<HAIRC.length?hc:(h>>>3)%3)][0],hijab:HIJABC[(hc>=0&&hc<HIJABC.length?hc:(h>>>11)%HIJABC.length)][0]}}
 function buildPerson(p){const h=p._h||0,L=lookOf(p);
-  return makePerson({shirt:p._col||"#7d8a90",pants:PANTS[(h>>>6)%5],skin:SKIN[L.skin],hair:L.hair,style:L.style,hijab:L.hijab,glasses:!!L.glasses,beard:!!L.beard,peci:!!L.peci,fem:!!L.fem,ph:(h%97)/10})}
+  const sh=p._col||"#7d8a90";return makePerson({shirt:sh,pants:PANTS[(h>>>6)%5],skin:SKIN[L.skin],hair:L.hair,style:L.style,hijab:L.hijab,glasses:!!L.glasses,beard:!!L.beard,peci:!!L.peci,fem:!!L.fem,longSleeve:!!L.ls,tunic:!!L.tunic,skirt:L.gamis?sh:L.skirt?["#2f3a48","#4a3f55","#3b3f46","#5b4a3a"][(h>>>4)%4]:null,hstyle:L.hs,ph:(h%97)/10})}
 const PEEPS=new Map();
 function personOf(p){const key=[p._col,p.gender,p._h,p.look,p.skin,p.hc].join("|");let e=PEEPS.get(p.id);if(e&&e.key===key)return e.node;
   const node=buildPerson(p);PEEPS.set(p.id,{key,node});return node}
 /* gambar kecil karakter untuk menu pilihan (dirender di luar layar) */
 const THUMBS=new Map();let THF=null;
-function avatarThumb(p,W=128,H=160){const key=[p._col,p.gender,p._h,p.look,p.skin,p.hc,W,H].join("|");if(THUMBS.has(key))return THUMBS.get(key);if(!GL_OK)return"";
+function avatarThumb(p,W=128,H=160){const key=[p._col,p.gender,p._h,p.look,p.skin,p.hc,W,H,p.pose,p.pt,p.yaw].join("|");if(THUMBS.has(key))return THUMBS.get(key);if(!GL_OK)return"";
   if(!THF||THF.w!==W||THF.h!==H){const fb=gl.createFramebuffer(),tx=gl.createTexture(),rb=gl.createRenderbuffer();gl.bindTexture(gl.TEXTURE_2D,tx);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,W,H);
     gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tx,0);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb);THF={fb,w:W,h:H}}
-  const node=buildPerson(p);poseP(node,"idle",.6,.42);node.j.shadow.hide=true;node.p=[0,0,0];
+  const node=buildPerson(p);poseP(node,p.pose||"idle",p.pt??.6,p.yaw??.42);node.j.shadow.hide=true;node.p=[0,0,0];
   gl.bindFramebuffer(gl.FRAMEBUFFER,THF.fb);gl.viewport(0,0,W,H);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(GLS.L);const L=GLS.l,eye=[0,.92,2.45];
   gl.uniformMatrix4fv(L.VP,false,M4.mul(M4.persp(.52,W/H,.3,20),M4.look(eye,[0,.6,0],[0,1,0])));gl.uniform3fv(L.E,eye);gl.uniform3f(L.L,.42,.84,.34);gl.uniform3f(L.SKY,1,.98,.95);gl.uniform3f(L.GND,.56,.53,.56);gl.uniform1f(L.AM,.62);gl.uniform1f(L.DI,.55);
   gl.depthMask(true);const op=[],tr=[];nodeDraws(node,ID4,1,true,op,tr);drawNodes(op);gl.depthMask(false);drawNodes(tr);gl.depthMask(true);
