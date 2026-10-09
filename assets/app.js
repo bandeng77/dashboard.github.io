@@ -72,8 +72,8 @@ const HOME_ACT={cluster:"Bekerja",office:"Bekerja",exec:"Bekerja",reception:"Mel
 const JABATAN=["Direktur","Komisaris","Manager","Supervisor","Staf"];
 const RANK=j=>{const i=JABATAN.indexOf(j);return i<0?9:i};
 const PALETTE=["#3b3f8f","#c2477a","#2e8b57","#d17f22","#2f6fd6","#7b4fc4","#d14b3c","#168f9c","#8a6d2f","#5b6b7a","#b5368f","#4f8a2b"];
-const ACT_COL={work:"#2fae61",meet:"#3b82f6",brk:"#f2a20c",talk:"#a35be0",move:"#8a95a0",out:"#f97316",none:"#8a95a0"};
-const ACT_NAME={work:"Bekerja",meet:"Rapat",brk:"Istirahat",talk:"Diskusi",move:"Berjalan",out:"Di luar kantor",none:"Belum punya kursi"};
+const ACT_COL={work:"#2fae61",meet:"#3b82f6",brk:"#f2a20c",talk:"#a35be0",move:"#8a95a0",out:"#f97316",home:"#64748b",none:"#8a95a0"};
+const ACT_NAME={work:"Bekerja",meet:"Rapat",brk:"Istirahat",talk:"Diskusi",move:"Berjalan",out:"Di luar kantor",home:"Sudah pulang",none:"Belum punya kursi"};
 
 /* =========================================================
    MESIN 3D (WebGL)
@@ -589,7 +589,9 @@ function planFor(p,n,home){
       const legs=legsTo(home,dest);if(legs){const D=legsDur(legs),stay=dest.sit?16+h%12:7+h%7,work=cycleT(p)-2*D-stay;if(D>.3&&work>10)pl={trip:{dest,legs,stay,work}}}}}
   if(S.cache.size>4000)S.cache.clear();S.cache.set(key,pl);return pl;
 }
-const LUNCH0=12*3600,LUNCH1=14*3600;
+const LUNCH0=12*3600,LUNCH1=14*3600,WORK0=7.5*3600,WORK1=17*3600;
+const EXIT=()=>({f:0,r:DD-.3,c:(ENTRANCE[0]+ENTRANCE[1])/2,face:"down",sit:false,hide:true,label:"Pulang",kind:"out",room:null});
+function exitLegs(p,home){const key="X:"+p.id;let v=S.cache.get(key);if(v===undefined){v=legsTo(home,EXIT());S.cache.set(key,v)}return v}
 function lunchPlan(p,home,day){
   const key="L:"+p.id+":"+day;let pl=S.cache.get(key);if(pl)return pl;const h=hash(key),start=LUNCH0+(h%35)*60+((h>>>6)%60),mode=h%10;
   pl={start,end:start+(20+h%20)*60,dest:null,legs:null};
@@ -605,6 +607,7 @@ function lunchPlan(p,home,day){
 const GUEST_COLS=["#6b7280","#b45309","#0f766e","#7c3aed","#be123c","#1d4ed8"];
 const GUEST_TRACKS=[{P:180,off:0},{P:240,off:113}];
 function guestPoses(tSec){const out=[],F=FL[0],R4=ROOMS["4"],RT=ROOMS["RT"];if(!F||!R4||!RT)return out;
+  {const d=new Date(tSec*1000),h=d.getHours()+d.getMinutes()/60;if(h<8.25||h>=16.75)return out}
   const ent={r:DD-.25,c:(ENTRANCE[0]+ENTRANCE[1])/2},desk={r:R4.r0+1.45,c:R4.c0},seats=RT.spots.filter(s=>s.sit);if(!seats.length)return out;
   GUEST_TRACKS.forEach((tr,ti)=>{const x=tSec+tr.off,n=Math.floor(x/tr.P),u=x-n*tr.P,h=hash("tamu"+ti+":"+n);if(h%3===0)return;
     const seat=seats[(h+ti*2)%seats.length],p1=gridPath(F,ent,desk),p2=gridPath(F,desk,seat),p3=gridPath(F,seat,ent),sp=1.0;
@@ -626,6 +629,12 @@ function poseOf(p,tSec){
   const atHome={...base,r:home.r,c:home.c,face:home.face,pose:home.sit?"sit":"stand",typing:home.sit&&!!(home.desk||home.boss||kind==="reception"),act:home.over?(home.room.seats.length?"Berdiri (ruangan penuh)":"Di "+home.room.name):HOME_ACT[kind]||"Bekerja",ak:kind==="meeting"?"meet":kind==="pantry"||kind==="mushola"?"brk":"work",emo:home.over?"🧍":EMO_HOME[kind]||"💻"};
   // istirahat makan siang 12:00–14:00 (jam lokal)
   const d=new Date(tSec*1000),sod=d.getHours()*3600+d.getMinutes()*60+d.getSeconds()+(tSec%1);
+  // jam kerja 07.30–17.00: datang bergiliran pagi, pulang mulai jam 17.00
+  {const h=p._h||0,dep=WORK1+(h%25)*60+((h>>>7)%60),arr=WORK0+((h>>>3)%40)*60+((h>>>9)%60);
+    if(sod>=dep||sod<arr+200){const X=exitLegs(p,home),D=X?legsDur(X):0,dest=EXIT();
+      if(X&&sod>=dep&&sod<dep+D){const r=tripPose(base,home,X,dest,1e9,sod-dep);if(r)return{...r,act:"Pulang ke rumah",ak:"move",emo:"👋"}}
+      if(X&&sod>=arr&&sod<arr+D){const r=tripPose(base,home,X,dest,0,D+(sod-arr));if(r)return{...r,act:"Datang ke kantor",ak:"move",emo:"☀️"}}
+      if(sod>=dep||sod<arr)return{...base,r:home.r,c:home.c,face:home.face||"down",pose:"stand",hidden:true,away:true,act:"Sudah pulang",ak:"home",emo:"🏠"}}}
   if(sod>=LUNCH0&&sod<LUNCH1){const L=lunchPlan(p,home,d.toDateString());
     if(sod>=L.start&&sod<L.end){if(!L.dest)return{...atHome,typing:false,act:"Makan siang di meja",ak:"brk",emo:"🍱"};
       const D=legsDur(L.legs),stay=Math.max(30,L.end-L.start-2*D),r=tripPose(base,home,L.legs,L.dest,stay,sod-L.start);if(r)return r}
@@ -660,7 +669,7 @@ function recWorld(){const pal=PAL();ZF=0;
 const winCol=(lit,k)=>NIGHT?(lit?"!#ffd77a":"#2d3d55"):(k%3===0?"#a9d6ea":"#8ec6e0");
 function recFacade(nf){const pal=PAL();ZF=0;if(nf<=0)return;const top=FZ(nf);
   prism(0,0,DD,WW,0,top-.6,pal.wall,{left:pal.wall,right:pal.wallR,top:"#98a3ac"});prism(-.02,-.02,DD+.04,WW+.04,0,8,"#6f7a84",{noTop:true});
-  for(let g=0;g<nf;g++){const z1=FZ(g)+10,z2=FZ(g+1)-16,busy=(S.floorCount?.[g]||0)>0;
+  for(let g=0;g<nf;g++){const z1=FZ(g)+10,z2=FZ(g+1)-16,busy=((S.present||S.floorCount)?.[g]||0)>0;
     for(let k=0,c=.3;c+1.1<=WW-.1;k++,c+=1.48){const lit=busy&&hash(g*31+k)%4!==0;if(!(g===0&&c+1.12>ENTRANCE[0]-.2&&c<ENTRANCE[1]+.2))faceL(DD+.01,c,c+1.12,z1,z2,winCol(lit,k+g));faceL(-.01,c,c+1.12,z1,z2,winCol(busy&&hash(g*13+k)%4!==0,k+g+2))}
     for(let k=0,r=.3;r+1.05<=DD-.1;k++,r+=1.45){faceR(WW+.01,r,r+1.05,z1,z2,winCol(busy&&hash(g*17+k)%3!==0,k+g+1));faceR(-.01,r,r+1.05,z1,z2,winCol(busy&&hash(g*7+k)%3!==0,k+g))}
     const b1=FZ(g+1)-8,b2=Math.min(FZ(g+1),top-.7);faceL(DD+.012,0,WW,b1,b2,"#56636f");faceL(-.012,0,WW,b1,b2,"#56636f");faceR(WW+.012,0,DD,b1,b2,"#4a5560");faceR(-.012,0,DD,b1,b2,"#4a5560")}
@@ -698,14 +707,19 @@ function makePerson(o){
   const fz=hijab?.262:.238;
   for(const sx of[-1,1])ADD(head,ND("sphL","#231d1a",[sx*.095,0,fz],[.036,.046,.02]),ND("sphL","#ffffff",[sx*.095+.012,.016,fz+.016],[.011,.011,.006],0,D),
     ND("rb",hijab?"#5b4637":hr,[sx*.095,.085,fz-.004],[.046,.011,.012],[0,0,-sx*.12],D),ND("sphL","#f2a594",[sx*.15,-.07,fz-.04],[.042,.024,.02],0,{det:true,a:.55}));
-  ADD(head,ND("sphL","#a64e3f",[0,-.105,fz-.002],[.042,.015,.012],0,D));
+  ADD(head,ND("sphL",o.fem?"#c4536a":"#a64e3f",[0,-.105,fz-.002],[.042,.015,.012],0,D));
   if(o.glasses){for(const sx of[-1,1]){const g=ND(null,0,[sx*.095,0,fz+.022],0,0,D);ADD(head,g);
     ADD(g,ND("box","#1e2328",[0,.052,0],[.072,.009,.006]),ND("box","#1e2328",[0,-.05,0],[.072,.009,.006]),ND("box","#1e2328",[-.068,0,0],[.009,.052,.006]),ND("box","#1e2328",[.068,0,0],[.009,.052,.006]))}
     ADD(head,ND("box","#1e2328",[0,.02,fz+.022],[.03,.007,.006],0,D))}
   if(hijab){const hj=o.hijab;ADD(head,ND("sph",hj,[0,.02,-.06],[.305,.31,.30]),ND("soft",hj,[0,-.25,-.03],[.29,.15,.25]),ND("soft",hj,[0,-.27,.06],[.21,.1,.15]))}
+  else if(o.style==="buzz")ADD(head,ND("sph",hr,[0,.07,-.025],[.278,.255,.27]));
   else{ADD(head,ND("sph",hr,[0,.055,-.04],[.287,.27,.275]));
     if(o.style==="long")ADD(head,ND("soft",hr,[0,-.14,-.13],[.25,.25,.13]),ND("soft",hr,[-.22,-.08,.02],[.06,.2,.1]),ND("soft",hr,[.22,-.08,.02],[.06,.2,.1]),ND("soft",hr,[0,.17,.15],[.24,.075,.1],[-.45,0,0]));
+    else if(o.style==="bob")ADD(head,ND("soft",hr,[-.215,-.06,-.05],[.085,.16,.17]),ND("soft",hr,[.215,-.06,-.05],[.085,.16,.17]),ND("soft",hr,[0,-.06,-.12],[.27,.18,.16]),ND("soft",hr,[0,.17,.15],[.25,.075,.1],[-.45,0,0]));
+    else if(o.style==="bun")ADD(head,ND("sph",hr,[0,.29,-.09],[.125,.115,.115]),ND("soft",hr,[0,.17,.15],[.24,.07,.1],[-.5,0,0]));
     else ADD(head,ND("soft",hr,[.03,.19,.15],[.2,.06,.085],[-.75,0,.1]))}
+  if(o.beard)ADD(head,ND("soft",hr,[0,-.17,.08],[.19,.09,.15]),ND("soft",hr,[0,-.075,.225],[.07,.016,.016],0,D));
+  if(o.peci)ADD(head,ND("cyl","#1c1c1f",[0,.2,-.01],[.245,.075,.245],[-.12,0,0]));
   const arm=sx=>{const s0=ND(null,0,[sx*.245,.40,0],0,[0,0,sx*.1]),el=ND(null,0,[0,-.25,0]);ADD(el,ND("limb",sk,[0,-.1,0],[.055,.12,.055]),ND("sphL",sk,[0,-.235,0],[.058,.066,.052]));
     ADD(s0,ND("limb",sh,[0,-.12,0],[.072,.15,.072]),el);s0.el=el;return s0};
   const aL=arm(-1),aR=arm(1);ADD(spine,aL,aR);
@@ -724,11 +738,39 @@ function poseP(Pn,mode,t,yaw){const j=Pn.j,ph=Pn.ph;Pn.r[1]=yaw;
   else if(mode==="talk"){const k=t*2.2+ph;j.aR.r[0]=-.6+Math.sin(k)*.15;j.aR.el.r[0]=-1.2+Math.sin(k*1.7)*.25;j.aR.r[2]=.25;j.aL.r[0]=-.15;j.aL.el.r[0]=-.25;j.head.r[1]=Math.sin(k*.6)*.18}
   else if(mode==="drink"){const k=(t*.6+ph)%4,lift=k<1.4?Math.sin(k/1.4*Math.PI):0;j.aR.r[0]=-.5-lift*.6;j.aR.el.r[0]=-1.6-lift*.5;j.head.r[0]=-lift*.18}
   else{j.spine.r[0]=Math.sin(t*1.6+ph)*.012;j.head.r[1]=Math.sin(t*.5+ph)*.22}}
+/* pilihan karakter (diatur per karyawan di /admin) */
+const LOOKS={
+  pria:{name:"Pria",style:"short"},pria_kc:{name:"Pria berkacamata",style:"short",glasses:true},pria_cepak:{name:"Pria cepak",style:"buzz"},
+  pria_jenggot:{name:"Pria berjenggot",style:"short",beard:true},pria_peci:{name:"Pria berpeci",style:"buzz",peci:true},pria_jkc:{name:"Pria jenggot & kacamata",style:"buzz",beard:true,glasses:true},
+  wanita:{name:"Wanita rambut panjang",style:"long",fem:true},wanita_kc:{name:"Wanita berkacamata",style:"long",glasses:true,fem:true},wanita_bob:{name:"Wanita rambut pendek",style:"bob",fem:true},
+  wanita_cepol:{name:"Wanita rambut dicepol",style:"bun",fem:true},hijab:{name:"Berhijab",style:"hijab",fem:true},hijab_kc:{name:"Berhijab berkacamata",style:"hijab",glasses:true,fem:true}};
+const LOOK_AUTO={L:["pria","pria","pria_kc","pria_cepak","pria_jenggot","pria_kc"],P:["hijab","hijab","hijab_kc","wanita","wanita_kc","wanita_cepol","hijab","wanita_bob"]};
+const HAIRC=[["#1f1a17","Hitam"],["#3d2b1f","Coklat tua"],["#6b4428","Coklat"],["#8a4b2a","Merah bata"],["#8d8d8d","Abu-abu"]];
+const HIJABC=[["#7c5aa6","Ungu"],["#2f6f8f","Biru"],["#a0522d","Coklat"],["#3f6b4f","Hijau"],["#8b3a5a","Marun"],["#c08a3e","Mustard"],["#1f2430","Hitam"],["#d8c7ad","Krem"]];
+const SKINN=["Terang","Kuning langsat","Sawo matang","Coklat","Gelap"];
+function lookOf(p){const h=p._h||0,g=p.gender==="L"||p.gender==="P"?p.gender:(h>>>15)%2?"L":"P";
+  const key=LOOKS[p.look]?p.look:LOOK_AUTO[g][(h>>>9)%LOOK_AUTO[g].length],L=LOOKS[key];
+  const skin=Number.isInteger(+p.skin)&&p.skin!==""&&p.skin!=null&&SKIN[+p.skin]?+p.skin:h%5;
+  const hc=Number.isInteger(+p.hc)&&p.hc!==""&&p.hc!=null?+p.hc:-1;
+  return{key,...L,skin,hair:HAIRC[(hc>=0&&hc<HAIRC.length?hc:(h>>>3)%3)][0],hijab:HIJABC[(hc>=0&&hc<HIJABC.length?hc:(h>>>11)%HIJABC.length)][0]}}
+function buildPerson(p){const h=p._h||0,L=lookOf(p);
+  return makePerson({shirt:p._col||"#7d8a90",pants:PANTS[(h>>>6)%5],skin:SKIN[L.skin],hair:L.hair,style:L.style,hijab:L.hijab,glasses:!!L.glasses,beard:!!L.beard,peci:!!L.peci,fem:!!L.fem,ph:(h%97)/10})}
 const PEEPS=new Map();
-function personOf(p){const h=p._h||0,key=p._col+"|"+p.gender+"|"+h;let e=PEEPS.get(p.id);if(e&&e.key===key)return e.node;
-  const g=p.gender,st=g==="L"?"short":g==="P"?((h>>>9)%2?"hijab":"long"):["short","short","long","hijab"][(h>>>9)%4];
-  const node=makePerson({shirt:p._col||"#7d8a90",pants:PANTS[(h>>>6)%5],skin:SKIN[h%5],hair:HAIR[(h>>>3)%5],style:st,hijab:HIJAB[(h>>>11)%6],glasses:(h>>>13)%5===0,ph:(h%97)/10});
-  PEEPS.set(p.id,{key,node});return node}
+function personOf(p){const key=[p._col,p.gender,p._h,p.look,p.skin,p.hc].join("|");let e=PEEPS.get(p.id);if(e&&e.key===key)return e.node;
+  const node=buildPerson(p);PEEPS.set(p.id,{key,node});return node}
+/* gambar kecil karakter untuk menu pilihan (dirender di luar layar) */
+const THUMBS=new Map();let THF=null;
+function avatarThumb(p,W=128,H=160){const key=[p._col,p.gender,p._h,p.look,p.skin,p.hc,W,H].join("|");if(THUMBS.has(key))return THUMBS.get(key);if(!GL_OK)return"";
+  if(!THF||THF.w!==W||THF.h!==H){const fb=gl.createFramebuffer(),tx=gl.createTexture(),rb=gl.createRenderbuffer();gl.bindTexture(gl.TEXTURE_2D,tx);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.bindRenderbuffer(gl.RENDERBUFFER,rb);gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,W,H);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fb);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tx,0);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,rb);THF={fb,w:W,h:H}}
+  const node=buildPerson(p);poseP(node,"idle",.6,.42);node.j.shadow.hide=true;node.p=[0,0,0];
+  gl.bindFramebuffer(gl.FRAMEBUFFER,THF.fb);gl.viewport(0,0,W,H);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(GLS.L);const L=GLS.l,eye=[0,.92,2.45];
+  gl.uniformMatrix4fv(L.VP,false,M4.mul(M4.persp(.52,W/H,.3,20),M4.look(eye,[0,.6,0],[0,1,0])));gl.uniform3fv(L.E,eye);gl.uniform3f(L.L,.42,.84,.34);gl.uniform3f(L.SKY,1,.98,.95);gl.uniform3f(L.GND,.56,.53,.56);gl.uniform1f(L.AM,.62);gl.uniform1f(L.DI,.55);
+  gl.depthMask(true);const op=[],tr=[];nodeDraws(node,ID4,1,true,op,tr);drawNodes(op);gl.depthMask(false);drawNodes(tr);gl.depthMask(true);
+  const px=new Uint8Array(W*H*4);gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,px);gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),img=x.createImageData(W,H);for(let y=0;y<H;y++)img.data.set(px.subarray((H-1-y)*W*4,(H-y)*W*4),y*W*4);x.putImageData(img,0,0);
+  const url=c.toDataURL();if(THUMBS.size>300)THUMBS.clear();THUMBS.set(key,url);return url}
 const YAW={down:0,right:Math.PI/2,up:Math.PI,left:-Math.PI/2};
 function nodeDraws(node,Pm,al,lod,op,tr){if(node.hide||(node.det&&!lod))return;let W=M4.mul(Pm,M4.T(node.p[0],node.p[1],node.p[2]));
   if(node.r[1])W=M4.mul(W,M4.RY(node.r[1]));if(node.r[0])W=M4.mul(W,M4.RX(node.r[0]));if(node.r[2])W=M4.mul(W,M4.RZ(node.r[2]));if(node.k)W=M4.mul(W,M4.S(node.k,node.k,node.k));
@@ -804,7 +846,7 @@ const BAT={world:null,wkey:"",fac:null,fkey:"",roof:null,rkey:"",floor:[],gh:nul
 function sideNear(side){const e=EYE;return side==="N"?e[2]<0:side==="S"?e[2]>DD:side==="W"?e[0]<0:e[0]>WW}
 function ensureBatches(){const nk=NIGHT?"n":"d";
   if(BAT.wkey!==nk+TEXGEN){glFree(BAT.world);BAT.world=record(recWorld);BAT.wkey=nk+TEXGEN}
-  const nf=S.view==="out"?4:S.view,fk=nf+nk+(S.floorCount||[]).map(x=>x>0?1:0).join("")+TEXGEN;
+  const nf=S.view==="out"?4:S.view,fk=nf+nk+(S.present||S.floorCount||[]).map(x=>x>0?1:0).join("")+TEXGEN;
   if(BAT.fkey!==fk){glFree(BAT.fac);BAT.fac=record(()=>recFacade(nf));BAT.fkey=fk}
   if(S.view==="out"){if(BAT.rkey!==nk+TEXGEN){glFree(BAT.roof);BAT.roof=record(recRoof);BAT.rkey=nk+TEXGEN}return}
   const f=S.view,key=BV+nk+TEXGEN;let b=BAT.floor[f];
@@ -815,7 +857,7 @@ function ensureBatches(){const nk=NIGHT?"n":"d";
 function draw(t){
   const was=NIGHT;NIGHT=isNight();const pal=PAL(),tSec=Date.now()/1000;
   if(was!==NIGHT||!stage.dataset.sky){stage.style.background=`linear-gradient(${pal.sky1},${pal.sky2})`;stage.dataset.sky="1"}
-  S.poses=R.people.map(p=>poseOf(p,tSec)).filter(Boolean);
+  S.poses=R.people.map(p=>poseOf(p,tSec)).filter(Boolean);S.present=[0,0,0,0];for(const o of S.poses)if(!o.away&&o.f>=0&&o.f<4)S.present[o.f]++;
   S.guestPoses=S.view===0?guestPoses(tSec):[];
   if(S.follow){const o=S.poses.find(o=>o.p.id===S.follow);if(o){if(S.view!==o.f)setView(o.f,true);if(!o.hidden){cam.tx=o.c;cam.tw=o.r;cam.ty=FZ(o.f)/PXU+.5}}}
   const k=.14;cam.x+=(cam.tx-cam.x)*k;cam.y+=(cam.ty-cam.y)*k;cam.w+=(cam.tw-cam.w)*k;
@@ -1067,8 +1109,14 @@ function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s
   <div class="kpi"><span>Kursi terisi</span><b>${seated}<small style="font-size:14px"> / ${TOTAL_SEATS}</small></b><small>di 4 lantai</small></div>
   <div class="kpi"><span>Kursi kosong</span><b>${TOTAL_SEATS-seated}</b><small>siap diisi</small></div>
   <div class="kpi"><span>Sedang bekerja</span><b>${counts.work}</b><small>${n?Math.round(counts.work/n*100)+"% dari karyawan":"—"}</small></div>
-  <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span><span><i style="background:${ACT_COL.out}"></i>Di luar ${counts.out||0}</span></div></div>`}
-function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",gender:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",...pre}}}
+  <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span><span><i style="background:${ACT_COL.out}"></i>Di luar ${counts.out||0}</span>${counts.home?`<span><i style="background:${ACT_COL.home}"></i>Pulang ${counts.home}</span>`:""}</div></div>`}
+function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",gender:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",look:"",skin:"",hc:"",...pre}}}
+function lookPicker(d){const base={_col:divOf(d.div).color,gender:d.gender,_h:hash((S.form?.id||"baru")+d.name),skin:d.skin,hc:d.hc};
+  const keys=Object.keys(LOOKS).filter(k=>d.gender==="L"?!LOOKS[k].fem:d.gender==="P"?LOOKS[k].fem:true),cur=LOOKS[d.look]?d.look:"";const L=lookOf({...base,look:cur}),isHij=L.style==="hijab";
+  const card=(k,lab)=>{const url=avatarThumb({...base,look:k});return`<button type="button" data-act="pickLook" data-k="${k}" aria-pressed="${cur===k}" title="${esc(lab)}">${url?`<img src="${url}" alt="" width="64" height="80">`:""}<span>${esc(lab)}</span></button>`};
+  return`<div class="sec" style="margin-top:4px">Karakter di gedung</div><div class="looks">${card("","Otomatis")}${keys.map(k=>card(k,LOOKS[k].name)).join("")}</div>
+  <div class="swrow"><span>Warna kulit</span>${SKIN.map((c,i)=>`<button type="button" class="sw" data-act="pickSkin" data-k="${i}" aria-pressed="${String(d.skin)===String(i)}" title="${SKINN[i]}" style="background:${c}"></button>`).join("")}<button type="button" class="sw auto" data-act="pickSkin" data-k="" aria-pressed="${d.skin===""||d.skin==null}" title="Otomatis">A</button></div>
+  <div class="swrow"><span>${isHij?"Warna hijab":"Warna rambut"}</span>${(isHij?HIJABC:HAIRC).map(([c,n],i)=>`<button type="button" class="sw" data-act="pickHc" data-k="${i}" aria-pressed="${String(d.hc)===String(i)}" title="${n}" style="background:${c}"></button>`).join("")}<button type="button" class="sw auto" data-act="pickHc" data-k="" aria-pressed="${d.hc===""||d.hc==null}" title="Otomatis">A</button></div>`}
 function renderDrawer(){if(!drawer)return;
   if(MODE==="admin"&&!S.edit){const ad=adminDrawer();if(ad){drawer.hidden=false;drawer.innerHTML=ad;return}}
   if(S.edit){drawer.hidden=false;drawer.innerHTML=editorHTML();return}
@@ -1080,7 +1128,8 @@ function renderDrawer(){if(!drawer)return;
       <label>ID karyawan <small>opsional, NIK / ID Talenta</small><input id="f-nik" data-f="nik" value="${esc(d.nik)}" autocomplete="off"></label></div>
       <div class="two"><label>Divisi<select id="f-div" data-f="div">${divOptions(d.div)}</select></label>
       <label>Jabatan<select id="f-jab" data-f="jabatan">${opt("","— Pilih —",d.jabatan)+JABATAN.map(j=>opt(j,j,d.jabatan)).join("")}</select></label></div>
-      <label>Jenis kelamin<select id="f-gen" data-f="gender">${opt("","— Pilih —",d.gender)+opt("L","Laki-laki",d.gender)+opt("P","Perempuan",d.gender)}</select></label>
+      <label>Jenis kelamin<select id="f-gen" data-f="gender" data-re="1">${opt("","— Pilih —",d.gender)+opt("L","Laki-laki",d.gender)+opt("P","Perempuan",d.gender)}</select></label>
+      ${lookPicker(d)}
       <label>Bagian <small>tampil di label atas kepala</small><input id="f-bag" data-f="bagian" value="${esc(d.bagian)}" placeholder="mis. Pajak, Rekrutmen, Drafter" autocomplete="off"></label>
       <div class="two"><label>Lantai<select id="f-fl" data-f="f" data-re="1">${[0,1,2,3].map(f=>opt(f,"Lantai "+(f+1),d.f)).join("")}</select></label>
       <label>Ruangan<select id="f-room" data-f="room" data-re="1">${roomOptions(+d.f,d.room)}</select></label></div>
@@ -1090,7 +1139,7 @@ function renderDrawer(){if(!drawer)return;
     </div>`;return}
   if(S.sel?.type==="person"){const p=personBy(S.sel.id);if(!p){S.sel=null;renderDrawer();return}
     const dv=divOf(p.div),o=S.poses.find(o=>o.p.id===p.id),following=S.follow===p.id,st=S.seat[p.id];
-    drawer.innerHTML=`<div class="row"><div style="display:flex;gap:10px;align-items:center;min-width:0"><span class="av" style="background:${dv.color};width:40px;height:40px;font-size:14px">${esc(initials(p.name))}</span><div style="min-width:0"><h3>${esc(p.name)}</h3><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span></div></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
+    drawer.innerHTML=`<div class="row"><div style="display:flex;gap:10px;align-items:center;min-width:0">${(()=>{const u=avatarThumb({...p,_col:dv.color});return u?`<img class="avimg" src="${u}" alt="" width="48" height="60">`:`<span class="av" style="background:${dv.color};width:40px;height:40px;font-size:14px">${esc(initials(p.name))}</span>`})()}<div style="min-width:0"><h3>${esc(p.name)}</h3><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span></div></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
     <div class="kv"><span>ID karyawan</span><b>${esc(p.nik||"—")}</b><span>Jenis kelamin</span><b>${p.gender==="L"?"Laki-laki":p.gender==="P"?"Perempuan":"—"}</b><span>Bagian</span><b>${esc(p.bagian||"—")}</b><span>Jabatan</span><b>${esc(p.jabatan||"—")}</b>
       <span>Tempat</span><b>${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`)+(st.over?" (berdiri, ruangan penuh)":st.si!=null?" · "+esc(st.room.seats[st.si].label):""):"Belum punya kursi"}</b>
       <span>Sekarang</span><b id="nowAct"><i class="dot" style="background:${o?ACT_COL[o.ak]:"#8a95a0"}"></i> ${o?.emo||""} ${esc(o?o.act:"—")}</b></div>
@@ -1161,12 +1210,13 @@ async function savePerson(more){const d=S.form.d,name=d.name.trim();if(!name){to
   if(!d.div){toast("Pilih divisinya dulu");return}
   const seat=d.room&&d.seat!=="auto"&&d.seat!==""?+d.seat:null;const editId=S.form.id;
   if(seat!=null){const occ=(S.seatOcc[d.room]||[])[seat];if(occ&&occ.id!==editId){toast(`Kursi itu sudah dipakai ${occ.name}. Pilih kursi lain.`);return}}
-  const doc={name,nik:d.nik.trim(),gender:d.gender||"",div:d.div,bagian:d.bagian.trim(),jabatan:d.jabatan||"",room:d.room||"",seat};
+  const doc={name,nik:d.nik.trim(),gender:d.gender||"",div:d.div,bagian:d.bagian.trim(),jabatan:d.jabatan||"",room:d.room||"",seat,look:LOOKS[d.look]?d.look:"",skin:d.skin===""||d.skin==null?"":+d.skin,hc:d.hc===""||d.hc==null?"":+d.hc};
   let newId=null;const ok=await safe(async()=>{if(editId)await store.update("people",editId,doc);else{doc.createdAt=Date.now();newId=await store.add("people",doc)}},editId?"Perubahan disimpan":`${name} ditambahkan`);
   if(!ok)return;
   if(more){S.form=newForm({div:d.div,f:d.f,room:d.room,jabatan:d.jabatan});renderDrawer();$("f-name")?.focus();return}
   S.form=null;const id=editId||newId;S.sel=id?{type:"person",id}:null;renderDrawer();renderBody()}
 panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]");if(!b||!panel.contains(b))return;const a=b.dataset.act;
+  if(S.form&&(a==="pickLook"||a==="pickSkin"||a==="pickHc")){const f=a==="pickLook"?"look":a==="pickSkin"?"skin":"hc";S.form.d[f]=b.dataset.k;if(f==="look")S.form.d.hc="";renderDrawer();return}
   if(MODE==="admin"&&await adminAction(a,b))return;
   if(a==="startEdit"){startEdit(S.sel.id);return}
   if(a==="eTool"){S.edit.tool=b.dataset.t;renderDrawer();return}
@@ -1189,7 +1239,7 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
   if(a==="newPerson"){S.sel=null;S.form=newForm();renderDrawer();$("f-name")?.focus();panel.scrollIntoView({behavior:"smooth",block:"start"});return}
   if(a==="fillSeat"){const Rm=ROOMS[b.dataset.room];const dv=divList().find(d=>Rm.seats[+b.dataset.seat]?.group&&d.name.toLowerCase()===Rm.seats[+b.dataset.seat].group.toLowerCase());
     S.sel=null;S.form=newForm({f:String(Rm.f),room:Rm.id,seat:b.dataset.seat,div:dv?dv.id:""});renderDrawer();$("f-name")?.focus();return}
-  if(a==="editPerson"){const p=personBy(S.sel.id),st=S.seat[p.id];S.form={kind:"person",id:p.id,d:{name:p.name,nik:p.nik||"",gender:p.gender||"",div:p.div||"",bagian:p.bagian||"",jabatan:p.jabatan||"",f:String(ROOMS[p.room]?.f??0),room:p.room||"",seat:Number.isInteger(p.seat)?String(p.seat):st?.si!=null?String(st.si):"auto"}};S.sel=null;renderDrawer();return}
+  if(a==="editPerson"){const p=personBy(S.sel.id),st=S.seat[p.id];S.form={kind:"person",id:p.id,d:{name:p.name,nik:p.nik||"",gender:p.gender||"",div:p.div||"",bagian:p.bagian||"",jabatan:p.jabatan||"",f:String(ROOMS[p.room]?.f??0),room:p.room||"",seat:Number.isInteger(p.seat)?String(p.seat):st?.si!=null?String(st.si):"auto",look:p.look||"",skin:p.skin??"",hc:p.hc??""}};S.sel=null;renderDrawer();return}
   if(a==="savePerson"){await savePerson(false);return}
   if(a==="savePersonMore"){await savePerson(true);return}
   if(a==="delPerson"){if(!armed("delp"))return;const id=S.sel.id;if(await safe(()=>store.del("people",id),"Karyawan dihapus")){if(S.follow===id)stopFollow();S.sel=null;renderDrawer();renderBody()}return}
