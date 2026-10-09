@@ -321,6 +321,10 @@ function buildRoom(R){
   if(R.custom){R.custom.forEach((it,i)=>{const s={r:it.r,c:it.c,face:it.face||"up",desk:it.t==="desk",ds:it.ds||"std",cs:it.cs||"office",label:"Kursi "+(i+1)};
     if(s.desk){const u=unitDesk(s);out.push({k:(u[0]+u[2])/2+(u[1]+u[3])/2,d:()=>drawUnitDesk(s,seed+i)});for(const q of deskRects(s))blk(q[0],q[1],q[2],q[3])}
     home(s)})}
+  if(!seats.length&&EDITABLE.has(R.type)){const pts=[];
+    for(let rr=r0+.6;rr<r1-.4;rr+=.9)for(let cc=c0+.6;cc<c1-.4;cc+=1.1){if(blocks.some(b=>rr>=b[0]-.2&&rr<=b[2]+.2&&cc>=b[1]-.2&&cc<=b[3]+.2))continue;pts.push([rr,cc])}
+    const pick=pts.filter((_,i)=>i%Math.max(1,Math.floor(pts.length/4))===0).slice(0,4);
+    for(const[rr,cc]of pick)spot(rr,cc,(hash(R.id+rr+cc)%2)?"up":"left",false,"Mampir ke "+R.name,"talk",{w:.6/Math.max(1,pick.length)})}
   return{items:out,blocks,seats,spots,doorOut};
 }
 
@@ -411,7 +415,7 @@ const divList=()=>Object.entries(R.divs).map(([id,d])=>({id,...d})).sort((a,b)=>
 function recompute(){
   S.seat={};S.roomPeople={};S.seatOcc={};S.divCount={};S.cache=new Map();S.floorCount=[0,0,0,0];
   for(const p of R.people){S.divCount[p.div]=(S.divCount[p.div]||0)+1;p._h=hash(p.id+p.name);p._col=divOf(p.div).color}
-  const byRoom={};for(const p of R.people)if(p.room&&ROOMS[p.room]&&ROOMS[p.room].seats.length)(byRoom[p.room]=byRoom[p.room]||[]).push(p);
+  const byRoom={};for(const p of R.people)if(p.room&&ROOMS[p.room]&&ROOMS[p.room].type!=="toilet"&&ROOMS[p.room].type!=="stairs")(byRoom[p.room]=byRoom[p.room]||[]).push(p);
   for(const id in byRoom){const room=ROOMS[id],list=byRoom[id].sort((a,b)=>RANK(a.jabatan)-RANK(b.jabatan)||(a.createdAt||0)-(b.createdAt||0)||a.name.localeCompare(b.name));
     S.roomPeople[id]=list;const occ=new Array(room.seats.length).fill(null);const rest=[];
     for(const p of list){const si=Number.isInteger(p.seat)?p.seat:-1;if(si>=0&&si<occ.length&&!occ[si])occ[si]=p;else rest.push(p)}
@@ -439,7 +443,7 @@ function poseOf(p,tSec){
   const home=S.seat[p.id];if(!home)return null;const base={p,f:home.f};
   if(home.none)return{...base,r:home.r,c:home.c,face:"down",pose:"stand",act:"Belum ditempatkan di kursi",ak:"none"};
   const kind=home.room.type;
-  const atHome={...base,r:home.r,c:home.c,face:home.face,pose:home.sit?"sit":"stand",typing:home.sit&&!!(home.desk||home.boss||kind==="reception"),act:home.over?"Berdiri (ruangan penuh)":HOME_ACT[kind]||"Bekerja",ak:kind==="meeting"?"meet":kind==="pantry"||kind==="mushola"?"brk":"work"};
+  const atHome={...base,r:home.r,c:home.c,face:home.face,pose:home.sit?"sit":"stand",typing:home.sit&&!!(home.desk||home.boss||kind==="reception"),act:home.over?(home.room.seats.length?"Berdiri (ruangan penuh)":"Di "+home.room.name):HOME_ACT[kind]||"Bekerja",ak:kind==="meeting"?"meet":kind==="pantry"||kind==="mushola"?"brk":"work"};
   const T=cycleT(p),x=tSec+(p._h%997)/997*T,n=Math.floor(x/T),u=x-n*T,pl=planFor(p,n,home);
   if(!pl.trip||u<pl.trip.work)return atHome;
   const tr=pl.trip;let k=u-tr.work;
@@ -574,7 +578,7 @@ function drawPlaques(f){HIT_PLAQ=[];HIT_DIVS=[];if(!S.plaques)return;ctx.textBas
     const w=Q(Rm.r0+Rm.dr*.5,Rm.c0+Rm.dc*.5,Rm.type==="toilet"?64:Rm.type==="stairs"?70:Rm.zone||Rm.open?2:44),s=toScreen(w);
     const cap=Rm.seats.length,n=(S.roomPeople[Rm.id]||[]).length;
     ctx.font="800 11px Manrope, sans-serif";const t1=fitText(Rm.name,150),w1=ctx.measureText(t1).width;
-    const t2=MODE==="admin"&&cap?`${n}/${cap} kursi terisi`:"";ctx.font="700 9.5px Manrope, sans-serif";const w2=t2?ctx.measureText(t2).width:0;
+    const t2="";ctx.font="700 9.5px Manrope, sans-serif";const w2=t2?ctx.measureText(t2).width:0;
     ctx.font="800 9.5px Manrope, sans-serif";const chips=roomDivs(Rm.id).map(id=>{const d=R.divs[id],t=fitText(d.name,90);return{id,t,c:d.color,w:ctx.measureText(t).width+22}});
     const cw=chips.reduce((a,c)=>a+c.w,0)+Math.max(0,chips.length-1)*4;
     const bw=Math.max(w1,w2,cw)+16,bh=18+(t2?11:0)+(chips.length?19:0),x=s[0]-bw/2,y=s[1]-bh/2;
@@ -665,7 +669,7 @@ const tip=$("tip");
 function showTip(h,mx,my){if(!h){tip.hidden=true;return}let html="";
   if(h.type==="person"){const p=personBy(h.id),o=S.poses.find(o=>o.p.id===h.id);if(!p){tip.hidden=true;return}const dv=divOf(p.div),st=S.seat[p.id];
     html=`<b>${esc(p.name)}</b><br><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span><br>${esc(p.bagian||"—")}${p.jabatan?` · ${esc(p.jabatan)}`:""}<br><span style="color:var(--muted)">${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`):"Belum punya kursi"}</span>${o?`<br><span class="act"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${esc(o.act)}</span>`:""}`}
-  else if(h.type==="room"){const Rm=ROOMS[h.id],n=(S.roomPeople[h.id]||[]).length;html=`<b>${esc(Rm.id)} · ${esc(Rm.name)}</b><br>${Rm.seats.length?`${n} dari ${Rm.seats.length} kursi terisi<br><span style="color:var(--muted)">${MODE==="admin"?"Klik untuk melihat dan mengisi kursi":"Ruang kerja"}</span>`:`<span style="color:var(--muted)">${esc(TYPE[Rm.type].name)}</span>`}`}
+  else if(h.type==="room"){const Rm=ROOMS[h.id],n=(S.roomPeople[h.id]||[]).length;html=`<b>${esc(Rm.name)}</b><br><span style="color:var(--muted)">${MODE==="admin"?"Klik untuk mengatur ruangan ini":esc(TYPE[Rm.type].name)}</span>`}
   else if(h.type==="div"){const d=R.divs[h.id],n=appsOf(h.id).length;html=`<b>${esc(d?.name||"")}</b><br><span style="color:var(--muted)">${n?`Klik untuk membuka ${n} aplikasi divisi ini`:"Divisi ini belum punya aplikasi khusus"}</span>`}
   else if(h.type==="floor")html=`<b>Lantai ${h.f+1}</b><br><span style="color:var(--muted)">Klik untuk masuk ke lantai ini</span>`;
   tip.innerHTML=html;tip.hidden=false;const tw=tip.offsetWidth,th=tip.offsetHeight;tip.style.left=Math.min(SW-tw-8,mx+14)+"px";tip.style.top=Math.max(8,Math.min(SH-th-8,my+14))+"px"}
@@ -748,8 +752,9 @@ function editorHTML(){const E=S.edit,Rm=ROOMS[E.room],it=E.items[E.sel],nd=E.ite
     <div class="acts"><button class="btn sm" data-act="eMove" data-d="u" aria-label="Geser ke atas">↑</button><button class="btn sm" data-act="eMove" data-d="d" aria-label="Geser ke bawah">↓</button><button class="btn sm" data-act="eMove" data-d="l" aria-label="Geser ke kiri">←</button><button class="btn sm" data-act="eMove" data-d="r" aria-label="Geser ke kanan">→</button>
     <button class="btn sm" data-act="eRot">Putar</button><button class="btn sm danger" data-act="eDel">Hapus</button></div>
     <div class="meta">Di keyboard: tombol panah untuk menggeser, R untuk memutar, Delete untuk menghapus.</div>`:""}
-  <div class="meta"><b>${nd}</b> meja · <b>${E.items.length}</b> kursi kerja${E.dirty?` · <span style="color:var(--warn);font-weight:700">belum disimpan</span>`:""}</div>
+  <div class="meta">${E.items.length?`<b>${nd}</b> meja · <b>${E.items.length}</b> kursi kerja`:`<b>Tanpa kursi.</b> Ruangan tetap bisa didatangi karyawan, seperti ruang meeting.`}${E.dirty?` · <span style="color:var(--warn);font-weight:700">belum disimpan</span>`:""}</div>
   <div class="acts"><button class="btn primary" data-act="eSave">Simpan tata letak</button><button class="btn" data-act="eCancel">Batal</button>
+  ${E.items.length?`<button class="btn danger${S.armed==="eclr"?" armed":""}" data-act="eClear">${S.armed==="eclr"?"Klik lagi untuk menghapus semua":"Hapus semua kursi"}</button>`:""}
   ${R.layouts[Rm.id]?`<button class="btn danger${S.armed==="erst"?" armed":""}" data-act="eReset">${S.armed==="erst"?"Klik lagi untuk mengembalikan":"Kembalikan ke bawaan"}</button>`:""}</div>`}
 
 /* =========================================================
@@ -897,6 +902,7 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
   if(a==="eMove"){const d=b.dataset.d;editMove(d==="u"?-.25:d==="d"?.25:0,d==="l"?-.25:d==="r"?.25:0);return}
   if(a==="eRot"){editRotate();return}
   if(a==="eDel"){editDelete();return}
+  if(a==="eClear"){if(!armed("eclr"))return;S.edit.items=[];S.edit.sel=-1;editChange();return}
   if(a==="eCancel"){endEdit();return}
   if(a==="eSave"){const id=S.edit.room,items=S.edit.items.map(({t,r,c,face,ds,cs})=>({t,r,c,face,ds:ds||"std",cs:cs||"office"}));if(await safe(()=>store.set("layouts",id,{items,updatedAt:Date.now()}),"Tata letak disimpan"))endEdit();return}
   if(a==="eReset"){if(!armed("erst"))return;const id=S.edit.room;if(await safe(()=>store.del("layouts",id),"Tata letak dikembalikan ke bawaan"))endEdit();return}
