@@ -110,12 +110,18 @@ function rrect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
 /* =========================================================
    FURNITURE BUILDERS — each returns drawables, walk-blocks, seats, spots
    ========================================================= */
-function chairItems(out,s,col="#37404d"){const{r,c,face}=s;
-  out.push({k:r+c-.06,d:()=>{prism(r-.2,c-.2,.4,.4,9,3,col,{top:shade(col,.14)});const b=Q(r,c,0);line(b,[b[0],b[1]-9],"#59616b",1.6)}});
+/* Model kursi & meja yang bisa dipilih di /admin → Atur meja & kursi */
+const CHAIR_STYLES={office:{name:"Kantor",col:"#37404d",back:15},mesh:{name:"Jaring",col:"#1f8f86",back:17},boss:{name:"Pimpinan",col:"#2a2a2e",back:24},
+  guest:{name:"Tamu",col:"#7b2f3b",back:13,legs:true},stool:{name:"Stool",col:"#e3a24a",stool:true}};
+function chairItems(out,s,col="#37404d"){const{r,c,face}=s;const st=CHAIR_STYLES[s.cs]||(s.boss?CHAIR_STYLES.boss:null),cc=st?st.col:col;
+  if(st&&st.stool){out.push({k:r+c-.06,d:()=>{const b=Q(r,c,0);ctx.fillStyle="#7a8590";ctx.fillRect(b[0]-1,b[1]-11,2,11);ctx.fillRect(b[0]-4,b[1]-1,8,1.5);ctx.beginPath();ctx.ellipse(b[0],b[1]-11,7,3.5,0,0,7);ctx.fillStyle=cc;ctx.fill()}});return}
+  out.push({k:r+c-.06,d:()=>{prism(r-.2,c-.2,.4,.4,9,3,cc,{top:shade(cc,.14)});
+    if(st&&st.legs){for(const[a,b]of[[-.17,-.17],[-.17,.17],[.17,-.17],[.17,.17]]){const p=Q(r+a,c+b,0);line(p,[p[0],p[1]-9],"#4a3a30",1.3)}}
+    else{const b=Q(r,c,0);line(b,[b[0],b[1]-9],"#59616b",1.6);ctx.fillStyle="#3a3f45";ctx.fillRect(b[0]-5,b[1]-1,10,1.6)}}});
   let br,bc,dr,dc;
   if(face==="up"){br=r+.2;bc=c-.2;dr=.07;dc=.4}else if(face==="down"){br=r-.27;bc=c-.2;dr=.07;dc=.4}
   else if(face==="left"){br=r-.2;bc=c+.2;dr=.4;dc=.07}else{br=r-.2;bc=c-.27;dr=.4;dc=.07}
-  const hh=s.boss?22:15;out.push({k:br+dr/2+bc+dc/2,d:()=>prism(br,bc,dr,dc,11,hh,col,{top:shade(col,.14)})});
+  const hh=st?st.back:(s.boss?22:15);out.push({k:br+dr/2+bc+dc/2,d:()=>prism(br,bc,dr,dc,11,hh,cc,{top:shade(cc,.14)})});
 }
 const scr=seed=>{const fl=.82+.18*Math.sin(performance.now()/700+seed);return`rgb(${150*fl|0},${208*fl|0},240)`};
 function monitor(r,c,screenVisible,seed){prism(r,c-.3,.06,.6,14,15,"#2b2f36");
@@ -128,13 +134,29 @@ function sofaItem(out,r0,c0,dr,dc,col,backSide="B"){out.push({k:r0+c0+.05,d:()=>
   if(backSide==="B")prism(r0+dr-.16,c0,.16,dc,9,10,bk);else if(backSide==="T")prism(r0,c0,.16,dc,9,10,bk);else prism(r0,c0,dr,.16,9,10,bk);
   if(backSide==="L"){prism(r0,c0,.16,dc,9,6,arm);prism(r0+dr-.16,c0,.16,dc,9,6,arm)}else{prism(r0,c0,dr,.16,9,6,arm);prism(r0,c0+dc-.16,dr,.16,9,6,arm)}}})}
 function dispenserItem(out,r,c){out.push({k:r+c,d:()=>{prism(r-.18,c-.18,.36,.36,0,18,"#e9eef1");const b=Q(r,c,18);ctx.fillStyle="rgba(90,170,230,.85)";ctx.beginPath();ctx.ellipse(b[0],b[1]-6,5,7,0,0,7);ctx.fill()}})}
-/* satu set meja + kursi yang bisa diatur manual */
-function unitDesk(s){const f=s.face;if(f==="up")return[s.r-1.02,s.c-.5,s.r-.47,s.c+.5];if(f==="down")return[s.r+.47,s.c-.5,s.r+1.02,s.c+.5];
-  if(f==="left")return[s.r-.5,s.c-1.02,s.r+.5,s.c-.47];return[s.r-.5,s.c+.47,s.r+.5,s.c+1.02]}
-function drawUnitDesk(s,seed){const[a,b,c,d]=unitDesk(s);prism(a,b,c-a,d-b,0,14,"#c8b693",{top:"#efe9de"});
-  if(s.face==="up")monitor(a+.1,s.c,true,seed);else if(s.face==="down")monitor(c-.16,s.c,false,seed);
-  else if(s.face==="left")monitorV(b+.1,s.r,true,seed);else monitorV(d-.16,s.r,false,seed)}
+/* satu set meja + kursi yang bisa diatur manual (beberapa model meja) */
+const DESK_STYLES={std:{name:"Standar",w:1.0,d:.55,top:"#efe9de",side:"#c8b693",mon:[0]},dual:{name:"2 monitor",w:1.3,d:.58,top:"#efe9de",side:"#c8b693",mon:[-.3,.3]},
+  laptop:{name:"Laptop",w:.8,d:.45,top:"#f4f6f7",side:"#c9d0d6",laptop:true},L:{name:"Sudut (L)",w:1.3,d:.55,top:"#efe9de",side:"#c8b693",mon:[0],ret:true},
+  exec:{name:"Pimpinan",w:1.6,d:.68,top:"#7d5a3f",side:"#5e3f2a",laptop:true,exec:true}};
+const FV={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]},RV={up:[0,1],down:[0,-1],left:[-1,0],right:[1,0]};
+const lpt=(s,f,l)=>{const F=FV[s.face]||FV.up,V=RV[s.face]||RV.up;return[s.r+f*F[0]+l*V[0],s.c+f*F[1]+l*V[1]]};
+function lrect(s,f1,f2,l1,l2){const p=[lpt(s,f1,l1),lpt(s,f2,l2)];return[Math.min(p[0][0],p[1][0]),Math.min(p[0][1],p[1][1]),Math.max(p[0][0],p[1][0]),Math.max(p[0][1],p[1][1])]}
+function deskRects(s){const D=DESK_STYLES[s.ds]||DESK_STYLES.std,g=.47,out=[lrect(s,g,g+D.d,-D.w/2,D.w/2)];if(D.ret)out.push(lrect(s,-.3,g,D.w/2-.42,D.w/2));return out}
+function unitDesk(s){const rs=deskRects(s);return[Math.min(...rs.map(x=>x[0])),Math.min(...rs.map(x=>x[1])),Math.max(...rs.map(x=>x[2])),Math.max(...rs.map(x=>x[3]))]}
+function drawUnitDesk(s,seed){const D=DESK_STYLES[s.ds]||DESK_STYLES.std,zt=D.exec?15:14,far=.47+D.d;
+  for(const[a,b,c,d]of deskRects(s).sort((x,y)=>(x[0]+x[1]+x[2]+x[3])-(y[0]+y[1]+y[2]+y[3])))prism(a,b,c-a,d-b,0,zt,D.side,{top:D.top});
+  if(D.mon)for(const l of D.mon){const f=s.face;
+    if(f==="up")monitor(s.r-far+.1,s.c+l,true,seed+l);else if(f==="down")monitor(s.r+far-.16,s.c-l,false,seed+l);
+    else if(f==="left")monitorV(s.c-far+.1,s.r-l,true,seed+l);else monitorV(s.c+far-.16,s.r+l,false,seed+l)}
+  if(D.laptop){const fm=.47+D.d*.5,[a,b,c,d]=lrect(s,fm-.13,fm+.08,-.18,.18);floorQ(a,b,c,d,zt+.2,"#3a3f45");
+    const[sa,sb,sc,sd]=lrect(s,fm+.08,fm+.12,-.18,.18);prism(sa,sb,sc-sa,sd-sb,zt,7,"#2b2f36");
+    if(s.face==="up")faceL(sc+.002,sb+.02,sd-.02,zt+1,zt+6.5,scr(seed));else if(s.face==="left")faceR(sd+.002,sa+.02,sc-.02,zt+1,zt+6.5,scr(seed))}
+  if(D.exec){const[a,b,c,d]=lrect(s,.5,.56,-.2,.2);floorQ(a,b,c,d,zt+.2,"#d9b26a");const p=lpt(s,.47+D.d-.15,D.w/2-.15),q=Q(p[0],p[1],zt);
+    ctx.fillStyle="#3d8b4a";ctx.beginPath();ctx.arc(q[0],q[1]-5,4.5,0,7);ctx.fill()}}
 function itemExt(it){let a=it.r-.25,b=it.c-.25,c=it.r+.25,d=it.c+.25;if(it.t==="desk"){const u=unitDesk(it);a=Math.min(a,u[0]);b=Math.min(b,u[1]);c=Math.max(c,u[2]);d=Math.max(d,u[3])}return[a,b,c,d]}
+const DESK_ICON={std:'<rect x="4" y="5" width="20" height="8" rx="1.5"/>',dual:'<rect x="2" y="6" width="24" height="7" rx="1.5"/><rect x="7" y="2" width="5" height="3"/><rect x="16" y="2" width="5" height="3"/>',
+  laptop:'<rect x="7" y="6" width="14" height="7" rx="1.5"/><rect x="11" y="4" width="6" height="2"/>',L:'<path d="M3 4h22v7H17v6h-6v-6H3z" rx="1"/>',exec:'<rect x="1" y="4" width="26" height="10" rx="2"/>'};
+const deskIcon=k=>`<svg width="28" height="18" viewBox="0 0 28 18" fill="${(DESK_STYLES[k]||{}).exec?"#7d5a3f":"#c8b693"}" aria-hidden="true">${DESK_ICON[k]||""}</svg>`;
 
 function buildRoom(R){
   const out=[],blocks=[],seats=[],spots=[];const blk=(r0,c0,r1,c1)=>blocks.push([r0,c0,r1,c1]);
@@ -296,8 +318,8 @@ function buildRoom(R){
     for(const x of[1.6,2.9,4.2])spot(r0+.85,c0+x,"down",true,"Menemui tamu di ruang tunggu","talk",{w:.12});
     for(const y of[2.1,3.3])spot(r0+y,c0+.75,"right",true,"Menemui tamu di ruang tunggu","talk",{w:.12});
   }
-  if(R.custom){R.custom.forEach((it,i)=>{const s={r:it.r,c:it.c,face:it.face||"up",desk:it.t==="desk",label:"Kursi "+(i+1)};
-    if(s.desk){const u=unitDesk(s);out.push({k:(u[0]+u[2])/2+(u[1]+u[3])/2,d:()=>drawUnitDesk(s,seed+i)});blk(u[0],u[1],u[2],u[3])}
+  if(R.custom){R.custom.forEach((it,i)=>{const s={r:it.r,c:it.c,face:it.face||"up",desk:it.t==="desk",ds:it.ds||"std",cs:it.cs||"office",label:"Kursi "+(i+1)};
+    if(s.desk){const u=unitDesk(s);out.push({k:(u[0]+u[2])/2+(u[1]+u[3])/2,d:()=>drawUnitDesk(s,seed+i)});for(const q of deskRects(s))blk(q[0],q[1],q[2],q[3])}
     home(s)})}
   return{items:out,blocks,seats,spots,doorOut};
 }
@@ -658,7 +680,7 @@ cv.addEventListener("pointermove",e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointe
   if(drag){const dx=e.offsetX-drag.x,dy=e.offsetY-drag.y;if(!drag.moved&&Math.hypot(dx,dy)>5){drag.moved=true;cv.classList.add("drag");stopFollow()}
     if(drag.moved){cam.tx-=dx/cam.s;cam.ty-=dy/cam.s;cam.x-=dx/cam.s;cam.y-=dy/cam.s;drag.x=e.offsetX;drag.y=e.offsetY;tip.hidden=true;return}}
   if(S.edit){const Rm=editRoom();S.hover=null;tip.hidden=true;if(S.view!==Rm.f){S.ghost=null;return}const[r,c]=planeRC(e.offsetX,e.offsetY);
-    const over=hitItem(r,c);S.ghost=inRoom(Rm,r,c)&&over<0?clampItem(Rm,{t:S.edit.tool,r:snap(r),c:snap(c),face:S.edit.face}):null;cv.classList.toggle("pt",over>=0||!!S.ghost);return}
+    const over=hitItem(r,c);S.ghost=inRoom(Rm,r,c)&&over<0?clampItem(Rm,{t:S.edit.tool,r:snap(r),c:snap(c),face:S.edit.face,ds:S.edit.ds,cs:S.edit.cs}):null;cv.classList.toggle("pt",over>=0||!!S.ghost);return}
   const h=pick(e.offsetX,e.offsetY);S.hover=h;cv.classList.toggle("pt",!!h);showTip(h,e.offsetX,e.offsetY)});
 cv.addEventListener("pointerup",e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;cv.classList.remove("drag");
   if(itemDrag){itemDrag=null;renderDrawer();return}
@@ -700,13 +722,13 @@ function clampItem(Rm,it){const e=itemExt(it);let dr=0,dc=0;
 function hitItem(r,c){const E=S.edit;for(let i=E.items.length-1;i>=0;i--){const it=E.items[i];if(Math.hypot(it.r-r,it.c-c)<.4)return i;
   if(it.t==="desk"){const u=unitDesk(it);if(r>=u[0]&&r<=u[2]&&c>=u[1]&&c<=u[3])return i}}return -1}
 function startEdit(id){const Rm=ROOMS[id];if(!Rm||!EDITABLE.has(Rm.type))return;const saved=R.layouts[id]?.items;
-  const items=(Array.isArray(saved)?saved:Rm.seats.map(s=>({t:s.desk||s.boss?"desk":"chair",r:s.r,c:s.c,face:s.face||"up"}))).map(x=>({t:x.t==="chair"?"chair":"desk",r:+x.r,c:+x.c,face:["up","down","left","right"].includes(x.face)?x.face:"up"}));
-  stopFollow();S.form=null;S.armed=null;S.sel={type:"room",id};S.edit={room:id,items,sel:-1,tool:"desk",face:"up",dirty:false};
+  const items=(Array.isArray(saved)?saved:Rm.seats.map(s=>({t:s.desk||s.boss?"desk":"chair",r:s.r,c:s.c,face:s.face||"up",ds:s.boss?"exec":"std",cs:s.boss?"boss":"office"}))).map(x=>({t:x.t==="chair"?"chair":"desk",r:+x.r,c:+x.c,face:["up","down","left","right"].includes(x.face)?x.face:"up",ds:DESK_STYLES[x.ds]?x.ds:"std",cs:CHAIR_STYLES[x.cs]?x.cs:"office"}));
+  stopFollow();S.form=null;S.armed=null;S.sel={type:"room",id};S.edit={room:id,items,sel:-1,tool:"desk",face:"up",ds:"std",cs:"office",dirty:false};
   if(S.view!==Rm.f)setView(Rm.f);ZF=FZ(Rm.f);const w=Q(Rm.r0+Rm.dr/2,Rm.c0+Rm.dc/2,10);cam.tx=w[0];cam.ty=w[1];cam.z=Math.max(1.3,Math.min(2.4,10/Math.max(Rm.dr,Rm.dc)));
   buildFloors();recompute();renderDrawer();if(window.innerWidth<1000)$("panel")?.scrollIntoView({behavior:"smooth",block:"start"})}
 function editChange(){S.edit.dirty=true;buildFloors();recompute();renderDrawer()}
 function endEdit(){S.edit=null;S.ghost=null;S.armed=null;buildFloors();recompute();renderDrawer();renderBody();renderKpis()}
-function editAdd(r,c){const it=clampItem(editRoom(),{t:S.edit.tool,r:snap(r),c:snap(c),face:S.edit.face});S.edit.items.push(it);S.edit.sel=S.edit.items.length-1;editChange()}
+function editAdd(r,c){const it=clampItem(editRoom(),{t:S.edit.tool,r:snap(r),c:snap(c),face:S.edit.face,ds:S.edit.ds,cs:S.edit.cs});S.edit.items.push(it);S.edit.sel=S.edit.items.length-1;editChange()}
 function editMove(dr,dc){const E=S.edit,it=E.items[E.sel];if(!it)return;it.r+=dr;it.c+=dc;clampItem(editRoom(),it);editChange()}
 const ROT={up:"right",right:"down",down:"left",left:"up"};
 function editRotate(){const E=S.edit,it=E.items[E.sel];if(!it)return;it.face=ROT[it.face];clampItem(editRoom(),it);E.face=it.face;editChange()}
@@ -716,9 +738,11 @@ window.addEventListener("keydown",e=>{if(!S.edit||/INPUT|SELECT|TEXTAREA/.test(d
   else if(k==="Delete"||k==="Backspace")editDelete();else if(k==="r"||k==="R")editRotate();else if(k==="Escape"){S.edit.sel=-1;renderDrawer()}else return;e.preventDefault()});
 function editorHTML(){const E=S.edit,Rm=ROOMS[E.room],it=E.items[E.sel],nd=E.items.filter(x=>x.t==="desk").length,cur=it?it.face:E.face;
   const dirBtn=(f,lab)=>`<button data-act="eFace" data-f="${f}" aria-pressed="${cur===f}">${lab}</button>`;
-  return`<div class="row"><div style="min-width:0"><div class="sec" style="margin:0">Atur meja & kursi · Lt ${Rm.f+1} · No. ${esc(Rm.id)}</div><h3>${esc(Rm.name)}</h3></div><button class="x" data-act="eCancel" aria-label="Tutup">×</button></div>
+  return`<div class="row"><div style="min-width:0"><div class="sec" style="margin:0">Atur meja & kursi · Lt ${Rm.f+1}</div><h3>${esc(Rm.name)}</h3></div><button class="x" data-act="eCancel" aria-label="Tutup">×</button></div>
   <div class="meta">Klik lantai di dalam ruangan untuk menaruh barang. Klik barang untuk memilih, lalu seret untuk memindahkan. Arah mengikuti denah: <b>atas</b> = sisi belakang gedung.</div>
   <div class="sec">Barang baru</div><div class="kinds" style="grid-template-columns:repeat(2,1fr)"><button data-act="eTool" data-t="desk" aria-pressed="${E.tool==="desk"}">Meja + kursi</button><button data-act="eTool" data-t="chair" aria-pressed="${E.tool==="chair"}">Kursi saja</button></div>
+  <div class="sec">${it?(it.t==="desk"?"Model meja terpilih":"Model meja (pilih barang meja dulu)"):"Model meja"}</div><div class="kinds" style="grid-template-columns:repeat(5,1fr)">${Object.entries(DESK_STYLES).map(([k,v])=>`<button data-act="eDs" data-k="${k}" aria-pressed="${(it?it.ds:E.ds)===k&&(!it||it.t==="desk")}" ${it&&it.t!=="desk"?"disabled":""} title="Meja ${esc(v.name)}">${deskIcon(k)}<span>${esc(v.name)}</span></button>`).join("")}</div>
+  <div class="sec">${it?"Model kursi terpilih":"Model kursi"}</div><div class="kinds" style="grid-template-columns:repeat(5,1fr)">${Object.entries(CHAIR_STYLES).map(([k,v])=>`<button data-act="eCs" data-k="${k}" aria-pressed="${(it?it.cs:E.cs)===k}" title="Kursi ${esc(v.name)}"><span style="width:18px;height:18px;border-radius:${v.stool?"50%":"5px 5px 3px 3px"};background:${v.col};display:block;box-shadow:inset 0 ${v.stool?0:6}px 0 rgba(255,255,255,.18)"></span><span>${esc(v.name)}</span></button>`).join("")}</div>
   <div class="sec">${it?"Arah hadap barang terpilih":"Arah hadap barang baru"}</div><div class="kinds">${dirBtn("up","↑ Atas")}${dirBtn("down","↓ Bawah")}${dirBtn("left","← Kiri")}${dirBtn("right","→ Kanan")}</div>
   ${it?`<div class="sec">Terpilih: ${it.t==="desk"?"meja + kursi":"kursi"} no. ${E.sel+1}</div>
     <div class="acts"><button class="btn sm" data-act="eMove" data-d="u" aria-label="Geser ke atas">↑</button><button class="btn sm" data-act="eMove" data-d="d" aria-label="Geser ke bawah">↓</button><button class="btn sm" data-act="eMove" data-d="l" aria-label="Geser ke kiri">←</button><button class="btn sm" data-act="eMove" data-d="r" aria-label="Geser ke kanan">→</button>
@@ -867,12 +891,14 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
   if(MODE==="admin"&&await adminAction(a,b))return;
   if(a==="startEdit"){startEdit(S.sel.id);return}
   if(a==="eTool"){S.edit.tool=b.dataset.t;renderDrawer();return}
+  if(a==="eDs"){const it=S.edit.items[S.edit.sel],k=b.dataset.k;if(it){if(it.t!=="desk")return;it.ds=k;clampItem(editRoom(),it);S.edit.ds=k;editChange()}else{S.edit.ds=k;S.edit.tool="desk";renderDrawer()}return}
+  if(a==="eCs"){const it=S.edit.items[S.edit.sel],k=b.dataset.k;if(it){it.cs=k;S.edit.cs=k;editChange()}else{S.edit.cs=k;renderDrawer()}return}
   if(a==="eFace"){const it=S.edit.items[S.edit.sel];if(it){it.face=b.dataset.f;clampItem(editRoom(),it);S.edit.face=it.face;editChange()}else{S.edit.face=b.dataset.f;renderDrawer()}return}
   if(a==="eMove"){const d=b.dataset.d;editMove(d==="u"?-.25:d==="d"?.25:0,d==="l"?-.25:d==="r"?.25:0);return}
   if(a==="eRot"){editRotate();return}
   if(a==="eDel"){editDelete();return}
   if(a==="eCancel"){endEdit();return}
-  if(a==="eSave"){const id=S.edit.room,items=S.edit.items.map(({t,r,c,face})=>({t,r,c,face}));if(await safe(()=>store.set("layouts",id,{items,updatedAt:Date.now()}),"Tata letak disimpan"))endEdit();return}
+  if(a==="eSave"){const id=S.edit.room,items=S.edit.items.map(({t,r,c,face,ds,cs})=>({t,r,c,face,ds:ds||"std",cs:cs||"office"}));if(await safe(()=>store.set("layouts",id,{items,updatedAt:Date.now()}),"Tata letak disimpan"))endEdit();return}
   if(a==="eReset"){if(!armed("erst"))return;const id=S.edit.room;if(await safe(()=>store.del("layouts",id),"Tata letak dikembalikan ke bawaan"))endEdit();return}
   if(a==="close"){S.sel=null;S.form=null;S.armed=null;renderDrawer();renderBody();return}
   if(a==="pickPerson"){selectPerson(b.dataset.id,true);return}
