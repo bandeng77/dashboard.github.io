@@ -51,9 +51,9 @@ const ROOM_DEFS=[
   {id:"34",f:3,name:"Service area",type:"service",r0:0,c0:0,dr:2.5,dc:10,doors:[{s:"R",at:1}]},
   {id:"33",f:3,name:"Gudang / arsip",type:"arsip",r0:2.5,c0:0,dr:3,dc:10,doors:[{s:"R",at:4}]},
   {id:"32",f:3,name:"Area kerja",type:"area",r0:5.5,c0:0,dr:10.5,dc:10,doors:[{s:"R",at:7},{s:"R",at:13.5}]},
-  {id:"32.A",f:3,name:"Area kerja 32.A",type:"cluster",open:true,zone:true,r0:5.8,c0:3.6,dr:2.7,dc:6,clusters:[{r0:5.9,c0:5.3,rows:2,n:2,sp:1.2}]},
-  {id:"32.B",f:3,name:"Area kerja 32.B",type:"cluster",open:true,zone:true,r0:9,c0:.5,dr:2.7,dc:9.2,clusters:[{r0:9.1,c0:2.85,rows:2,n:3,sp:1.5}]},
-  {id:"32.C",f:3,name:"Area kerja 32.C",type:"cluster",open:true,zone:true,r0:12.8,c0:.4,dr:2.9,dc:9.4,clusters:[{r0:13.6,c0:2.3,rows:1,n:3,sp:1.8}]},
+  {id:"32.A",f:3,name:"Area kerja A",type:"cluster",open:true,zone:true,r0:5.8,c0:3.6,dr:2.7,dc:6,clusters:[{r0:5.9,c0:5.3,rows:2,n:2,sp:1.2}]},
+  {id:"32.B",f:3,name:"Area kerja B",type:"cluster",open:true,zone:true,r0:9,c0:.5,dr:2.7,dc:9.2,clusters:[{r0:9.1,c0:2.85,rows:2,n:3,sp:1.5}]},
+  {id:"32.C",f:3,name:"Area kerja C",type:"cluster",open:true,zone:true,r0:12.8,c0:.4,dr:2.9,dc:9.4,clusters:[{r0:13.6,c0:2.3,rows:1,n:3,sp:1.8}]},
   {id:"28",f:3,name:"Tangga turun & naik",type:"stairs",r0:0,c0:12.5,dr:3,dc:2.5,both:true},
   {id:"29",f:3,name:"Ruang meeting",type:"meeting",r0:3.5,c0:12,dr:4.5,dc:4,doors:[{s:"L",at:5.5}]},
   {id:"30",f:3,name:"Mushola",type:"mushola",r0:8.5,c0:12,dr:2,dc:4,doors:[{s:"L",at:9.5}]},
@@ -383,7 +383,7 @@ buildFloors();
 let store=null;
 const divOf=id=>R.divs[id]||{name:"Tanpa divisi",color:"#7d8a90"};
 const personBy=id=>R.people.find(p=>p.id===id);
-const roomTitle=id=>{const r=ROOMS[id];return r?`${r.id} · ${r.name}`:"—"};
+const roomTitle=id=>{const r=ROOMS[id];return r?r.name:"—"};
 const divList=()=>Object.entries(R.divs).map(([id,d])=>({id,...d})).sort((a,b)=>(a.order??99)-(b.order??99)||a.name.localeCompare(b.name));
 
 function recompute(){
@@ -517,7 +517,7 @@ function drawFloor(f,t){
   for(let r=.4;r+1.1<DD;r+=1.6){faceR(.002,r,r+1.2,22,WALLH-10,pal.inWin);faceR(.003,r,r+1.2,22,24,"#cfd6db")}
   for(const Rm of F.rooms){if(Rm.type==="toilet"||Rm.type==="stairs")continue;const T=TYPE[Rm.type];
     if(Rm.zone){ctx.save();ctx.setLineDash([5,4]);floorQ(Rm.r0,Rm.c0,Rm.r0+Rm.dr,Rm.c0+Rm.dc,.05,"rgba(200,170,110,.18)","rgba(140,110,60,.55)",1.2);ctx.restore();
-      textFloor(Rm.r0+Rm.dr-.38,Rm.c0+.35,Rm.id,.42,"rgba(110,80,40,.65)")}
+      textFloor(Rm.r0+Rm.dr-.38,Rm.c0+.35,Rm.id.replace(/^\d+\./,""),.42,"rgba(110,80,40,.65)")}
     else if(Rm.open&&Rm.type!=="cluster")floorQ(Rm.r0,Rm.c0,Rm.r0+Rm.dr,Rm.c0+Rm.dc,0,T.floor);
     else if(!Rm.open){floorQ(Rm.r0,Rm.c0,Rm.r0+Rm.dr,Rm.c0+Rm.dc,0,T.floor);if(["exec","office","cluster","area"].includes(Rm.type)){ctx.globalAlpha=.12;for(let r=Rm.r0+.5;r<Rm.r0+Rm.dr;r+=.5)line(Q(r,Rm.c0),Q(r,Rm.c0+Rm.dc),"#5a3d20",.8);ctx.globalAlpha=1}
       for(const d of Rm.doors){const o=d.s==="B"?[Rm.r0+Rm.dr-.4,d.at-.5,Rm.r0+Rm.dr,d.at+.5]:d.s==="T"?[Rm.r0,d.at-.5,Rm.r0+.4,d.at+.5]:d.s==="L"?[d.at-.5,Rm.c0,d.at+.5,Rm.c0+.4]:[d.at-.5,Rm.c0+Rm.dc-.4,d.at+.5,Rm.c0+Rm.dc];floorQ(o[0],o[1],o[2],o[3],.03,"rgba(0,0,0,.08)")}}
@@ -551,7 +551,7 @@ function drawPlaques(f){HIT_PLAQ=[];if(!S.plaques)return;ctx.textBaseline="middl
   for(const Rm of FL[f].rooms){if(Rm.type==="area")continue;
     const w=Q(Rm.r0+Rm.dr*.5,Rm.c0+Rm.dc*.5,Rm.type==="toilet"?64:Rm.type==="stairs"?70:Rm.zone||Rm.open?2:44),s=toScreen(w);
     const cap=Rm.seats.length,n=(S.roomPeople[Rm.id]||[]).length;
-    ctx.font="800 11px Manrope, sans-serif";const t1=fitText(`${Rm.id}  ${Rm.name}`,150),w1=ctx.measureText(t1).width;
+    ctx.font="800 11px Manrope, sans-serif";const t1=fitText(Rm.name,150),w1=ctx.measureText(t1).width;
     const t2=cap?`${n}/${cap} kursi terisi`:"";ctx.font="700 9.5px Manrope, sans-serif";const w2=t2?ctx.measureText(t2).width:0;
     const bw=Math.max(w1,w2)+16,bh=t2?28:18,x=s[0]-bw/2,y=s[1]-bh/2;
     ctx.globalAlpha=.86;ctx.fillStyle="rgba(20,34,40,1)";rrect(x,y,bw,bh,8);ctx.fill();ctx.globalAlpha=1;
@@ -835,7 +835,7 @@ function renderBody(force){if(!body)return;
         <div class="acts"><button class="btn primary" data-act="saveDiv">Simpan</button><button class="btn" data-act="cancelDiv">Batal</button>
         <button class="btn danger${S.armed==="deld"?" armed":""}" data-act="delDiv" ${n?"disabled":""}>${n?"Masih ada "+n+" orang":S.armed==="deld"?"Klik lagi untuk hapus":"Hapus"}</button></div></div></div>`}
       return`<div class="card"><div class="top"><h3><i class="sw" style="background:${d.color};width:14px;height:14px"></i>${esc(d.name)}</h3><div class="acts"><span class="pill">${n} orang</span><button class="btn sm" data-act="editDiv" data-id="${esc(d.id)}">Ubah</button></div></div></div>`}).join(""):`<div class="empty">Belum ada divisi.</div>`}
-  if(MODE==="admin"&&["app","info","set"].includes(S.tab))h+=adminTabs();
+  if(MODE==="admin"&&S.tab==="set")h+=adminTabs();
   body.innerHTML=h}
 panel?.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending&&!(panel.contains(document.activeElement)&&/INPUT|SELECT/.test(document.activeElement?.tagName||"")))renderBody(true)},0));
 panel?.addEventListener("input",e=>{const el=e.target;
@@ -931,7 +931,8 @@ const DEFAULT_SLIDES=[
   {id:"iso9001",tag:"Certification",tone:"cert",title:"ISO 9001:2015 Accredited",desc:"Quality Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%209K%20IA.pdf",img:"https://i.imgur.com/P4fLT1j.png",order:2},
   {id:"iso45001",tag:"Certification",tone:"cert",title:"ISO 45001:2018 Accredited",desc:"Health And Safety Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2045K%20IA.pdf",img:"https://i.imgur.com/BPEP5C0.png",order:3},
 ];
-let APPS=[],SLIDES=[];
+/* Daftar aplikasi & info ditulis langsung di kode (link langsung), tidak diambil dari database. */
+let APPS=DEFAULT_APPS.map(a=>({...a})),SLIDES=DEFAULT_SLIDES.map(x=>({...x}));
 const byOrder=(a,b)=>(a.order??99)-(b.order??99)||String(a.title).localeCompare(String(b.title));
 const appsSorted=()=>[...APPS].sort(byOrder);
 const appsOf=divId=>appsSorted().filter(a=>a.divId===divId);
@@ -1042,16 +1043,15 @@ function adminTabs(){let h="";
   else if(S.tab==="set"){const nD=Object.keys(R.divs).length,nA=APPS.length,nS=SLIDES.length;
     h+=`<div class="note">${S.live?`Masuk sebagai <b>${esc(S.admin||"—")}</b>. Semua perubahan langsung tampil di mainmenu.genetek.co.id.`:`<b>Mode demo.</b> Firebase belum diatur di <code>assets/firebase-config.js</code>, jadi perubahan tidak tersimpan.`}</div>`;
     h+=`<div class="sec">Isi database</div><div class="tbl"><table><tbody>
-      <tr><td>Divisi</td><td class="num">${nD}</td></tr><tr><td>Aplikasi</td><td class="num">${nA}</td></tr><tr><td>Info & sertifikat</td><td class="num">${nS}</td></tr>
+      <tr><td>Divisi</td><td class="num">${nD}</td></tr>
       <tr><td>Karyawan</td><td class="num">${R.people.length}</td></tr><tr><td>Tata letak manual</td><td class="num">${Object.keys(R.layouts).length}</td></tr></tbody></table></div>`;
-    h+=`<div class="card"><h3>Data awal mainmenu</h3><div class="meta">Mengisi 8 divisi, 10 aplikasi, dan 4 kartu info sesuai mainmenu lama. Data yang sudah ada tidak ditimpa.</div><div class="acts"><button class="btn primary" data-act="seed">Isi data awal</button></div></div>`;
-    h+=`<div class="card"><h3>Menambah admin</h3><div class="meta">Buat akun di Firebase Console → Authentication, lalu buat dokumen di koleksi <b>mm_admins</b> dengan ID dokumen = email admin (huruf kecil).</div></div>`;
+    h+=`<div class="card"><h3>Data awal mainmenu</h3><div class="meta">Mengisi 8 divisi (Direksi, Komisaris, Finance, SCM, Engineering, Sales, HCCS, Teknik). Data yang sudah ada tidak ditimpa. Daftar aplikasi dan info sudah tertulis di kode mainmenu.</div><div class="acts"><button class="btn primary" data-act="seed">Isi data awal</button></div></div>`;
+    h+=`<div class="card"><h3>Menambah admin</h3><div class="meta">Buat akun di Firebase Console → Authentication, lalu tambahkan emailnya di fungsi <b>isMainmenuAdmin()</b> pada Firestore rules dan publish ulang.</div></div>`;
     h+=`<a class="btn wide" href="/" style="text-align:center;text-decoration:none">Lihat halaman utama</a>`}
   return h}
 async function seedDefaults(){let n=0;toast("Mengisi data awal…");
   const ok=await safe(async()=>{for(const[id,d]of Object.entries(DEFAULT_DIVS)){const byName=divList().some(x=>x.name.toLowerCase()===d.name.toLowerCase());if(!R.divs[id]&&!byName){await store.set("divisions",id,d);n++}}
-    for(const a of DEFAULT_APPS){if(!APPS.some(x=>x.id===a.id)){const{id,...rest}=a;await store.set("apps",id,rest);n++}}
-    for(const s of DEFAULT_SLIDES){if(!SLIDES.some(x=>x.id===s.id)){const{id,...rest}=s;await store.set("slides",id,rest);n++}}});
+  });
   if(ok)toast(n?`${n} data awal ditambahkan`:"Semua data awal sudah ada");renderBody(true)}
 async function moveItem(col,list,id,dir){const arr=[...list].sort(byOrder);arr.forEach((x,i)=>x._o=i);const i=arr.findIndex(x=>x.id===id),j=i+dir;if(i<0||j<0||j>=arr.length)return;
   const a=arr[i],b=arr[j];await safe(async()=>{await store.update(col,a.id,{order:j});await store.update(col,b.id,{order:i});
@@ -1103,14 +1103,13 @@ function setMode(t,show){if(!modeEl)return;modeEl.textContent=t;modeEl.hidden=MO
 recompute();renderKpis();renderBody(true);renderDivbar();renderApps();renderInfo();requestAnimationFrame(loop);
 function useLocal(msg){R.divs=JSON.parse(JSON.stringify(DEFAULT_DIVS));APPS=DEFAULT_APPS.map(a=>({...a}));SLIDES=DEFAULT_SLIDES.map(x=>({...x}));store=localStore();S.loaded=true;S.live=false;setMode(msg,true);changed()}
 function startFirestore(G){store=dbStore(G.db);S.live=true;setMode("Tersinkron",false);
-  const need=new Set(["divisions","people","layouts","apps","slides"]);const done=c=>{if(need.delete(c)&&!need.size)S.loaded=true;if(S.loaded)changed()};
+  const need=new Set(["divisions","people","layouts"]);const done=c=>{if(need.delete(c)&&!need.size)S.loaded=true;if(S.loaded)changed()};
   const err=e=>{console.error(e);setMode("Gagal memuat data · muat ulang halaman",true)};
   const list=s=>s.docs.map(d=>({id:d.id,...d.data()})),map=s=>{const o={};for(const d of s.docs)o[d.id]=d.data();return o};
-  G.db.collection("divisions").onSnapshot(s=>{R.divs=map(s);done("divisions")},err);
+  const pub=MODE==="public";
+  G.db.collection("divisions").onSnapshot(s=>{const m=map(s);R.divs=Object.keys(m).length||!pub?m:JSON.parse(JSON.stringify(DEFAULT_DIVS));done("divisions")},err);
   G.db.collection("layouts").onSnapshot(s=>{R.layouts=map(s);done("layouts")},err);
-  G.db.collection("people").onSnapshot(s=>{R.people=list(s);done("people")},err);
-  G.db.collection("apps").onSnapshot(s=>{APPS=list(s);done("apps")},err);
-  G.db.collection("slides").onSnapshot(s=>{SLIDES=list(s);done("slides")},err)}
+  G.db.collection("people").onSnapshot(s=>{R.people=list(s);done("people")},err);}
 const gtReady=()=>new Promise(res=>{if(window.GT!==undefined)return res(window.GT);addEventListener("gt-ready",()=>res(window.GT),{once:true});setTimeout(()=>res(window.GT||null),9000)});
 (async()=>{const G=await gtReady(),ok=!!(G&&G.db);if(MODE==="admin")setupAdminGate(ok?G:null);if(!ok){useLocal("Mode demo · Firebase belum diatur");return}startFirestore(G)})();
 
