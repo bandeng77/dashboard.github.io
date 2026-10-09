@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// Aturan untuk koleksi mainmenu (awalan mm_).
+// PENTING: kalau project Firebase ini juga dipakai aplikasi lain (GA, RAB, dll.),
+// GABUNGKAN blok "match /mm_..." di bawah ke rules yang sudah ada — jangan menimpa seluruh file,
+// supaya aturan aplikasi lain tetap berlaku.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin = akun yang emailnya terdaftar sebagai ID dokumen di koleksi mm_admins.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && exists(/databases/$(database)/documents/mm_admins/$(request.auth.token.email.lower()));
+    }
+
+    // Data kantor 3D & menu: semua orang boleh membaca (tampil di mainmenu), hanya admin yang boleh mengubah.
+    match /mm_divisions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /mm_people/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /mm_layouts/{id}   { allow read: if true; allow write: if isAdmin(); }
+    match /mm_apps/{id}      { allow read: if true; allow write: if isAdmin(); }
+    match /mm_slides/{id}    { allow read: if true; allow write: if isAdmin(); }
+
+    // Daftar admin: hanya bisa dibaca oleh pemilik email itu sendiri atau admin lain.
+    // Penambahan admin dilakukan lewat Firebase Console (tidak bisa dari halaman web).
+    match /mm_admins/{email} {
+      allow read: if request.auth != null
+        && (request.auth.token.email.lower() == email || isAdmin());
+      allow write: if false;
+    }
+  }
+}
