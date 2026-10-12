@@ -319,3 +319,11 @@ code{font-family:var(--f-mono);font-size:12px;background:var(--panel-2);padding:
 .ondot.off{background:#94a3b8;box-shadow:none;animation:none}
 @keyframes onpulse{50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
 @media (prefers-reduced-motion:reduce){.ondot{animation:none}}
+
+/* kotak online Carbonio di bawah tombol "Nama ruang" */
+.hudcol{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.onbox{background:var(--hud);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:6px 12px 7px;backdrop-filter:blur(10px);display:flex;flex-direction:column;align-items:center;gap:1px;pointer-events:auto}
+.onbox span{font:800 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center}
+.onbox b{font:600 19px var(--f-display);font-variant-numeric:tabular-nums;line-height:1.15}
+.onbox.off b{color:var(--muted)}
+.hud.tl{align-items:flex-start}
