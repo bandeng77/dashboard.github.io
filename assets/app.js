@@ -526,10 +526,7 @@ const R={divs:{},people:[],layouts:{},rooms:{},contacts:{},presence:null};
 const PRES_STALE=5*60e3;
 const presFresh=()=>!!(R.presence&&R.presence.updatedAt&&Date.now()-R.presence.updatedAt<PRES_STALE);
 const onlineOf=id=>presFresh()?(R.presence.people?.[id]||null):null;
-function kpiOnline(){const n=R.people.length,on=R.people.filter(p=>onlineOf(p.id)),chat=on.filter(p=>onlineOf(p.id).chat).length;
-  let sub;if(!R.presence)sub="belum tersambung ke Carbonio";else if(!presFresh()){const d=new Date(R.presence.updatedAt||0);sub="terputus · data terakhir "+d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}
-  else sub=`${chat} di chat · ${on.length-chat} hanya web`;
-  return`<div class="kpi kpi-on"><span><i class="ondot${presFresh()?"":" off"}"></i>Online di Carbonio</span><b>${presFresh()?on.length:"—"}${presFresh()&&n?`<small style="font-size:14px"> / ${n}</small>`:""}</b><small>${esc(sub)}</small></div>`}
+
 const S={afilter:"",hub:null,focusDiv:null,view:0,lab:"full",plaques:true,dayMode:"auto",tab:"sum",sel:null,hover:null,follow:null,form:null,armed:null,
   live:false,loaded:false,q:"",fdiv:"",ffl:"",editDiv:null,divDraft:null,newDiv:{name:"",color:PALETTE[0]},
   seat:{},roomPeople:{},seatOcc:{},divCount:{},poses:[],pending:false,cache:new Map(),edit:null,ghost:null,emailMode:false,emDraft:{}};
@@ -1081,6 +1078,8 @@ function setView(v,keepFollow){S.view=v;if(!keepFollow)stopFollow();document.que
 document.querySelectorAll("#floorSeg button").forEach(b=>b.onclick=()=>setView(b.dataset.view==="out"?"out":+b.dataset.view));
 document.querySelectorAll("#labelSeg button[data-lab]").forEach(b=>b.onclick=()=>{S.lab=b.dataset.lab;document.querySelectorAll("#labelSeg button[data-lab]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));try{localStorage.setItem("ke-lab",S.lab)}catch{}});
 $("plaqBtn").onclick=()=>{S.plaques=!S.plaques;$("plaqBtn").setAttribute("aria-pressed",String(S.plaques))};
+{const pb=$("plaqBtn");if(pb&&!$("onlineBox")){const col=document.createElement("div");col.className="hudcol";pb.parentNode.insertBefore(col,pb);col.appendChild(pb);
+  const ob=document.createElement("div");ob.id="onlineBox";ob.className="onbox off";ob.setAttribute("aria-live","polite");col.appendChild(ob)}}
 document.querySelectorAll("#daySeg button").forEach(b=>b.onclick=()=>{S.dayMode=b.dataset.day;document.querySelectorAll("#daySeg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)))});
 try{const l=localStorage.getItem("ke-lab");if(l&&["full","div","name","off"].includes(l)){S.lab=l;document.querySelectorAll("#labelSeg button[data-lab]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.lab===l)))}}catch{}
 const followEl=$("follow");
@@ -1168,14 +1167,10 @@ function seatOptions(roomId,sel,selfId){const Rm=ROOMS[roomId];if(!Rm)return opt
 function personRow(p){const dv=divOf(p.div),sel=S.sel?.type==="person"&&S.sel.id===p.id,h=S.seat[p.id];
   return`<button class="prow${sel?" sel":""}" data-act="pickPerson" data-id="${esc(p.id)}"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span>
     <div><div class="nm">${esc(p.name)}${MODE==="admin"&&!emailOf(p.id)?` <small class="noem" title="Email Carbonio belum diisi">tanpa email</small>`:""}</div><div class="sb">${esc(dv.name)} · ${esc(p.bagian||p.jabatan||"—")}</div></div><span class="loc">${h&&!h.none?"Lt "+(h.f+1):"—"}</span></button>`}
-function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s=S.seat[p.id];return s&&!s.none&&!s.over}).length,unassigned=R.people.filter(p=>S.seat[p.id]?.none).length;
-  const counts={work:0,meet:0,brk:0,talk:0,move:0,out:0,none:0};for(const o of S.poses)counts[o.ak]=(counts[o.ak]||0)+1;
-  $("kpis").innerHTML=`<div class="kpi"><span>Karyawan</span><b>${n}</b><small>${n?unassigned?unassigned+" belum punya kursi":"semua sudah punya kursi":"belum ada data"}</small></div>
-  <div class="kpi"><span>Divisi</span><b>${divList().length}</b><small>${esc(divList().slice(0,3).map(d=>d.name).join(", "))||"belum ada"}</small></div>
-  <div class="kpi"><span>Kursi terisi</span><b>${seated}<small style="font-size:14px"> / ${TOTAL_SEATS}</small></b><small>di 4 lantai</small></div>
-  <div class="kpi"><span>Kursi kosong</span><b>${TOTAL_SEATS-seated}</b><small>siap diisi</small></div>
-  <div class="kpi"><span>Sedang bekerja</span><b>${counts.work}</b><small>${n?Math.round(counts.work/n*100)+"% dari karyawan":"—"}</small></div>
-  ${kpiOnline()}`}
+function renderKpis(){const k=$("kpis");if(k){k.style.display="none";k.innerHTML=""}
+  const ob=$("onlineBox");if(!ob)return;const n=R.people.length,on=R.people.filter(p=>onlineOf(p.id)).length,f=presFresh();
+  ob.classList.toggle("off",!f);ob.title=!R.presence?"Belum tersambung ke Carbonio":!f?"Status Carbonio terputus":"Karyawan yang sedang online di Carbonio";
+  ob.innerHTML=`<span><i class="ondot${f?"":" off"}"></i>Online</span><b>${f?on:"—"}/${n}</b>`}
 /* email Carbonio per karyawan — disimpan terpisah di mm_contacts (hanya admin yang bisa membaca) */
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const emailOf=id=>(R.contacts[id]?.email||"").toLowerCase();
@@ -1405,9 +1400,11 @@ const resolveDiv=key=>{if(!key)return null;if(R.divs[key])return key;const k=div
   for(const id in R.divs)if(divKey(R.divs[id].name)===k||divKey(id)===k)return id;
   if(k.length>=3)for(const id in R.divs){const n=String(R.divs[id].name||"").toLowerCase().replace(/[^a-z]/g,"");if(n.includes(k)||(DIV_HINT[k]||[]).some(x=>n.includes(x)))return id}
   return null};
-const appOwner=a=>resolveDiv(a.divId);
+/* grup aplikasi yang bukan divisi karyawan (tidak muncul di daftar divisi) */
+const APP_GROUPS={hse:{name:"HSE",color:"#f97316",order:90}};
+const appOwner=a=>APP_GROUPS[a.divId]?a.divId:resolveDiv(a.divId);
 const appsOf=divId=>appsSorted().filter(a=>appOwner(a)===divId);
-const divOfApp=a=>{const id=appOwner(a);return id?{id,...R.divs[id]}:null};
+const divOfApp=a=>{const id=appOwner(a);return id?{id,...(APP_GROUPS[id]||R.divs[id])}:null};
 const ICON_KEYS=["book","box","building","shield","chart","check","chip","truck","heart","pie","pen","award"];
 const abbr=n=>{n=String(n||"?").trim();if(n.length<=4)return n.toUpperCase();const w=n.split(/[\s&]+/).filter(Boolean);return(w.length>1?w[0][0]+w[1][0]:n.slice(0,2)).toUpperCase()};
 const appTile=a=>`<a class="happ" style="--c:${a.color}" href="${esc(a.href)}" target="_blank" rel="noopener"><span class="ic">${svg(a.icon,22)}</span><div><b>${esc(a.title)}</b><small>${esc(a.desc)}</small></div><span class="go">${svg("arrow",14)}</span></a>`;
@@ -1437,8 +1434,8 @@ $("hub").addEventListener("click",e=>{const b=e.target.closest("[data-hub]");if(
   else if(a==="follow"){const id=S.hub.person;if(S.follow===id)stopFollow();else startFollow(id);renderHub()}
   else if(a==="detail"){selectPerson(S.hub.person,false);$("panel")?.scrollIntoView({behavior:"smooth",block:"nearest"})}});
 
-function renderApps(){if(!$("appsGrid"))return;const dl=divList(),keys=dl.map(d=>d.id).filter(id=>appsOf(id).length),f=S.afilter||"";
-  $("afilter").innerHTML=`<button data-af="" aria-pressed="${!f}">Semua</button>`+keys.map(k=>{const d=R.divs[k];
+function renderApps(){if(!$("appsGrid"))return;const dl=divList(),keys=[...dl.map(d=>d.id),...Object.keys(APP_GROUPS)].filter(id=>appsOf(id).length),f=S.afilter||"";
+  $("afilter").innerHTML=`<button data-af="" aria-pressed="${!f}">Semua</button>`+keys.map(k=>{const d=APP_GROUPS[k]||R.divs[k];
     return`<button data-af="${k}" style="--c:${d?d.color:"#8a95a0"}" aria-pressed="${f===k}"><i></i>${esc(d?d.name:k.toUpperCase())}</button>`}).join("");
   const list=appsSorted().filter(a=>!f||appOwner(a)===f);$("appCount").textContent=list.length+" Aplikasi";
   $("appsGrid").innerHTML=list.map(a=>{const d=divOfApp(a);return`<article class="app" style="--c:${a.color};--dc:${d?d.color:a.color}">
