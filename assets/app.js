@@ -35,12 +35,12 @@ const ROOM_DEFS=[
   {id:"15",f:1,name:"Ruang finance",type:"cluster",r0:9,c0:10,dr:7,dc:6,doors:[{s:"L",at:10}],clusters:[{r0:9.7,c0:10.8,rows:2,n:3,sp:1.2},{r0:12.6,c0:10.8,rows:2,n:3,sp:1.2}],cabinets:true},
   // ---------- LANTAI 3 ----------
   {id:"20",f:2,name:"Ruang server",type:"server",r0:0,c0:0,dr:3.5,dc:3.5,doors:[{s:"B",at:2.5}]},
-  {id:"19",f:2,name:"Ruang Manager SCM",type:"exec",r0:0,c0:3.5,dr:3.5,dc:3.5,doors:[{s:"B",at:6.5}]},
+  {id:"19",f:2,name:"Ruang Manager Supply Chain",type:"exec",r0:0,c0:3.5,dr:3.5,dc:3.5,doors:[{s:"B",at:6.5}]},
   {id:"18",f:2,name:"Toilet",type:"toilet",r0:0,c0:7.5,dr:3.5,dc:3.5,doors:[{s:"B",at:9}]},
   {id:"17",f:2,name:"Tangga turun",type:"stairs",r0:0,c0:12,dr:3,dc:1.75,down:true},
   {id:"16",f:2,name:"Tangga naik",type:"stairs",r0:0,c0:14,dr:3,dc:1.75},
   {id:"21",f:2,name:"Ruang finance",type:"office",r0:4.5,c0:0,dr:3.5,dc:3.5,doors:[{s:"R",at:6}]},
-  {id:"22",f:2,name:"Ruang SCM",type:"office",r0:8,c0:0,dr:3.5,dc:3.5,doors:[{s:"R",at:10}]},
+  {id:"22",f:2,name:"Ruang Supply Chain",type:"office",r0:8,c0:0,dr:3.5,dc:3.5,doors:[{s:"R",at:10}]},
   {id:"27",f:2,name:"Ruang kerja Sales & Engineering",type:"cluster",r0:4.5,c0:5,dr:7,dc:10.5,doors:[{s:"L",at:6},{s:"B",at:10}],
     clusters:[{dir:"v",r0:6.1,c0:6.2,n:3,sp:1.2,group:"Engineering"},{dir:"v",r0:6.1,c0:11.3,n:3,sp:1.2,group:"Sales"}]},
   {id:"23",f:2,name:"Ruang Manager Engineering",type:"exec",r0:12.5,c0:0,dr:3.5,dc:3.5,doors:[{s:"T",at:2.5}]},
@@ -1373,8 +1373,8 @@ const svg=(k,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="n
 /* Data bawaan mainmenu — dipakai untuk "Isi data awal" di /admin dan untuk mode demo */
 const DEFAULT_DIVS={
   direksi:{name:"Direksi",color:"#3b3f8f",order:0},komisaris:{name:"Komisaris",color:"#8a6d2f",order:1},finance:{name:"Finance",color:"#2e8b57",order:2},
-  scm:{name:"SCM",color:"#d17f22",order:3},engineering:{name:"Engineering",color:"#7b4fc4",order:4},sales:{name:"Sales",color:"#d14b3c",order:5},
-  hccs:{name:"HCCS",color:"#c2477a",order:6},technic:{name:"technic",color:"#168f9c",order:7}};
+  scm:{name:"Supply Chain",color:"#d17f22",order:3},engineering:{name:"Engineering",color:"#7b4fc4",order:4},sales:{name:"Sales",color:"#d14b3c",order:5},
+  hccs:{name:"HCCS",color:"#c2477a",order:6},teknik:{name:"Technic",color:"#168f9c",order:7}};
 const DEFAULT_APPS=[
   {id:"guides",title:"Guides & Manuals",icon:"book",color:"#3b82f6",href:"https://panduan.genetek.co.id",desc:"Akses cepat ke panduan pengguna dan manual operasional lengkap.",divId:"hccs",order:0},
   {id:"atk",title:"Office Supply (ATK)",icon:"box",color:"#10b981",href:"https://orderatk.genetek.co.id",desc:"Pengelolaan dan permintaan alat tulis kantor secara terstruktur.",divId:"hccs",order:1},
@@ -1383,7 +1383,7 @@ const DEFAULT_APPS=[
   {id:"pipelines",title:"Pipeline Sales Manager",icon:"chart",color:"#a855f7",href:"https://pipelines.genetek.co.id",desc:"Monitoring dan manajemen proyek peluang sales secara real-time.",divId:"sales",order:4},
   {id:"engmon",title:"Engineering Monitor",icon:"chip",color:"#6366f1",href:"https://monitoringeng.genetek.co.id",desc:"Monitoring teknis operasi engineering & keandalan alat.",divId:"engineering",order:5},
   {id:"supplychain",title:"Supply Chain App",icon:"truck",color:"#0ea5e9",href:"https://supplychain.genetek.co.id",desc:"Pelacakan arus kargo, rantai pasok, dan stok gudang.",divId:"scm",order:6},
-  {id:"workorder",title:"Work Order",icon:"check",color:"#06b6d4",href:"https://workorder.genetek.co.id",desc:"Sistem tiket instruksi kerja dan penugasan maintenance teknis.",divId:"technic",order:7},
+  {id:"workorder",title:"Work Order",icon:"check",color:"#06b6d4",href:"https://workorder.genetek.co.id",desc:"Sistem tiket instruksi kerja dan penugasan maintenance teknis.",divId:"teknik",order:7},
   {id:"medical",title:"Medical Claim",icon:"heart",color:"#f43f5e",href:"https://medicalclaim.genetek.co.id",desc:"Pengajuan penggantian klaim medis dan biaya kesehatan.",divId:"finance",order:8},
   {id:"monfinance",title:"Monitoring Finance",icon:"pie",color:"#14b8a6",href:"https://monfinance.genetek.co.id",desc:"Pemantauan arus kas dan pelaporan keuangan terpadu.",divId:"finance",order:9},
 ];
@@ -1400,8 +1400,8 @@ const roomDivs=id=>[...new Set((Array.isArray(R.rooms[id]?.divs)?R.rooms[id].div
 let APPS=DEFAULT_APPS.map(a=>({...a})),SLIDES=DEFAULT_SLIDES.map(x=>({...x}));
 const byOrder=(a,b)=>(a.order??99)-(b.order??99)||String(a.title).localeCompare(String(b.title));
 const appsSorted=()=>[...APPS].sort(byOrder);
-const DIV_HINT={hccs:["humancapital","hrd","hrga","hr"],scm:["supplychain","procurement","logistik"],technic:["technic","technical","maintenance"],finance:["keuangan","accounting"]};
-const DIV_ALIAS={hr:"hccs",humancapital:"hccs",humancapitalcorporateservice:"hccs",humancapitalcorporateservices:"hccs",hrd:"hccs",hrga:"hccs",hrdga:"hccs",supplychain:"scm",supplychainmanagement:"scm",engineer:"engineering",tehnik:"technic"};
+const DIV_HINT={hccs:["humancapital","hrd","hrga","hr"],scm:["supplychain","procurement","logistik"],teknik:["teknik","technic","technical","maintenance"],finance:["keuangan","accounting"]};
+const DIV_ALIAS={hr:"hccs",humancapital:"hccs",humancapitalcorporateservice:"hccs",humancapitalcorporateservices:"hccs",hrd:"hccs",hrga:"hccs",hrdga:"hccs",supplychain:"scm",supplychainmanagement:"scm",engineer:"engineering",tehnik:"teknik",technic:"teknik",technics:"teknik",technical:"teknik",teknikal:"teknik",teknis:"teknik",scmsupplychain:"scm"};
 const divKey=n=>{const k=String(n||"").toLowerCase().replace(/[^a-z]/g,"");return DIV_ALIAS[k]||k};
 /* cocokkan kode divisi bawaan (mis. "hccs") ke divisi di database, lewat ID atau nama */
 const resolveDiv=key=>{if(!key)return null;if(R.divs[key])return key;const k=divKey(key);
@@ -1525,7 +1525,7 @@ function adminTabs(){let h="";
     h+=`<div class="sec">Isi database</div><div class="tbl"><table><tbody>
       <tr><td>Divisi</td><td class="num">${nD}</td></tr>
       <tr><td>Karyawan</td><td class="num">${R.people.length}</td></tr><tr><td>Tata letak manual</td><td class="num">${Object.keys(R.layouts).length}</td></tr></tbody></table></div>`;
-    h+=`<div class="card"><h3>Data awal mainmenu</h3><div class="meta">Mengisi 8 divisi (Direksi, Komisaris, Finance, SCM, Engineering, Sales, HCCS, technic). Data yang sudah ada tidak ditimpa. Daftar aplikasi dan info sudah tertulis di kode mainmenu.</div><div class="acts"><button class="btn primary" data-act="seed">Isi data awal</button></div></div>`;
+    h+=`<div class="card"><h3>Data awal mainmenu</h3><div class="meta">Mengisi 8 divisi (Direksi, Komisaris, Finance, SCM, Engineering, Sales, HCCS, Teknik). Data yang sudah ada tidak ditimpa. Daftar aplikasi dan info sudah tertulis di kode mainmenu.</div><div class="acts"><button class="btn primary" data-act="seed">Isi data awal</button></div></div>`;
     h+=`<div class="card"><h3>Menambah admin</h3><div class="meta">Buat akun di Firebase Console → Authentication, lalu tambahkan emailnya di fungsi <b>isMainmenuAdmin()</b> pada Firestore rules dan publish ulang.</div></div>`;
     h+=`<a class="btn wide" href="/" style="text-align:center;text-decoration:none">Lihat halaman utama</a>`}
   return h}
