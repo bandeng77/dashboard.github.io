@@ -1376,7 +1376,7 @@ const DEFAULT_APPS=[
   {id:"guides",title:"Guides & Manuals",icon:"book",color:"#3b82f6",href:"https://panduan.genetek.co.id",desc:"Akses cepat ke panduan pengguna dan manual operasional lengkap.",divId:"hccs",order:0},
   {id:"atk",title:"Office Supply (ATK)",icon:"box",color:"#10b981",href:"https://orderatk.genetek.co.id",desc:"Pengelolaan dan permintaan alat tulis kantor secara terstruktur.",divId:"hccs",order:1},
   {id:"ga",title:"General Affair",icon:"building",color:"#f59e0b",href:"https://ga.genetek.co.id",desc:"Layanan fasilitas umum dan pengelolaan kebutuhan umum kantor.",divId:"hccs",order:2},
-  {id:"apd",title:"Secure Gear (APD)",icon:"shield",color:"#f97316",href:"https://formapd.genetek.co.id",desc:"Manajemen peminjaman Alat Pelindung Diri & standar K3.",divId:"hccs",order:3},
+  {id:"apd",title:"Secure Gear (APD)",icon:"shield",color:"#f97316",href:"https://formapd.genetek.co.id",desc:"Manajemen peminjaman Alat Pelindung Diri & standar K3.",divId:"hse",order:3},
   {id:"pipelines",title:"Pipeline Sales Manager",icon:"chart",color:"#a855f7",href:"https://pipelines.genetek.co.id",desc:"Monitoring dan manajemen proyek peluang sales secara real-time.",divId:"sales",order:4},
   {id:"engmon",title:"Engineering Monitor",icon:"chip",color:"#6366f1",href:"https://monitoringeng.genetek.co.id",desc:"Monitoring teknis operasi engineering & keandalan alat.",divId:"engineering",order:5},
   {id:"supplychain",title:"Supply Chain App",icon:"truck",color:"#0ea5e9",href:"https://supplychain.genetek.co.id",desc:"Pelacakan arus kargo, rantai pasok, dan stok gudang.",divId:"scm",order:6},
