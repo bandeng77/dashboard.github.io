@@ -521,7 +521,15 @@ const faceOf=(dr,dc)=>Math.abs(dr)>Math.abs(dc)?(dr>0?"down":"up"):(dc>0?"right"
 /* =========================================================
    STATE & DATA
    ========================================================= */
-const R={divs:{},people:[],layouts:{},rooms:{},contacts:{}};
+const R={divs:{},people:[],layouts:{},rooms:{},contacts:{},presence:null};
+/* status online Carbonio (ditulis skrip jembatan di server ke mm_presence/current) */
+const PRES_STALE=5*60e3;
+const presFresh=()=>!!(R.presence&&R.presence.updatedAt&&Date.now()-R.presence.updatedAt<PRES_STALE);
+const onlineOf=id=>presFresh()?(R.presence.people?.[id]||null):null;
+function kpiOnline(){const n=R.people.length,on=R.people.filter(p=>onlineOf(p.id)),chat=on.filter(p=>onlineOf(p.id).chat).length;
+  let sub;if(!R.presence)sub="belum tersambung ke Carbonio";else if(!presFresh()){const d=new Date(R.presence.updatedAt||0);sub="terputus · data terakhir "+d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}
+  else sub=`${chat} di chat · ${on.length-chat} hanya web`;
+  return`<div class="kpi kpi-on"><span><i class="ondot${presFresh()?"":" off"}"></i>Online di Carbonio</span><b>${presFresh()?on.length:"—"}${presFresh()&&n?`<small style="font-size:14px"> / ${n}</small>`:""}</b><small>${esc(sub)}</small></div>`}
 const S={afilter:"",hub:null,focusDiv:null,view:0,lab:"full",plaques:true,dayMode:"auto",tab:"sum",sel:null,hover:null,follow:null,form:null,armed:null,
   live:false,loaded:false,q:"",fdiv:"",ffl:"",editDiv:null,divDraft:null,newDiv:{name:"",color:PALETTE[0]},
   seat:{},roomPeople:{},seatOcc:{},divCount:{},poses:[],pending:false,cache:new Map(),edit:null,ghost:null,emailMode:false,emDraft:{}};
@@ -974,15 +982,15 @@ function drawBubbles(list,t){
   const items=list.map(o=>({o,s:toScreen(o.head),b:toScreen(Q(o.r,o.c,0))})).filter(it=>it.b[0]>-60&&it.b[0]<SW+60&&it.b[1]>-60&&it.s[1]<SH+60);
   for(const it of items){const hh=Math.max(12,it.b[1]-it.s[1]);HIT_PEOPLE.push({id:it.o.p.id,x:it.b[0]-hh*.32,y:it.s[1]-2,w:hh*.64,h:hh+4})}
   let show=items;if(S.lab==="off")show=items.filter(it=>it.o.sel||it.o.hov);
-  show.sort((a,b)=>b.s[1]-a.s[1]);const placed=[];
+  show.sort((a,b)=>b.s[1]-a.s[1]);const placed=[],dots=[];
   for(const it of show){const o=it.o,dv=divOf(o.p.div),byName=S.lab==="name",full=S.lab==="full"||o.sel||o.hov,showName=(o.sel||o.hov)&&!byName;
     ctx.font="800 10px Manrope, sans-serif";const l1=byName?fitText(o.p.name,150):fitText(dv.name.toUpperCase(),130),w1=ctx.measureText(l1).width;
     ctx.font="700 10.5px Manrope, sans-serif";const l2=full?fitText(o.p.bagian||o.p.jabatan||"—",140):"",w2=full?ctx.measureText(l2).width+12:0;
     ctx.font="800 12px Manrope, sans-serif";const l0=showName?fitText(o.p.name,160):"",w0=showName?ctx.measureText(l0).width:0;
     const bw=Math.max(w1+14,w2+12,w0+14),hTop=showName?17:0,bh=hTop+15+(full?16:0),bobY=Math.sin(t/600+(o.p._h%50))*1.6;
-    let x=it.s[0]-bw/2,y=it.s[1]-bh-9+bobY;
-    for(let pass=0;pass<6;pass++){let moved=false;for(const r of placed){if(x<r.x+r.w+2&&x+bw+2>r.x&&y<r.y+r.h+2&&y+bh+2>r.y){y=r.y-bh-3;moved=true}}if(!moved)break}
-    placed.push({x:x-18,y,w:bw+18,h:bh});const ax=it.s[0],ay=it.s[1]+bobY-4;
+    let x=it.s[0]-bw/2,y=it.s[1]-bh-9+bobY;const ex=onlineOf(o.p.id)?12:0;
+    for(let pass=0;pass<6;pass++){let moved=false;for(const r of placed){if(x<r.x+r.w+2&&x+bw+2>r.x&&y-ex<r.y+r.h+2&&y+bh+2>r.y){y=r.y-bh-3;moved=true}}if(!moved)break}
+    placed.push({x:x-18,y:y-ex,w:bw+18,h:bh+ex});if(ex)dots.push([x+bw/2,y-7,o.p.id]);const ax=it.s[0],ay=it.s[1]+bobY-4;
     if(y+bh<ay-8){ctx.strokeStyle="rgba(20,34,40,.45)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ax,y+bh);ctx.lineTo(ax,ay);ctx.stroke()}
     ctx.save();ctx.shadowColor="rgba(0,0,0,.22)";ctx.shadowBlur=6;ctx.shadowOffsetY=2;ctx.fillStyle="#ffffff";rrect(x,y,bw,bh,7);ctx.fill();ctx.restore();
     if(o.sel){ctx.strokeStyle="#12c08a";ctx.lineWidth=2;rrect(x,y,bw,bh,7);ctx.stroke()}
@@ -993,7 +1001,13 @@ function drawBubbles(list,t){
     if(full){ctx.fillStyle=ACT_COL[o.ak]||"#8a95a0";ctx.beginPath();ctx.arc(x+bw/2-w2/2+3,y+hTop+24,3,0,7);ctx.fill();ctx.fillStyle="#2b3a40";ctx.font="700 10.5px Manrope, sans-serif";ctx.textAlign="left";ctx.fillText(l2,x+bw/2-w2/2+10,y+hTop+24.5)}
     if(o.emo){const ex=x-7,ey=y+bh/2;ctx.save();ctx.shadowColor="rgba(0,0,0,.25)";ctx.shadowBlur=5;ctx.fillStyle="#ffffff";ctx.beginPath();ctx.arc(ex,ey,10.5,0,7);ctx.fill();ctx.restore();
       ctx.font='13px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(o.emo,ex,ey+1)}
-    HIT_BUBBLES.push({id:o.p.id,x,y,w:bw,h:bh})}}
+    HIT_BUBBLES.push({id:o.p.id,x,y,w:bw,h:bh})}
+  // lingkar hijau: online di Carbonio — tampil di semua mode label (juga saat label "Mati")
+  const shown=new Set(dots.map(d=>d[2]));for(const it of items)if(!shown.has(it.o.p.id)&&onlineOf(it.o.p.id))dots.push([it.s[0],it.s[1]-10,it.o.p.id]);
+  const pulse=(Math.sin(t/420)+1)/2;
+  for(const[dx,dy]of dots){ctx.beginPath();ctx.arc(dx,dy,7+pulse*3.5,0,7);ctx.fillStyle=`rgba(34,197,94,${.32-.24*pulse})`;ctx.fill();
+    ctx.beginPath();ctx.arc(dx,dy,6,0,7);ctx.fillStyle="#22c55e";ctx.fill();ctx.lineWidth=2.2;ctx.strokeStyle="#ffffff";ctx.stroke();
+    ctx.beginPath();ctx.arc(dx-1.6,dy-1.6,1.6,0,7);ctx.fillStyle="rgba(255,255,255,.65)";ctx.fill()}}
 function hull(pts){pts=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];
   for(const p of pts){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}for(const p of pts.reverse()){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}
   return lo.slice(0,-1).concat(up.slice(0,-1))}
@@ -1026,7 +1040,7 @@ function pick(mx,my){
 const tip=$("tip");
 function showTip(h,mx,my){if(!h){tip.hidden=true;return}let html="";
   if(h.type==="person"){const p=personBy(h.id),o=S.poses.find(o=>o.p.id===h.id);if(!p){tip.hidden=true;return}const dv=divOf(p.div),st=S.seat[p.id];
-    html=`<b>${esc(p.name)}</b><br><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span><br>${esc(p.bagian||"—")}${p.jabatan?` · ${esc(p.jabatan)}`:""}<br><span style="color:var(--muted)">${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`):"Belum punya kursi"}</span>${o?`<br><span class="act"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${o.emo?o.emo+" ":""}${esc(o.act)}</span>`:""}`}
+    html=`<b>${esc(p.name)}</b><br><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span><br>${esc(p.bagian||"—")}${p.jabatan?` · ${esc(p.jabatan)}`:""}<br><span style="color:var(--muted)">${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`):"Belum punya kursi"}</span>${onlineOf(p.id)?`<br><span class="act"><i class="dot" style="background:#22c55e"></i>Online di Carbonio${onlineOf(p.id).chat?" (chat)":""}</span>`:""}${o?`<br><span class="act"><i class="dot" style="background:${ACT_COL[o.ak]}"></i>${o.emo?o.emo+" ":""}${esc(o.act)}</span>`:""}`}
   else if(h.type==="room"){const Rm=ROOMS[h.id];html=`<b>${esc(Rm.name)}</b><br><span style="color:var(--muted)">${MODE==="admin"?"Klik untuk mengatur ruangan ini":esc(TYPE[Rm.type].name)}</span>`}
   else if(h.type==="div"){const d=R.divs[h.id],n=appsOf(h.id).length;html=`<b>${esc(d?.name||"")}</b><br><span style="color:var(--muted)">${n?`Klik untuk membuka ${n} aplikasi divisi ini`:"Divisi ini belum punya aplikasi khusus"}</span>`}
   else if(h.type==="floor")html=`<b>Lantai ${h.f+1}</b><br><span style="color:var(--muted)">Klik untuk masuk ke lantai ini</span>`;
@@ -1161,7 +1175,7 @@ function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s
   <div class="kpi"><span>Kursi terisi</span><b>${seated}<small style="font-size:14px"> / ${TOTAL_SEATS}</small></b><small>di 4 lantai</small></div>
   <div class="kpi"><span>Kursi kosong</span><b>${TOTAL_SEATS-seated}</b><small>siap diisi</small></div>
   <div class="kpi"><span>Sedang bekerja</span><b>${counts.work}</b><small>${n?Math.round(counts.work/n*100)+"% dari karyawan":"—"}</small></div>
-  <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span><span><i style="background:${ACT_COL.out}"></i>Di luar ${counts.out||0}</span>${counts.home?`<span><i style="background:${ACT_COL.home}"></i>Pulang ${counts.home}</span>`:""}</div></div>`}
+  ${kpiOnline()}`}
 /* email Carbonio per karyawan — disimpan terpisah di mm_contacts (hanya admin yang bisa membaca) */
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const emailOf=id=>(R.contacts[id]?.email||"").toLowerCase();
@@ -1588,7 +1602,8 @@ function startFirestore(G){store=dbStore(G.db);S.live=true;setMode("Tersinkron",
   G.db.collection("divisions").onSnapshot(s=>{const m=map(s);R.divs=Object.keys(m).length||!pub?m:JSON.parse(JSON.stringify(DEFAULT_DIVS));done("divisions")},err);
   G.db.collection("layouts").onSnapshot(s=>{R.layouts=map(s);done("layouts")},err);
   G.db.collection("rooms").onSnapshot(s=>{R.rooms=map(s);done("rooms")},err);
-  G.db.collection("people").onSnapshot(s=>{R.people=list(s);done("people")},err);}
+  G.db.collection("people").onSnapshot(s=>{R.people=list(s);done("people")},err);
+  G.db.collection("presence").onSnapshot(s=>{const d=s.docs.find(x=>x.id==="current");R.presence=d?d.data():null;renderKpis()},e=>console.warn("[mainmenu] status Carbonio belum bisa dibaca (rules mm_presence?)",e?.code||e));}
 const gtReady=()=>new Promise(res=>{if(window.GT!==undefined)return res(window.GT);addEventListener("gt-ready",()=>res(window.GT),{once:true});setTimeout(()=>res(window.GT||null),9000)});
 (async()=>{const G=await gtReady(),ok=!!(G&&G.db);if(MODE==="admin")setupAdminGate(ok?G:null);if(!ok){useLocal("Mode demo · Firebase belum diatur");return}startFirestore(G)})();
 
