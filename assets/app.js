@@ -282,7 +282,12 @@ function buildRoom(R){
   const home=(s,o={})=>{seats.push({...s,sit:true,chair:true,...o});};
   const spot=(r,c,face,sit,label,kind,o={})=>spots.push({r,c,face,sit,label,kind,room:R,...o});
   const doorOut=d=>d.s==="B"?[r1+.4,d.at,"down"]:d.s==="T"?[r0-.4,d.at,"up"]:d.s==="L"?[d.at,c0-.4,"left"]:[d.at,c1+.4,"right"];
-  if(R.type==="cluster"){
+  if(R.closed){ // ruang tertutup untuk publik: kotak tanpa isi & tanpa nama (seperti toilet)
+    out.push({k:crm+cxm+dr/2,d:()=>{prism(r0+.05,c0+.05,dr-.1,dc-.1,0,56,"#dfe3e6",{top:"#c9cfd4"});
+      for(const d of R.doors){if(d.s==="B")faceL(r1-.048,d.at-.4,d.at+.4,0,40,"#9aa5ae");else if(d.s==="T")faceL(r0+.048,d.at-.4,d.at+.4,0,40,"#9aa5ae");
+        else if(d.s==="R")faceR(c1-.048,d.at-.4,d.at+.4,0,40,"#9aa5ae");else faceR(c0+.048,d.at-.4,d.at+.4,0,40,"#9aa5ae")}}});
+    if(D)home({r:r0+2.08,c:c0+1,face:"up",desk:true})}
+  else if(R.type==="cluster"){
     if(D)for(const cl of R.clusters){const n=cl.n,sp=cl.sp,dw=Math.min(1.02,sp-.1),cw=n*sp,x0=cl.c0;
       if(cl.dir==="v"){const y0=cl.r0,dA=cl.c0+.62,dB=cl.c0+1.17,dE=cl.c0+1.72;
         out.push({k:y0+cw/2+dB,d:()=>{for(let i=0;i<n;i++){const rc=y0+i*sp+sp/2;prism(rc-dw/2,dA,dw,dE-dA,0,14,"#c8b693",{top:"#efe9de"})}
@@ -460,6 +465,7 @@ function buildFloors(){
   for(let f=0;f<FLOORS;f++)FL[f]={rooms:[],items:[],floorItems:[],blocks:[],spots:[],hw:new Map(),vw:new Map()};
   for(const d of ROOM_DEFS){const Rm={...d,doors:d.doors||[]};
     Rm.noSeats=!!R.rooms[d.id]?.noSeats;
+    if(MODE==="public"&&d.type==="server"){Rm.closed=true;Rm.name="Ruang tertutup"}
     Rm.custom=S.edit&&S.edit.room===d.id?S.edit.items:(EDITABLE.has(d.type)&&Array.isArray(R.layouts[d.id]?.items)?R.layouts[d.id].items:null);
     const b=buildRoom(Rm);Rm.seats=b.seats.map((s,i)=>({...s,i,label:s.label||((s.group?s.group+" · ":"")+"Kursi "+(i+1))}));Rm.spots=b.spots;Rm.doorOut=b.doorOut;
     ROOMS[Rm.id]=Rm;const F=FL[Rm.f];F.rooms.push(Rm);for(const it of b.items)(it.floor?F.floorItems:F.items).push(it);F.blocks.push(...b.blocks);F.spots.push(...b.spots);
@@ -630,7 +636,7 @@ function guestPoses(tSec){const out=[],F=FL[0],R4=ROOMS["4"],RT=ROOMS["RT"];if(!
 function poseOf(p,tSec){
   const home=S.seat[p.id];if(!home)return null;const base={p,f:home.f};
   if(home.none)return{...base,r:home.r,c:home.c,face:"down",pose:"stand",act:"Belum ditempatkan di kursi",ak:"none",emo:"❔"};
-  const kind=home.room.type;
+  const kind=home.room.closed?"office":home.room.type;
   const atHome={...base,r:home.r,c:home.c,face:home.face,pose:home.sit?"sit":"stand",typing:home.sit&&!!(home.desk||home.boss||kind==="reception"),act:home.over?(home.room.seats.length?"Berdiri (ruangan penuh)":"Di "+home.room.name):HOME_ACT[kind]||"Bekerja",ak:kind==="meeting"?"meet":kind==="pantry"||kind==="mushola"?"brk":"work",emo:home.over?"🧍":EMO_HOME[kind]||"💻"};
   // istirahat makan siang 12:00–14:00 (jam lokal)
   const d=new Date(tSec*1000),sod=d.getHours()*3600+d.getMinutes()*60+d.getSeconds()+(tSec%1);
@@ -914,7 +920,9 @@ function ensureBatches(){const nk=NIGHT?"n":"d";
 function draw(t){
   const was=NIGHT;NIGHT=isNight();const pal=PAL(),tSec=Date.now()/1000;
   if(was!==NIGHT||!stage.dataset.sky){stage.style.background=`linear-gradient(${pal.sky1},${pal.sky2})`;stage.dataset.sky="1"}
-  S.poses=R.people.map(p=>poseOf(p,tSec)).filter(Boolean);S.present=[0,0,0,0];for(const o of S.poses)if(!o.away&&o.f>=0&&o.f<4)S.present[o.f]++;
+  S.poses=R.people.map(p=>poseOf(p,tSec)).filter(Boolean);
+  if(MODE==="public")for(const o of S.poses){if(o.hidden)continue;const Rm=FL[o.f]?.rooms.find(R=>R.closed&&o.r>R.r0&&o.r<R.r0+R.dr&&o.c>R.c0&&o.c<R.c0+R.dc);if(Rm)o.hidden=true}
+  S.present=[0,0,0,0];for(const o of S.poses)if(!o.away&&o.f>=0&&o.f<4)S.present[o.f]++;
   S.guestPoses=S.view===0?guestPoses(tSec):[];
   if(S.follow){const o=S.poses.find(o=>o.p.id===S.follow);if(o){if(S.view!==o.f)setView(o.f,true);if(!o.hidden){cam.tx=o.c;cam.tw=o.r;cam.ty=FZ(o.f)/PXU+.5}}}
   const k=.14;cam.x+=(cam.tx-cam.x)*k;cam.y+=(cam.ty-cam.y)*k;cam.w+=(cam.tw-cam.w)*k;
@@ -961,7 +969,7 @@ function drawRoomMarks(f,t){ZF=FZ(f);
     if(it){ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle="#12c08a";ctx.lineWidth=2;const ring=[];for(let i=0;i<24;i++){const a=i/24*Math.PI*2;ring.push(toScreen(Q(it.r+Math.cos(a)*.32,it.c+Math.sin(a)*.32,.5)))}pathPts(ring);ctx.stroke();
       if(it.t==="desk"){const u=unitDesk(it);pathPts([Q(u[0],u[1],14.5),Q(u[0],u[3],14.5),Q(u[2],u[3],14.5),Q(u[2],u[1],14.5)].map(toScreen));ctx.stroke()}ctx.restore()}}}
 function drawPlaques(f){HIT_PLAQ=[];HIT_DIVS=[];if(!S.plaques)return;ctx.textBaseline="middle";ZF=FZ(f);
-  for(const Rm of FL[f].rooms){if(Rm.type==="area")continue;
+  for(const Rm of FL[f].rooms){if(Rm.type==="area"||Rm.closed)continue;
     const s=toScreen(Q(Rm.r0+Rm.dr*.5,Rm.c0+Rm.dc*.5,Rm.type==="toilet"?64:Rm.type==="stairs"?70:Rm.zone||Rm.open?2:44));if(s[0]<-200||s[0]>SW+200||s[1]<-60||s[1]>SH+60)continue;
     ctx.font="800 11px Manrope, sans-serif";const t1=fitText(Rm.name,150),w1=ctx.measureText(t1).width;
     ctx.font="800 9.5px Manrope, sans-serif";const chips=roomDivs(Rm.id).map(id=>{const d=R.divs[id],t=fitText(d.name,90);return{id,t,c:d.color,w:ctx.measureText(t).width+22}});
@@ -1032,7 +1040,7 @@ function pick(mx,my){
   let best=null;for(const h of HIT_PEOPLE)if(inRect(mx,my,h)){if(!best||h.y+h.h>best.y+best.h)best=h}if(best)return{type:"person",id:best.id};
   for(let i=HIT_PLAQ.length-1;i>=0;i--)if(inRect(mx,my,HIT_PLAQ[i]))return{type:"room",id:HIT_PLAQ[i].id};
   const[r,c]=planeRC(mx,my);
-  const rooms=FL[S.view].rooms.filter(R=>r>=R.r0&&r<=R.r0+R.dr&&c>=R.c0&&c<=R.c0+R.dc).sort((x,y)=>x.dr*x.dc-y.dr*y.dc);
+  const rooms=FL[S.view].rooms.filter(R=>!R.closed&&r>=R.r0&&r<=R.r0+R.dr&&c>=R.c0&&c<=R.c0+R.dc).sort((x,y)=>x.dr*x.dc-y.dr*y.dc);
   return rooms.length?{type:"room",id:rooms[0].id}:null}
 const tip=$("tip");
 function showTip(h,mx,my){if(!h){tip.hidden=true;return}let html="";
@@ -1268,7 +1276,7 @@ function renderBody(force){if(!body)return;
     h+=`<div class="note">Ruangan mengikuti layout kantor. Klik ruangan untuk melihat kursi dan mengisinya.</div>`;
     for(let f=FLOORS-1;f>=0;f--){h+=`<div class="sec">Lantai ${f+1}<button class="btn sm" data-act="goFloor" data-f="${f}">Lihat lantai</button></div>`;
       h+=FL[f].rooms.filter(r=>r.type!=="area").map(Rm=>{const n=(S.seatOcc[Rm.id]||[]).filter(Boolean).length,cap=Rm.seats.length,sel=S.sel?.type==="room"&&S.sel.id===Rm.id;
-        return`<button class="card click${sel?" sel":""}" data-act="pickRoom" data-id="${esc(Rm.id)}"><div class="top"><h3><i class="sw" style="background:${TYPE[Rm.type].chip}"></i>${esc(Rm.name)}</h3>${cap?`<span class="pill" style="${n>=cap?"color:var(--ok)":""}">${n}/${cap} kursi</span>`:`<span class="pill">${esc(TYPE[Rm.type].name)}</span>`}</div></button>`}).join("")}}
+        return`<button class="card click${sel?" sel":""}" data-act="pickRoom" data-id="${esc(Rm.id)}"><div class="top"><h3><i class="sw" style="background:${TYPE[Rm.type].chip}"></i>${esc(Rm.name)}${Rm.type==="server"?` <small style="color:var(--muted);font-weight:600">· tertutup di halaman publik</small>`:""}</h3>${cap?`<span class="pill" style="${n>=cap?"color:var(--ok)":""}">${n}/${cap} kursi</span>`:`<span class="pill">${esc(TYPE[Rm.type].name)}</span>`}</div></button>`}).join("")}}
   else if(S.tab==="div"){const nd=S.newDiv;
     h+=`<div class="card"><div class="sec" style="margin:0">Tambah divisi</div><div class="form"><label>Nama divisi<input id="nd-name" value="${esc(nd.name)}" placeholder="mis. QHSE" autocomplete="off"></label>
       <div class="swatches" role="group" aria-label="Warna divisi">${PALETTE.map(c=>`<button data-act="ndColor" data-c="${c}" style="background:${c}" aria-label="Warna ${c}" aria-pressed="${nd.color===c}"></button>`).join("")}</div>
