@@ -521,10 +521,10 @@ const faceOf=(dr,dc)=>Math.abs(dr)>Math.abs(dc)?(dr>0?"down":"up"):(dc>0?"right"
 /* =========================================================
    STATE & DATA
    ========================================================= */
-const R={divs:{},people:[],layouts:{},rooms:{}};
+const R={divs:{},people:[],layouts:{},rooms:{},contacts:{}};
 const S={afilter:"",hub:null,focusDiv:null,view:0,lab:"full",plaques:true,dayMode:"auto",tab:"sum",sel:null,hover:null,follow:null,form:null,armed:null,
   live:false,loaded:false,q:"",fdiv:"",ffl:"",editDiv:null,divDraft:null,newDiv:{name:"",color:PALETTE[0]},
-  seat:{},roomPeople:{},seatOcc:{},divCount:{},poses:[],pending:false,cache:new Map(),edit:null,ghost:null};
+  seat:{},roomPeople:{},seatOcc:{},divCount:{},poses:[],pending:false,cache:new Map(),edit:null,ghost:null,emailMode:false,emDraft:{}};
 buildFloors();
 let store=null;
 const divOf=id=>R.divs[id]||{name:"Tanpa divisi",color:"#7d8a90"};
@@ -1127,7 +1127,7 @@ function editorHTML(){const E=S.edit,Rm=ROOMS[E.room],it=E.items[E.sel],nd=E.ite
 /* =========================================================
    STORES
    ========================================================= */
-function localStore(){let n=1;const arr=c=>c==="people"?R.people:c==="apps"?APPS:c==="slides"?SLIDES:null,obj=c=>c==="layouts"?R.layouts:c==="rooms"?R.rooms:R.divs;return{
+function localStore(){let n=1;const arr=c=>c==="people"?R.people:c==="apps"?APPS:c==="slides"?SLIDES:null,obj=c=>c==="layouts"?R.layouts:c==="rooms"?R.rooms:c==="contacts"?R.contacts:R.divs;return{
   add:async(c,d)=>{const id="loc"+Date.now().toString(36)+(n++),a=arr(c);if(a)a.push({...d,id});else obj(c)[id]=d;changed();return id},
   set:async(c,id,d)=>{const a=arr(c);if(a){const i=a.findIndex(x=>x.id===id);if(i>=0)a[i]={...d,id};else a.push({...d,id})}else obj(c)[id]=d;changed()},
   update:async(c,id,p)=>{const a=arr(c);if(a){const x=a.find(x=>x.id===id);if(x)Object.assign(x,p)}else if(obj(c)[id])Object.assign(obj(c)[id],p);changed()},
@@ -1153,7 +1153,7 @@ function seatOptions(roomId,sel,selfId){const Rm=ROOMS[roomId];if(!Rm)return opt
   return opt("auto","Otomatis (kursi kosong pertama)",sel)+Rm.seats.map((s,i)=>{const p=occ[i];return opt(i,`${s.label} — ${p?(p.id===selfId?"(kursi saat ini)":"terisi: "+p.name):"kosong"}`,sel)}).join("")}
 function personRow(p){const dv=divOf(p.div),sel=S.sel?.type==="person"&&S.sel.id===p.id,h=S.seat[p.id];
   return`<button class="prow${sel?" sel":""}" data-act="pickPerson" data-id="${esc(p.id)}"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span>
-    <div><div class="nm">${esc(p.name)}</div><div class="sb">${esc(dv.name)} · ${esc(p.bagian||p.jabatan||"—")}</div></div><span class="loc">${h&&!h.none?"Lt "+(h.f+1):"—"}</span></button>`}
+    <div><div class="nm">${esc(p.name)}${MODE==="admin"&&!emailOf(p.id)?` <small class="noem" title="Email Carbonio belum diisi">tanpa email</small>`:""}</div><div class="sb">${esc(dv.name)} · ${esc(p.bagian||p.jabatan||"—")}</div></div><span class="loc">${h&&!h.none?"Lt "+(h.f+1):"—"}</span></button>`}
 function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s=S.seat[p.id];return s&&!s.none&&!s.over}).length,unassigned=R.people.filter(p=>S.seat[p.id]?.none).length;
   const counts={work:0,meet:0,brk:0,talk:0,move:0,out:0,none:0};for(const o of S.poses)counts[o.ak]=(counts[o.ak]||0)+1;
   $("kpis").innerHTML=`<div class="kpi"><span>Karyawan</span><b>${n}</b><small>${n?unassigned?unassigned+" belum punya kursi":"semua sudah punya kursi":"belum ada data"}</small></div>
@@ -1162,7 +1162,26 @@ function renderKpis(){const n=R.people.length,seated=R.people.filter(p=>{const s
   <div class="kpi"><span>Kursi kosong</span><b>${TOTAL_SEATS-seated}</b><small>siap diisi</small></div>
   <div class="kpi"><span>Sedang bekerja</span><b>${counts.work}</b><small>${n?Math.round(counts.work/n*100)+"% dari karyawan":"—"}</small></div>
   <div class="kpi"><span>Lainnya sekarang</span><div class="dots" style="margin-top:4px"><span><i style="background:${ACT_COL.meet}"></i>Rapat ${counts.meet}</span><span><i style="background:${ACT_COL.brk}"></i>Istirahat ${counts.brk}</span><span><i style="background:${ACT_COL.talk}"></i>Diskusi ${counts.talk}</span><span><i style="background:${ACT_COL.move}"></i>Jalan ${counts.move}</span><span><i style="background:${ACT_COL.out}"></i>Di luar ${counts.out||0}</span>${counts.home?`<span><i style="background:${ACT_COL.home}"></i>Pulang ${counts.home}</span>`:""}</div></div>`}
-function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",gender:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",look:"",skin:"",hc:"",...pre}}}
+/* email Carbonio per karyawan — disimpan terpisah di mm_contacts (hanya admin yang bisa membaca) */
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const emailOf=id=>(R.contacts[id]?.email||"").toLowerCase();
+function emailClash(email,selfId){if(!email)return null;for(const id in R.contacts)if(id!==selfId&&emailOf(id)===email)return personBy(id)||{name:"karyawan lain"};return null}
+async function saveEmail(id,raw,name){const email=String(raw||"").trim().toLowerCase();if(email===emailOf(id))return;
+  if(!email){if(R.contacts[id])await store.del("contacts",id);return}
+  await store.set("contacts",id,{email,name:name||personBy(id)?.name||"",updatedAt:Date.now()})}
+function suggestEmail(name,pat,dom){const w=String(name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z\s]/g," ").trim().split(/\s+/).filter(Boolean);if(!w.length)return"";
+  const l=pat==="first.last"?w.slice(0,2).join("."):pat==="firstlast"?w.slice(0,2).join(""):w[0];return l+"@"+dom}
+function emailPanel(){const ppl=[...R.people].sort((a,b)=>a.name.localeCompare(b.name)),filled=ppl.filter(p=>emailOf(p.id)).length,dom=S.emDom||(S.admin&&S.admin.includes("@")?S.admin.split("@")[1]:"genetek.co.id");
+  const dirty=Object.keys(S.emDraft).filter(id=>String(S.emDraft[id]).trim().toLowerCase()!==emailOf(id)).length;
+  return`<div class="row" style="margin-bottom:6px"><div><div class="sec" style="margin:0">Langkah 1 · Hubungkan ke Carbonio</div><h3 style="margin:2px 0">Email Carbonio karyawan</h3></div><button class="btn sm" data-act="emClose">Selesai</button></div>
+  <div class="note">Email dipakai untuk mencocokkan karyawan dengan akun Carbonio. Email <b>tidak tampil</b> di halaman publik, hanya admin yang bisa melihatnya.</div>
+  <div class="emstat"><div class="bar"><i style="width:${ppl.length?Math.round(filled/ppl.length*100):0}%"></i></div><span><b>${filled}</b> dari ${ppl.length} karyawan sudah punya email</span></div>
+  <details class="emhelp"><summary>Isi otomatis yang masih kosong dari nama</summary><div class="emsug"><label>Pola<select id="em-pat">${opt("first","namadepan@",S.emPat)}${opt("first.last","namadepan.namabelakang@",S.emPat)}${opt("firstlast","namadepannamabelakang@",S.emPat)}</select></label>
+    <label>Domain<input id="em-dom" value="${esc(dom)}" autocomplete="off"></label><button class="btn sm" data-act="emSuggest">Isi saran</button></div><div class="meta">Saran hanya mengisi kolom yang kosong dan belum tersimpan. Periksa dulu sebelum menyimpan.</div></details>
+  <div class="emlist">${ppl.map(p=>{const v=S.emDraft[p.id]!==undefined?S.emDraft[p.id]:emailOf(p.id),dv=divOf(p.div),bad=v&&!EMAIL_RE.test(String(v).trim());
+    return`<label class="emrow${bad?" bad":""}"><span class="av" style="background:${dv.color}">${esc(initials(p.name))}</span><span class="nm">${esc(p.name)}<small>${esc(dv.name)}</small></span><input type="email" data-em="${esc(p.id)}" value="${esc(v)}" placeholder="nama@${esc(dom)}" autocomplete="off" spellcheck="false"></label>`}).join("")||`<div class="empty">Belum ada karyawan.</div>`}</div>
+  <div class="acts" style="position:sticky;bottom:0;background:var(--panel);padding-top:8px"><button class="btn primary" data-act="emSave"${dirty?"":" disabled"}>Simpan ${dirty?dirty+" perubahan":"email"}</button>${dirty?`<button class="btn" data-act="emReset">Batalkan perubahan</button>`:""}</div>`}
+function newForm(pre={}){return{kind:"person",id:null,d:{name:"",nik:"",email:"",gender:"",div:"",bagian:"",jabatan:"Staf",f:String(S.view==="out"?0:S.view),room:"",seat:"auto",look:"",skin:"",hc:"",...pre}}}
 function lookPicker(d){const base={_col:divOf(d.div).color,gender:d.gender,_h:hash((S.form?.id||"baru")+d.name),skin:d.skin,hc:d.hc};
   const keys=Object.keys(LOOKS).filter(k=>d.gender==="L"?!LOOKS[k].fem:d.gender==="P"?LOOKS[k].fem:true),cur=LOOKS[d.look]?d.look:"";const L=lookOf({...base,look:cur}),isHij=L.style==="hijab";
   const card=(k,lab)=>{const url=avatarThumb({...base,look:k});return`<button type="button" data-act="pickLook" data-k="${k}" aria-pressed="${cur===k}" title="${esc(lab)}">${url?`<img src="${url}" alt="" width="64" height="80">`:""}<span>${esc(lab)}</span></button>`};
@@ -1178,6 +1197,7 @@ function renderDrawer(){if(!drawer)return;
     <div class="form">
       <div class="two"><label>Nama lengkap<input id="f-name" data-f="name" value="${esc(d.name)}" placeholder="Nama karyawan" autocomplete="off"></label>
       <label>ID karyawan <small>opsional, NIK / ID Talenta</small><input id="f-nik" data-f="nik" value="${esc(d.nik)}" autocomplete="off"></label></div>
+      <label>Email Carbonio <small>untuk status online, tidak tampil di halaman publik</small><input id="f-email" type="email" data-f="email" value="${esc(d.email||"")}" placeholder="nama@genetek.co.id" autocomplete="off" spellcheck="false"></label>
       <div class="two"><label>Divisi<select id="f-div" data-f="div">${divOptions(d.div)}</select></label>
       <label>Jabatan<select id="f-jab" data-f="jabatan">${opt("","— Pilih —",d.jabatan)+JABATAN.map(j=>opt(j,j,d.jabatan)).join("")}</select></label></div>
       <label>Jenis kelamin<select id="f-gen" data-f="gender" data-re="1">${opt("","— Pilih —",d.gender)+opt("L","Laki-laki",d.gender)+opt("P","Perempuan",d.gender)}</select></label>
@@ -1192,7 +1212,7 @@ function renderDrawer(){if(!drawer)return;
   if(S.sel?.type==="person"){const p=personBy(S.sel.id);if(!p){S.sel=null;renderDrawer();return}
     const dv=divOf(p.div),o=S.poses.find(o=>o.p.id===p.id),following=S.follow===p.id,st=S.seat[p.id];
     drawer.innerHTML=`<div class="row"><div style="display:flex;gap:10px;align-items:center;min-width:0">${(()=>{const u=avatarThumb({...p,_col:dv.color});return u?`<img class="avimg" src="${u}" alt="" width="48" height="60">`:`<span class="av" style="background:${dv.color};width:40px;height:40px;font-size:14px">${esc(initials(p.name))}</span>`})()}<div style="min-width:0"><h3>${esc(p.name)}</h3><span class="divpill" style="background:${dv.color}">${esc(dv.name)}</span></div></div><button class="x" data-act="close" aria-label="Tutup">×</button></div>
-    <div class="kv"><span>ID karyawan</span><b>${esc(p.nik||"—")}</b><span>Jenis kelamin</span><b>${p.gender==="L"?"Laki-laki":p.gender==="P"?"Perempuan":"—"}</b><span>Bagian</span><b>${esc(p.bagian||"—")}</b><span>Jabatan</span><b>${esc(p.jabatan||"—")}</b>
+    <div class="kv"><span>ID karyawan</span><b>${esc(p.nik||"—")}</b>${MODE==="admin"?`<span>Email Carbonio</span><b>${emailOf(p.id)?esc(emailOf(p.id)):`<span style="color:var(--warn)">belum diisi</span>`}</b>`:""}<span>Jenis kelamin</span><b>${p.gender==="L"?"Laki-laki":p.gender==="P"?"Perempuan":"—"}</b><span>Bagian</span><b>${esc(p.bagian||"—")}</b><span>Jabatan</span><b>${esc(p.jabatan||"—")}</b>
       <span>Tempat</span><b>${st&&!st.none?esc(`Lt ${st.f+1} · ${roomTitle(st.room.id)}`)+(st.over?" (berdiri, ruangan penuh)":st.si!=null?" · "+esc(st.room.seats[st.si].label):""):"Belum punya kursi"}</b>
       <span>Sekarang</span><b id="nowAct"><i class="dot" style="background:${o?ACT_COL[o.ak]:"#8a95a0"}"></i> ${o?.emo||""} ${esc(o?o.act:"—")}</b></div>
     <div class="acts"><button class="btn primary" data-act="${following?"unfollow":"follow"}">${following?"Berhenti mengikuti":"Ikuti di gedung"}</button><button class="btn" data-act="editPerson">Ubah</button>
@@ -1224,12 +1244,14 @@ function renderBody(force){if(!body)return;
     for(let f=FLOORS-1;f>=0;f--){const rooms=FL[f].rooms.filter(r=>r.type!=="area"),cap=rooms.reduce((a,r)=>a+r.seats.length,0),n=rooms.reduce((a,r)=>a+(S.seatOcc[r.id]||[]).filter(Boolean).length,0);
       h+=`<tr class="click" data-act="goFloor" data-f="${f}"><td><b>Lantai ${f+1}</b></td><td class="num">${rooms.length}</td><td class="num">${cap}</td><td class="num">${n}</td><td style="color:var(--accent);font-weight:800">Lihat →</td></tr>`}
     h+=`</tbody></table></div><div class="sec">Arti titik di label</div><div class="meta" style="display:flex;gap:12px;flex-wrap:wrap">${["work","meet","brk","talk","move"].map(k=>`<span style="display:inline-flex;gap:5px;align-items:center"><i class="dot" style="background:${ACT_COL[k]}"></i>${ACT_NAME[k]}</span>`).join("")}</div>`}
+  else if(S.tab==="ppl"&&S.emailMode&&MODE==="admin"){h+=emailPanel()}
   else if(S.tab==="ppl"){
     h+=`<button class="btn primary wide" data-act="newPerson">+ Tambah karyawan</button>`;
+    if(MODE==="admin"){const nf=R.people.filter(p=>emailOf(p.id)).length;h+=`<button class="btn wide" data-act="emOpen" style="margin-top:6px">✉️ Email Carbonio · ${nf}/${R.people.length} terisi</button>`}
     h+=`<div class="filters"><input id="q" placeholder="Cari nama, ID, atau bagian…" value="${esc(S.q)}" autocomplete="off"><select id="fdiv">${divOptions(S.fdiv,"Semua divisi")}</select>
       <select id="ffl">${opt("","Semua lantai",S.ffl)}${[0,1,2,3].map(f=>opt(f,"Lantai "+(f+1),S.ffl)).join("")}${opt("none","Belum punya kursi",S.ffl)}</select></div>`;
     const q=S.q.trim().toLowerCase();
-    const list=R.people.filter(p=>(!q||(p.name+" "+(p.nik||"")+" "+(p.bagian||"")+" "+divOf(p.div).name).toLowerCase().includes(q))&&(!S.fdiv||p.div===S.fdiv)&&
+    const list=R.people.filter(p=>(!q||(p.name+" "+(p.nik||"")+" "+(p.bagian||"")+" "+divOf(p.div).name+" "+emailOf(p.id)).toLowerCase().includes(q))&&(!S.fdiv||p.div===S.fdiv)&&
       (!S.ffl||(S.ffl==="none"?S.seat[p.id]?.none:!S.seat[p.id]?.none&&String(S.seat[p.id]?.f)===S.ffl)))
       .sort((a,b)=>(divOf(a.div).order??99)-(divOf(b.div).order??99)||RANK(a.jabatan)-RANK(b.jabatan)||a.name.localeCompare(b.name));
     h+=`<div class="sec">${list.length} karyawan</div>`+(list.length?`<div class="plist">${list.map(personRow).join("")}</div>`:`<div class="empty">${R.people.length?"Tidak ada yang cocok dengan pencarian.":"Belum ada karyawan. Tambahkan yang pertama."}</div>`)}
@@ -1253,6 +1275,9 @@ function renderBody(force){if(!body)return;
   body.innerHTML=h}
 panel?.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending&&!(panel.contains(document.activeElement)&&/INPUT|SELECT/.test(document.activeElement?.tagName||"")))renderBody(true)},0));
 panel?.addEventListener("input",e=>{const el=e.target;
+  if(el.dataset.em){S.emDraft[el.dataset.em]=el.value;const r=el.closest(".emrow");if(r)r.classList.toggle("bad",!!el.value.trim()&&!EMAIL_RE.test(el.value.trim()));const sv=panel.querySelector('[data-act="emSave"]');
+    if(sv){const n=Object.keys(S.emDraft).filter(id=>String(S.emDraft[id]).trim().toLowerCase()!==emailOf(id)).length;sv.disabled=!n;sv.textContent=n?`Simpan ${n} perubahan`:"Simpan email"}return}
+  if(el.id==="em-pat"){S.emPat=el.value;return}if(el.id==="em-dom"){S.emDom=el.value.trim().replace(/^@/,"");return}
   if(el.dataset.f&&S.form){S.form.d[el.dataset.f]=el.value;if(el.dataset.f==="f"){S.form.d.room="";S.form.d.seat="auto"}if(el.dataset.f==="room")S.form.d.seat="auto";
     if(el.dataset.re){renderDrawer();const n=$(el.id);n&&n.focus()}return}
   if(el.id==="q"){S.q=el.value;const pos=el.selectionStart;renderBody(true);const n=$("q");n.focus();n.setSelectionRange(pos,pos);return}
@@ -1261,9 +1286,11 @@ panel?.addEventListener("input",e=>{const el=e.target;
 async function savePerson(more){const d=S.form.d,name=d.name.trim();if(!name){toast("Isi nama karyawan dulu");$("f-name")?.focus();return}
   if(!d.div){toast("Pilih divisinya dulu");return}
   const seat=d.room&&d.seat!=="auto"&&d.seat!==""?+d.seat:null;const editId=S.form.id;
+  const em=String(d.email||"").trim().toLowerCase();if(em&&!EMAIL_RE.test(em)){toast("Format email belum benar, contoh: nama@genetek.co.id");$("f-email")?.focus();return}
+  {const c=emailClash(em,S.form.id);if(c){toast(`Email itu sudah dipakai ${c.name}.`);$("f-email")?.focus();return}}
   if(seat!=null){const occ=(S.seatOcc[d.room]||[])[seat];if(occ&&occ.id!==editId){toast(`Kursi itu sudah dipakai ${occ.name}. Pilih kursi lain.`);return}}
   const doc={name,nik:d.nik.trim(),gender:d.gender||"",div:d.div,bagian:d.bagian.trim(),jabatan:d.jabatan||"",room:d.room||"",seat,look:LOOKS[d.look]?d.look:"",skin:d.skin===""||d.skin==null?"":+d.skin,hc:d.hc===""||d.hc==null?"":+d.hc};
-  let newId=null;const ok=await safe(async()=>{if(editId)await store.update("people",editId,doc);else{doc.createdAt=Date.now();newId=await store.add("people",doc)}},editId?"Perubahan disimpan":`${name} ditambahkan`);
+  let newId=null;const ok=await safe(async()=>{if(editId)await store.update("people",editId,doc);else{doc.createdAt=Date.now();newId=await store.add("people",doc)}await saveEmail(editId||newId,em,name)},editId?"Perubahan disimpan":`${name} ditambahkan`);
   if(!ok)return;
   if(more){S.form=newForm({div:d.div,f:d.f,room:d.room,jabatan:d.jabatan});renderDrawer();$("f-name")?.focus();return}
   S.form=null;const id=editId||newId;S.sel=id?{type:"person",id}:null;renderDrawer();renderBody()}
@@ -1291,10 +1318,10 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
   if(a==="newPerson"){S.sel=null;S.form=newForm();renderDrawer();$("f-name")?.focus();panel.scrollIntoView({behavior:"smooth",block:"start"});return}
   if(a==="fillSeat"){const Rm=ROOMS[b.dataset.room];const dv=divList().find(d=>Rm.seats[+b.dataset.seat]?.group&&d.name.toLowerCase()===Rm.seats[+b.dataset.seat].group.toLowerCase());
     S.sel=null;S.form=newForm({f:String(Rm.f),room:Rm.id,seat:b.dataset.seat,div:dv?dv.id:""});renderDrawer();$("f-name")?.focus();return}
-  if(a==="editPerson"){const p=personBy(S.sel.id),st=S.seat[p.id];S.form={kind:"person",id:p.id,d:{name:p.name,nik:p.nik||"",gender:p.gender||"",div:p.div||"",bagian:p.bagian||"",jabatan:p.jabatan||"",f:String(ROOMS[p.room]?.f??0),room:p.room||"",seat:Number.isInteger(p.seat)?String(p.seat):st?.si!=null?String(st.si):"auto",look:p.look||"",skin:p.skin??"",hc:p.hc??""}};S.sel=null;renderDrawer();return}
+  if(a==="editPerson"){const p=personBy(S.sel.id),st=S.seat[p.id];S.form={kind:"person",id:p.id,d:{name:p.name,nik:p.nik||"",gender:p.gender||"",div:p.div||"",bagian:p.bagian||"",jabatan:p.jabatan||"",f:String(ROOMS[p.room]?.f??0),room:p.room||"",seat:Number.isInteger(p.seat)?String(p.seat):st?.si!=null?String(st.si):"auto",look:p.look||"",skin:p.skin??"",hc:p.hc??"",email:emailOf(p.id)}};S.sel=null;renderDrawer();return}
   if(a==="savePerson"){await savePerson(false);return}
   if(a==="savePersonMore"){await savePerson(true);return}
-  if(a==="delPerson"){if(!armed("delp"))return;const id=S.sel.id;if(await safe(()=>store.del("people",id),"Karyawan dihapus")){if(S.follow===id)stopFollow();S.sel=null;renderDrawer();renderBody()}return}
+  if(a==="delPerson"){if(!armed("delp"))return;const id=S.sel.id;if(await safe(async()=>{await store.del("people",id);if(R.contacts[id])await store.del("contacts",id)},"Karyawan dihapus")){if(S.follow===id)stopFollow();S.sel=null;renderDrawer();renderBody()}return}
   if(a==="ndColor"){S.newDiv.color=b.dataset.c;renderBody(true);return}
   if(a==="edColor"){S.divDraft.color=b.dataset.c;renderBody(true);return}
   if(a==="addDiv"){const name=S.newDiv.name.trim();if(!name){toast("Isi nama divisi dulu");return}if(divList().some(d=>d.name.toLowerCase()===name.toLowerCase())){toast("Divisi dengan nama itu sudah ada");return}
@@ -1491,6 +1518,16 @@ async function moveItem(col,list,id,dir){const arr=[...list].sort(byOrder);arr.f
   const a=arr[i],b=arr[j];await safe(async()=>{await store.update(col,a.id,{order:j});await store.update(col,b.id,{order:i});
     for(const x of arr)if(x!==a&&x!==b&&x.order!==x._o)await store.update(col,x.id,{order:x._o})})}
 async function adminAction(a,b){
+  if(a==="emOpen"){S.emailMode=true;S.emDraft={};S.sel=null;S.form=null;renderDrawer();renderBody(true);return true}
+  if(a==="emClose"){if(Object.keys(S.emDraft).some(id=>String(S.emDraft[id]).trim().toLowerCase()!==emailOf(id))&&!armed("emc")){toast("Ada email yang belum disimpan. Klik Selesai sekali lagi untuk keluar tanpa menyimpan.");return true}S.emailMode=false;S.emDraft={};renderBody(true);return true}
+  if(a==="emReset"){S.emDraft={};renderBody(true);return true}
+  if(a==="emSuggest"){const dom=(S.emDom||($("em-dom")?.value||"")).trim().replace(/^@/,"");if(!/\S+\.\S+/.test(dom)){toast("Isi domain dulu, misalnya genetek.co.id");return true}S.emDom=dom;
+    const used=new Set(Object.keys(R.contacts).map(emailOf));let n=0;for(const p of R.people){if(emailOf(p.id)||String(S.emDraft[p.id]||"").trim())continue;const sug=suggestEmail(p.name,S.emPat||"first",dom);if(sug&&!used.has(sug)){S.emDraft[p.id]=sug;used.add(sug);n++}}
+    renderBody(true);toast(n?`${n} saran email diisi. Periksa lalu simpan.`:"Tidak ada kolom kosong yang bisa diisi.");return true}
+  if(a==="emSave"){const ch=Object.keys(S.emDraft).filter(id=>String(S.emDraft[id]).trim().toLowerCase()!==emailOf(id));const bad=ch.filter(id=>{const v=String(S.emDraft[id]).trim();return v&&!EMAIL_RE.test(v)});
+    if(bad.length){toast(`${bad.length} email formatnya belum benar (ditandai merah).`);return true}
+    const all={};for(const p of R.people){const v=(S.emDraft[p.id]!==undefined?String(S.emDraft[p.id]):emailOf(p.id)).trim().toLowerCase();if(!v)continue;if(all[v]){toast(`Email ${v} dipakai dua orang: ${all[v]} dan ${p.name}.`);return true}all[v]=p.name}
+    if(await safe(async()=>{for(const id of ch)await saveEmail(id,S.emDraft[id])},`${ch.length} email disimpan`)){S.emDraft={};renderBody(true)}return true}
   if(a==="rdiv"){const id=S.sel?.id;if(!id)return true;if(!S.rdiv||S.rdiv.room!==id)S.rdiv={room:id,list:[...roomDivs(id)],dirty:false};const l=S.rdiv.list,k=l.indexOf(b.dataset.id);if(k>=0)l.splice(k,1);else l.push(b.dataset.id);S.rdiv.dirty=true;renderDrawer();return true}
   if(a==="saveRdiv"){const r=S.rdiv;if(!r)return true;if(await safe(()=>store.set("rooms",r.room,{...(R.rooms[r.room]||{}),divs:r.list,updatedAt:Date.now()}),"Label divisi disimpan")){S.rdiv=null;renderDrawer()}return true}
   if(a==="cancelRdiv"){S.rdiv=null;renderDrawer();return true}
@@ -1522,10 +1559,12 @@ function setupAdminGate(G){const gate=$("gate");if(!gate)return;
   $("gateReset").onclick=async()=>{const em=$("g-email").value.trim();if(!em){$("gateErr").textContent="Isi email dulu, lalu klik lagi.";return}
     try{await G.auth.reset(em);$("gateErr").textContent="Link reset password sudah dikirim ke "+em+"."}catch(err){$("gateErr").textContent=authMsg(err)}};
   $("logout").onclick=()=>G.auth.signOut();
-  G.auth.onChange(async u=>{if(!u){S.admin=null;gate.hidden=false;$("who").textContent="";return}
+  G.auth.onChange(async u=>{if(!u){S.admin=null;gate.hidden=false;$("who").textContent="";if(S.unsubContacts){S.unsubContacts();S.unsubContacts=null}R.contacts={};return}
     let ok=false;try{ok=await G.isAdmin(u.email)}catch{ok=false}
     if(!ok){$("gateErr").textContent=`Akun ${u.email} belum terdaftar sebagai admin.`;await G.auth.signOut();return}
-    S.admin=u.email;$("who").textContent=u.email;gate.hidden=true;renderBody(true)})}
+    S.admin=u.email;$("who").textContent=u.email;gate.hidden=true;
+    if(S.unsubContacts)S.unsubContacts();S.unsubContacts=G.db.collection("contacts").onSnapshot(sn=>{const o={};for(const d of sn.docs)o[d.id]=d.data();R.contacts=o;renderBody(true);if(!(S.form&&drawer?.contains(document.activeElement)))renderDrawer()},e=>{console.error(e);toast("Email Carbonio gagal dimuat. Pastikan rules mm_contacts sudah dipasang.")});
+    renderBody(true)})}
 
 /* =========================================================
    DATA CHANGES & BOOT
