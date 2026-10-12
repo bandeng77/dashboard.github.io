@@ -1374,7 +1374,7 @@ const svg=(k,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="n
 const DEFAULT_DIVS={
   direksi:{name:"Direksi",color:"#3b3f8f",order:0},komisaris:{name:"Komisaris",color:"#8a6d2f",order:1},finance:{name:"Finance",color:"#2e8b57",order:2},
   scm:{name:"SCM",color:"#d17f22",order:3},engineering:{name:"Engineering",color:"#7b4fc4",order:4},sales:{name:"Sales",color:"#d14b3c",order:5},
-  hccs:{name:"HCCS",color:"#c2477a",order:6},teknik:{name:"Teknik",color:"#168f9c",order:7}};
+  hccs:{name:"HCCS",color:"#c2477a",order:6},technic:{name:"technic",color:"#168f9c",order:7}};
 const DEFAULT_APPS=[
   {id:"guides",title:"Guides & Manuals",icon:"book",color:"#3b82f6",href:"https://panduan.genetek.co.id",desc:"Akses cepat ke panduan pengguna dan manual operasional lengkap.",divId:"hccs",order:0},
   {id:"atk",title:"Office Supply (ATK)",icon:"box",color:"#10b981",href:"https://orderatk.genetek.co.id",desc:"Pengelolaan dan permintaan alat tulis kantor secara terstruktur.",divId:"hccs",order:1},
@@ -1400,8 +1400,8 @@ const roomDivs=id=>[...new Set((Array.isArray(R.rooms[id]?.divs)?R.rooms[id].div
 let APPS=DEFAULT_APPS.map(a=>({...a})),SLIDES=DEFAULT_SLIDES.map(x=>({...x}));
 const byOrder=(a,b)=>(a.order??99)-(b.order??99)||String(a.title).localeCompare(String(b.title));
 const appsSorted=()=>[...APPS].sort(byOrder);
-const DIV_HINT={hccs:["humancapital","hrd","hrga","hr"],scm:["supplychain","procurement","logistik"],teknik:["teknik","technical","maintenance"],finance:["keuangan","accounting"]};
-const DIV_ALIAS={hr:"hccs",humancapital:"hccs",humancapitalcorporateservice:"hccs",humancapitalcorporateservices:"hccs",hrd:"hccs",hrga:"hccs",hrdga:"hccs",supplychain:"scm",supplychainmanagement:"scm",engineer:"engineering",tehnik:"teknik"};
+const DIV_HINT={hccs:["humancapital","hrd","hrga","hr"],scm:["supplychain","procurement","logistik"],technic:["technic","technical","maintenance"],finance:["keuangan","accounting"]};
+const DIV_ALIAS={hr:"hccs",humancapital:"hccs",humancapitalcorporateservice:"hccs",humancapitalcorporateservices:"hccs",hrd:"hccs",hrga:"hccs",hrdga:"hccs",supplychain:"scm",supplychainmanagement:"scm",engineer:"engineering",tehnik:"technic"};
 const divKey=n=>{const k=String(n||"").toLowerCase().replace(/[^a-z]/g,"");return DIV_ALIAS[k]||k};
 /* cocokkan kode divisi bawaan (mis. "hccs") ke divisi di database, lewat ID atau nama */
 const resolveDiv=key=>{if(!key)return null;if(R.divs[key])return key;const k=divKey(key);
@@ -1525,7 +1525,7 @@ function adminTabs(){let h="";
     h+=`<div class="sec">Isi database</div><div class="tbl"><table><tbody>
       <tr><td>Divisi</td><td class="num">${nD}</td></tr>
       <tr><td>Karyawan</td><td class="num">${R.people.length}</td></tr><tr><td>Tata letak manual</td><td class="num">${Object.keys(R.layouts).length}</td></tr></tbody></table></div>`;
-    h+=`<div class="card"><h3>Data awal mainmenu</h3><div class="meta">Mengisi 8 divisi (Direksi, Komisaris, Finance, SCM, Engineering, Sales, HCCS, Teknik). Data yang sudah ada tidak ditimpa. Daftar aplikasi dan info sudah tertulis di kode mainmenu.</div><div class="acts"><button class="btn primary" data-act="seed">Isi data awal</button></div></div>`;
+    h+=`<div class="card"><h3>Data awal mainmenu</h3><div class="meta">Mengisi 8 divisi (Direksi, Komisaris, Finance, SCM, Engineering, Sales, HCCS, technic). Data yang sudah ada tidak ditimpa. Daftar aplikasi dan info sudah tertulis di kode mainmenu.</div><div class="acts"><button class="btn primary" data-act="seed">Isi data awal</button></div></div>`;
     h+=`<div class="card"><h3>Menambah admin</h3><div class="meta">Buat akun di Firebase Console → Authentication, lalu tambahkan emailnya di fungsi <b>isMainmenuAdmin()</b> pada Firestore rules dan publish ulang.</div></div>`;
     h+=`<a class="btn wide" href="/" style="text-align:center;text-decoration:none">Lihat halaman utama</a>`}
   return h}
