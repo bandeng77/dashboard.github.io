@@ -313,3 +313,9 @@ code{font-family:var(--f-mono);font-size:12px;background:var(--panel-2);padding:
 .emrow.bad input{outline:2px solid color-mix(in srgb,var(--warn,#e0a030) 60%,transparent)}
 .noem{font:700 10px var(--f-body);color:var(--warn,#c98a12);background:color-mix(in srgb,var(--warn,#e0a030) 14%,transparent);padding:1px 6px;border-radius:99px;vertical-align:1px}
 @media (max-width:520px){.emrow{grid-template-columns:32px minmax(0,1fr)}.emrow input{grid-column:1/-1}}
+
+/* status online Carbonio */
+.ondot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:5px;vertical-align:0;box-shadow:0 0 0 3px rgba(34,197,94,.25);animation:onpulse 1.8s ease-in-out infinite}
+.ondot.off{background:#94a3b8;box-shadow:none;animation:none}
+@keyframes onpulse{50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+@media (prefers-reduced-motion:reduce){.ondot{animation:none}}
