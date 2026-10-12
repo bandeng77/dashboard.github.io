@@ -1383,7 +1383,7 @@ const DEFAULT_APPS=[
   {id:"pipelines",title:"Pipeline Sales Manager",icon:"chart",color:"#a855f7",href:"https://pipelines.genetek.co.id",desc:"Monitoring dan manajemen proyek peluang sales secara real-time.",divId:"sales",order:4},
   {id:"engmon",title:"Engineering Monitor",icon:"chip",color:"#6366f1",href:"https://monitoringeng.genetek.co.id",desc:"Monitoring teknis operasi engineering & keandalan alat.",divId:"engineering",order:5},
   {id:"supplychain",title:"Supply Chain App",icon:"truck",color:"#0ea5e9",href:"https://supplychain.genetek.co.id",desc:"Pelacakan arus kargo, rantai pasok, dan stok gudang.",divId:"scm",order:6},
-  {id:"workorder",title:"Work Order",icon:"check",color:"#06b6d4",href:"https://workorder.genetek.co.id",desc:"Sistem tiket instruksi kerja dan penugasan maintenance teknis.",divId:"teknik",order:7},
+  {id:"workorder",title:"Work Order",icon:"check",color:"#06b6d4",href:"https://workorder.genetek.co.id",desc:"Sistem tiket instruksi kerja dan penugasan maintenance teknis.",divId:"technic",order:7},
   {id:"medical",title:"Medical Claim",icon:"heart",color:"#f43f5e",href:"https://medicalclaim.genetek.co.id",desc:"Pengajuan penggantian klaim medis dan biaya kesehatan.",divId:"finance",order:8},
   {id:"monfinance",title:"Monitoring Finance",icon:"pie",color:"#14b8a6",href:"https://monfinance.genetek.co.id",desc:"Pemantauan arus kas dan pelaporan keuangan terpadu.",divId:"finance",order:9},
 ];
