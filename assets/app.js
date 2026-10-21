@@ -1285,9 +1285,13 @@ function renderBody(force){if(!body)return;
     h+=dl.length?dl.map(d=>{const n=S.divCount[d.id]||0;
       if(S.editDiv===d.id){const dd=S.divDraft;return`<div class="card sel"><div class="form"><label>Nama divisi<input id="ed-name" value="${esc(dd.name)}" autocomplete="off"></label>
         <div class="swatches">${PALETTE.map(c=>`<button data-act="edColor" data-c="${c}" style="background:${c}" aria-label="Warna ${c}" aria-pressed="${dd.color===c}"></button>`).join("")}</div>
+        <div class="sec" style="margin:6px 0 0">Aplikasi milik divisi ini</div><div class="appchk">${appsSorted().map(x=>{const on=dd.apps.includes(x.id),ow=appOwner(x),other=!on&&ow&&ow!==d.id?divOfApp(x):null;
+          return`<button type="button" data-act="edApp" data-id="${esc(x.id)}" aria-pressed="${on}"><span class="ck">${on?"✓":""}</span><span>${esc(x.title)}${other?`<small>sekarang: ${esc(other.name)}</small>`:""}</span></button>`}).join("")}</div>
+        <div class="meta">Aplikasi yang dicentang akan pindah ke divisi ini dan muncul saat label divisinya diklik.</div>
         <div class="acts"><button class="btn primary" data-act="saveDiv">Simpan</button><button class="btn" data-act="cancelDiv">Batal</button>
         <button class="btn danger${S.armed==="deld"?" armed":""}" data-act="delDiv" ${n?"disabled":""}>${n?"Masih ada "+n+" orang":S.armed==="deld"?"Klik lagi untuk hapus":"Hapus"}</button></div></div></div>`}
-      return`<div class="card"><div class="top"><h3><i class="sw" style="background:${d.color};width:14px;height:14px"></i>${esc(d.name)}</h3><div class="acts"><span class="pill">${n} orang</span><button class="btn sm" data-act="editDiv" data-id="${esc(d.id)}">Ubah</button></div></div></div>`}).join(""):`<div class="empty">Belum ada divisi.</div>`}
+      const ap=appsOf(d.id);return`<div class="card"><div class="top"><h3><i class="sw" style="background:${d.color};width:14px;height:14px"></i>${esc(d.name)}</h3><div class="acts"><span class="pill">${n} orang</span><button class="btn sm" data-act="editDiv" data-id="${esc(d.id)}">Ubah</button></div></div>
+        <div class="meta" style="margin-top:4px">${ap.length?"Aplikasi: "+ap.map(x=>esc(x.title)).join(", "):`<span style="color:var(--muted)">Belum ada aplikasi</span>`}</div></div>`}).join(""):`<div class="empty">Belum ada divisi.</div>`}
   if(MODE==="admin"&&S.tab==="set")h+=adminTabs();
   body.innerHTML=h}
 panel?.addEventListener("focusout",()=>setTimeout(()=>{if(S.pending&&!(panel.contains(document.activeElement)&&/INPUT|SELECT/.test(document.activeElement?.tagName||"")))renderBody(true)},0));
@@ -1343,9 +1347,12 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
   if(a==="edColor"){S.divDraft.color=b.dataset.c;renderBody(true);return}
   if(a==="addDiv"){const name=S.newDiv.name.trim();if(!name){toast("Isi nama divisi dulu");return}if(divList().some(d=>d.name.toLowerCase()===name.toLowerCase())){toast("Divisi dengan nama itu sudah ada");return}
     const order=Math.max(-1,...divList().map(d=>d.order??0))+1;if(await safe(()=>store.add("divisions",{name,color:S.newDiv.color,order}),"Divisi ditambahkan")){S.newDiv={name:"",color:PALETTE[(PALETTE.indexOf(S.newDiv.color)+1)%PALETTE.length]};renderBody(true)}return}
-  if(a==="editDiv"){const d=R.divs[b.dataset.id];S.editDiv=b.dataset.id;S.divDraft={name:d.name,color:d.color};renderBody(true);return}
+  if(a==="editDiv"){const d=R.divs[b.dataset.id];S.editDiv=b.dataset.id;S.divDraft={name:d.name,color:d.color,apps:appsOf(b.dataset.id).map(x=>x.id)};renderBody(true);return}
+  if(a==="edApp"){const L=S.divDraft.apps,k=L.indexOf(b.dataset.id);if(k>=0)L.splice(k,1);else L.push(b.dataset.id);renderBody(true);return}
   if(a==="cancelDiv"){S.editDiv=null;S.divDraft=null;renderBody(true);return}
-  if(a==="saveDiv"){const name=S.divDraft.name.trim();if(!name){toast("Nama divisi tidak boleh kosong");return}if(await safe(()=>store.update("divisions",S.editDiv,{name,color:S.divDraft.color}),"Divisi disimpan")){S.editDiv=null;S.divDraft=null;renderBody(true)}return}
+  if(a==="saveDiv"){const name=S.divDraft.name.trim();if(!name){toast("Nama divisi tidak boleh kosong");return}const me=S.editDiv,mine=[...S.divDraft.apps];
+    if(await safe(async()=>{await store.update("divisions",me,{name,color:S.divDraft.color,apps:mine});
+      for(const id in R.divs){if(id===me)continue;const L=R.divs[id].apps;if(Array.isArray(L)&&L.some(x=>mine.includes(x)))await store.update("divisions",id,{apps:L.filter(x=>!mine.includes(x))})}},"Divisi disimpan")){S.editDiv=null;S.divDraft=null;renderBody(true)}return}
   if(a==="delDiv"){if(!armed("deld"))return;const id=S.editDiv;if(await safe(()=>store.del("divisions",id),"Divisi dihapus")){S.editDiv=null;S.divDraft=null;renderBody(true)}return}
 });
 
@@ -1353,6 +1360,10 @@ panel?.addEventListener("click",async e=>{const b=e.target.closest("[data-act]")
    APLIKASI PER DIVISI (menu utama Genetek)
    ========================================================= */
 const IC={
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  car:'<path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>',
+  boxes:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>',
   book:'<path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5Z"/><path d="M12 6v13.5"/>',
   box:'<path d="m3 7 9-4 9 4v10l-9 4-9-4Z"/><path d="m3 7 9 4 9-4M12 11v10M7.5 5l9 4"/>',
   building:'<path d="M4 21V4h11v17M15 9h5v12"/><path d="M8 8h3M8 12h3M8 16h3M2 21h20"/>',
@@ -1386,6 +1397,10 @@ const DEFAULT_APPS=[
   {id:"workorder",title:"Work Order",icon:"check",color:"#06b6d4",href:"https://workorder.genetek.co.id",desc:"Sistem tiket instruksi kerja dan penugasan maintenance teknis.",divId:"teknik",order:7},
   {id:"medical",title:"Medical Claim",icon:"heart",color:"#f43f5e",href:"https://medicalclaim.genetek.co.id",desc:"Pengajuan penggantian klaim medis dan biaya kesehatan.",divId:"finance",order:8},
   {id:"monfinance",title:"Monitoring Finance",icon:"pie",color:"#14b8a6",href:"https://monfinance.genetek.co.id",desc:"Pemantauan arus kas dan pelaporan keuangan terpadu.",divId:"finance",order:9},
+  {id:"pengajuankaryawan",title:"Pengajuan Karyawan",icon:"users",color:"#8b5cf6",href:"https://pengajuankaryawan.genetek.co.id",desc:"Pengajuan kebutuhan karyawan baru (manpower request).",divId:"hccs",order:10},
+  {id:"taksi",title:"Tiket Taksi Dinas",icon:"car",color:"#eab308",href:"https://taksi.genetek.co.id",desc:"Pengajuan dan pencatatan tiket taksi untuk keperluan dinas.",divId:"hccs",order:11},
+  {id:"inventory",title:"Inventory",icon:"boxes",color:"#22c55e",href:"https://inventory.genetek.co.id",desc:"Pencatatan dan pengecekan stok barang inventaris kantor.",divId:"hccs",order:12},
+  {id:"rabmonitor",title:"RAB Monitoring",icon:"wallet",color:"#0891b2",href:"https://rabmonitor.genetek.co.id",desc:"Pemantauan RAB proyek dan pengajuan klaim pembayaran PO.",divId:"teknik",order:13},
 ];
 const DEFAULT_SLIDES=[
   {id:"signature",tag:"Feature Highlight",tone:"feature",title:"Email Signature Generator",desc:"Format standar tanda tangan email resmi Genetek. Buat profil profesional Anda secara otomatis hanya dalam beberapa klik.",cta:"Buat Signature",href:"https://forms.gle/PrdDHmJugaxzD4mW9",img:"https://i.imgur.com/AYL5RTd.png",order:0},
@@ -1410,10 +1425,12 @@ const resolveDiv=key=>{if(!key)return null;if(R.divs[key])return key;const k=div
   return null};
 /* grup aplikasi yang bukan divisi karyawan (tidak muncul di daftar divisi) */
 const APP_GROUPS={hse:{name:"HSE",color:"#f97316",order:90}};
-const appOwner=a=>APP_GROUPS[a.divId]?a.divId:resolveDiv(a.divId);
+/* pemilik aplikasi: 1) dipilih manual di /admin → Divisi, 2) grup khusus (HSE), 3) dicocokkan dari nama divisi */
+const appOwner=a=>{for(const id in R.divs){const L=R.divs[id].apps;if(Array.isArray(L)&&L.includes(a.id))return id}
+  if(APP_GROUPS[a.divId])return a.divId;const id=resolveDiv(a.divId);return id&&Array.isArray(R.divs[id]?.apps)?null:id};
 const appsOf=divId=>appsSorted().filter(a=>appOwner(a)===divId);
 const divOfApp=a=>{const id=appOwner(a);return id?{id,...(APP_GROUPS[id]||R.divs[id])}:null};
-const ICON_KEYS=["book","box","building","shield","chart","check","chip","truck","heart","pie","pen","award"];
+const ICON_KEYS=["book","box","building","shield","chart","check","chip","truck","heart","pie","pen","award","users","car","boxes","wallet"];
 const abbr=n=>{n=String(n||"?").trim();if(n.length<=4)return n.toUpperCase();const w=n.split(/[\s&]+/).filter(Boolean);return(w.length>1?w[0][0]+w[1][0]:n.slice(0,2)).toUpperCase()};
 const appTile=a=>`<a class="happ" style="--c:${a.color}" href="${esc(a.href)}" target="_blank" rel="noopener"><span class="ic">${svg(a.icon,22)}</span><div><b>${esc(a.title)}</b><small>${esc(a.desc)}</small></div><span class="go">${svg("arrow",14)}</span></a>`;
 
