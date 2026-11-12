@@ -1,30 +1,180 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Mainmenu Genetek</title>
-  <script>try{var t=localStorage.getItem("gt-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
-  <link rel="stylesheet" href="/assets/app.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mainmenu Genetek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<script>try{var t=localStorage.getItem("gt-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+:root{
+  --bg:#090D20; --bg-2:#10163A; --panel:#131937; --panel-2:#1C2348; --glass:rgba(255,255,255,.05); --glass-2:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.09); --ink:#EEF0FF; --muted:#99A0C8; --teal:#2BD9CA; --violet:#8F80FA;
+  --accent:#2BD9CA; --accent-ink:#04201d; --ok:#4cd98a; --warn:#f5b54a; --bad:#ff7a6b; --info:#7fa8ff;
+  --hud:rgba(19,25,55,.86); --shadow:0 24px 60px -24px rgba(0,0,0,.8);
+  --f-display:"Unbounded","Segoe UI",system-ui,sans-serif; --f-body:"Manrope","Segoe UI",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#EDEFFA; --bg-2:#DEE3F6; --panel:#FFFFFF; --panel-2:#E7EAF7; --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.9);
+  --line:rgba(20,24,60,.10); --ink:#141838; --muted:#5B6287; --teal:#0EA597; --violet:#6B5BE0;
+  --accent:#0EA597; --accent-ink:#ffffff; --ok:#2b8f4a; --warn:#b86f05; --bad:#c8402f; --info:#2f6fd6;
+  --hud:rgba(255,255,255,.9); --shadow:0 20px 50px -24px rgba(40,44,110,.35); color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#EDEFFA; --bg-2:#DEE3F6; --panel:#FFFFFF; --panel-2:#E7EAF7; --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.9);
+  --line:rgba(20,24,60,.10); --ink:#141838; --muted:#5B6287; --teal:#0EA597; --violet:#6B5BE0;
+  --accent:#0EA597; --accent-ink:#ffffff; --ok:#2b8f4a; --warn:#b86f05; --bad:#c8402f; --info:#2f6fd6;
+  --hud:rgba(255,255,255,.9); --shadow:0 20px 50px -24px rgba(40,44,110,.35); color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;padding-inline:16px;padding-block:0 0}
+.bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(1000px 600px at 15% -10%,color-mix(in srgb,var(--violet) 22%,transparent),transparent 70%),radial-gradient(900px 600px at 100% 30%,color-mix(in srgb,var(--teal) 14%,transparent),transparent 70%),linear-gradient(180deg,var(--bg),var(--bg-2))}
+.wrap{max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+
+/* topbar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;margin-inline:-16px;padding:10px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 92%,transparent),color-mix(in srgb,var(--bg) 0%,transparent))}
+.tbar{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit;flex:none}
+.brand .mk{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--teal),var(--violet));box-shadow:0 10px 24px -10px var(--violet)}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;line-height:1}
+.brand small{display:block;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.search{position:relative;flex:1;max-width:520px;margin-left:auto}
+.search input{width:100%;height:46px;border-radius:16px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--ink);font:600 14px var(--f-body);padding:0 14px 0 42px}
+.search input::placeholder{color:var(--muted)}
+.search svg{position:absolute;left:14px;top:14px;color:var(--muted)}
+.sres{position:absolute;left:0;right:0;top:52px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:8px;max-height:min(70vh,460px);overflow:auto;z-index:50}
+.sres .grp{font:800 10.5px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.sres a,.sres button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:12px;text-decoration:none;color:var(--ink);background:transparent;border:0;cursor:pointer;text-align:left}
+.sres a:hover,.sres button:hover,.sres .on{background:var(--panel-2)}
+.sres .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff}
+.sres .t{font-weight:800;font-size:13.5px}.sres .d{font-size:12px;color:var(--muted)}
+.tools{display:flex;gap:8px;align-items:center;flex:none}
+.tool{width:46px;height:46px;border-radius:16px;border:1px solid var(--line);background:var(--glass);backdrop-filter:blur(12px);cursor:pointer;display:grid;place-items:center;transition:transform .3s cubic-bezier(.3,1.6,.5,1),border-color .3s,color .3s}
+.tool:hover{transform:translateY(-2px);border-color:var(--teal);color:var(--teal)}
+.clk{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;padding:0 4px}
+.clk b{font-family:var(--f-display);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.clk span{font-size:11.5px;color:var(--muted);font-weight:700}
+.clk .sun{display:none}
+@media (max-width:760px){.clk{display:none}.brand small{display:none}.search{max-width:none}}
+@media (max-width:480px){.brand b{display:none}}
+
+/* hero line */
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(22px,3vw,34px);letter-spacing:-.02em;margin:0;line-height:1.1;text-wrap:balance}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--teal),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:62ch}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-weight:800;font-size:13px;z-index:60;max-width:calc(100% - 32px)}
+.empty{text-align:center;padding:16px 10px;color:var(--muted);font-size:13px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv span{color:var(--muted)}
+.kv b{font-weight:700;overflow-wrap:anywhere}
+
+/* apps section (bento) */
+.apps{margin-top:30px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.sec-head h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.02em;display:flex;align-items:center;gap:12px}
+.sec-head h2 .i{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--teal),var(--violet));box-shadow:0 10px 24px -10px var(--violet)}
+.count{white-space:nowrap;padding:7px 13px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-weight:800;font-size:12.5px;color:var(--muted)}
+.afilter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.afilter button{--c:var(--teal);font:800 12.5px var(--f-body);padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--glass);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.afilter button i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.afilter button[aria-pressed="true"]{color:var(--ink);border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;perspective:1200px}
+.app{--c:#888;--rx:0deg;--ry:0deg;position:relative;display:flex;flex-direction:column;border-radius:24px;background:var(--panel);box-shadow:var(--shadow);border:1px solid var(--line);transform:rotateX(var(--rx)) rotateY(var(--ry));transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.9,.2,1),box-shadow .4s}
+.app-top{position:relative;height:104px;margin:8px 8px 0;border-radius:18px;overflow:hidden;background:color-mix(in srgb,var(--c) 18%,var(--panel));display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.app-top .ghost{position:absolute;right:-10px;bottom:-24px;color:var(--c);opacity:.18;transform:rotate(-14deg);transition:transform .7s cubic-bezier(.2,.9,.2,1),opacity .4s}
+.app:hover .ghost{transform:rotate(0) scale(1.1);opacity:.28}
+.app-ic{position:relative;width:54px;height:54px;border-radius:50%;background:var(--panel);color:var(--c);display:grid;place-items:center;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--c) 70%,transparent);transform:translateZ(30px)}
+.app-div{position:relative;font:800 10.5px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--panel);color:var(--ink);display:inline-flex;gap:6px;align-items:center;align-self:flex-start;margin-top:12px}
+.app-div i{width:7px;height:7px;border-radius:50%;background:var(--dc)}
+.app-body{padding:14px 18px 4px;flex:1}
+.app-body h4{margin:0 0 6px;font-family:var(--f-display);font-weight:500;font-size:15.5px;line-height:1.2}
+.app-body p{margin:0;font-size:13.5px;line-height:1.55;color:var(--muted)}
+.app-go{margin:12px 16px 16px;display:flex;align-items:center;justify-content:space-between;padding:6px 6px 6px 14px;border-radius:999px;background:var(--panel-2);text-decoration:none;font-weight:800;font-size:13.5px;color:var(--ink);transition:background .3s,color .3s}
+.app-go::after{content:"";position:absolute;inset:0;border-radius:24px}
+.app-go .ci{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel);color:var(--c);transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.app:hover .app-go{background:var(--c);color:#fff}
+.app:hover .app-go .ci{transform:rotate(-45deg)}
+.app:has(.app-go:focus-visible){outline:2px solid var(--teal);outline-offset:3px}
+
+/* info cards */
+.info{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.icard{position:relative;overflow:hidden;border-radius:22px;padding:18px;color:#fff;min-height:170px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;text-decoration:none;border:1px solid rgba(255,255,255,.08)}
+.icard.feature{background:radial-gradient(400px 200px at 90% 0%,rgba(43,217,202,.45),transparent 70%),linear-gradient(160deg,#0f1a3d,#0b1030)}
+.icard.cert{background:radial-gradient(400px 200px at 90% 0%,rgba(143,128,250,.5),transparent 70%),linear-gradient(160deg,#16133d,#0b1030)}
+.icard .tag{align-self:flex-start;font:800 11.5px var(--f-body);padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08)}
+.icard h4{margin:0;font-family:var(--f-display);font-weight:700;font-size:17px;line-height:1.2}
+.icard p{margin:0;font-size:13px;color:rgba(230,233,255,.78);line-height:1.5}
+.icard .cta{display:inline-flex;gap:8px;align-items:center;font-weight:800;font-size:13px;color:#7FF0E5}
+.icard.cert .cta{color:#D7CCFF}
+.icard .bg{position:absolute;right:-10px;top:-10px;opacity:.16}
+footer{margin-top:40px;padding:24px 0 30px;text-align:center;font-size:13px;color:var(--muted);line-height:1.8;border-top:1px solid var(--line)}
+footer p{margin:0}footer b{color:var(--ink)}footer a{color:var(--teal);font-weight:800;text-decoration:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* sapaan hero kecil */
+.hero{padding-top:18px}
+.hero .ask{display:inline-flex;align-items:center;gap:8px;font:800 13px var(--f-body);padding:10px 16px;border-radius:999px;border:1px solid color-mix(in srgb,var(--teal) 45%,var(--line));background:color-mix(in srgb,var(--teal) 12%,var(--glass));color:var(--ink);cursor:pointer}
+.hero .ask:hover{border-color:var(--teal)}
+.apps{margin-top:18px}
+
+/* ===== asisten aplikasi ===== */
+.bot-fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;height:56px;padding:0 20px 0 8px;border-radius:999px;border:0;cursor:pointer;color:#fff;font:800 14px var(--f-body);background:linear-gradient(135deg,var(--teal),var(--violet));box-shadow:0 16px 40px -12px color-mix(in srgb,var(--violet) 70%,transparent)}
+.bot-fab .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18)}
+.bot-fab:hover{transform:translateY(-2px)}
+.bot-fab .pip{position:absolute;top:6px;left:38px;width:11px;height:11px;border-radius:50%;background:#22c55e;border:2px solid #fff}
+@media (max-width:520px){.bot-fab span.lb{display:none}.bot-fab{padding:0 8px}}
+.bot{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:61;width:min(400px,calc(100vw - 24px));height:min(620px,calc(100vh - 120px));display:flex;flex-direction:column;border-radius:24px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
+@media (max-width:520px){.bot{right:12px;left:12px;width:auto;bottom:calc(84px + env(safe-area-inset-bottom,0px));height:calc(100vh - 110px)}}
+.bot-h{display:flex;align-items:center;gap:11px;padding:14px 14px 12px 16px;background:linear-gradient(135deg,color-mix(in srgb,var(--teal) 22%,var(--panel)),color-mix(in srgb,var(--violet) 22%,var(--panel)));border-bottom:1px solid var(--line)}
+.bot-h .av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--teal),var(--violet));flex:none}
+.bot-h b{display:block;font-family:var(--f-display);font-weight:600;font-size:15px}
+.bot-h small{color:var(--muted);font-weight:700;font-size:11.5px;display:flex;align-items:center;gap:5px}
+.bot-h small i{width:7px;height:7px;border-radius:50%;background:#22c55e}
+.bot-h .x{margin-left:auto;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--glass);cursor:pointer;font-size:18px;line-height:1}
+.bot-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.msg{max-width:88%;padding:10px 13px;border-radius:16px;font-size:13.5px;line-height:1.55;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,var(--teal),var(--violet));color:#fff;border-bottom-right-radius:6px}
+.msg.ai{align-self:flex-start;background:var(--panel-2);border-bottom-left-radius:6px}
+.msg.ai b{font-weight:800}
+.msg .grp{font:800 10.5px var(--f-body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:8px 0 4px}
+.mapps{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.mapp{--c:var(--teal);display:flex;align-items:center;gap:10px;padding:8px 8px 8px 9px;border-radius:13px;background:var(--panel);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.mapp:hover{border-color:var(--c)}
+.mapp .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none;color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.mapp .t{font-weight:800;font-size:13px;line-height:1.2}
+.mapp .d{font-size:11.5px;color:var(--muted);line-height:1.35}
+.mapp .go{margin-left:auto;flex:none;font:800 11.5px var(--f-body);padding:6px 10px;border-radius:999px;background:var(--c);color:#fff;white-space:nowrap}
+.typing{display:inline-flex;gap:4px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:tp 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tp{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
+.chips button{font:700 12px var(--f-body);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--glass);cursor:pointer}
+.chips button:hover{border-color:var(--teal);color:var(--teal)}
+.bot-f{display:flex;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--line)}
+.bot-f input{flex:1;min-width:0;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:0 14px;font:600 14px var(--f-body);outline:none}
+.bot-f input:focus{border-color:var(--teal)}
+.bot-f button{width:44px;height:44px;border-radius:14px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--teal),var(--violet));display:grid;place-items:center;flex:none}
+
+</style>
 </head>
-<body data-mode="public">
+<body>
 <div class="bgfx" aria-hidden="true"></div>
 <header class="topbar">
   <div class="tbar">
-    <a class="brand" id="brand" href="/" aria-label="Genetek">
-      <span class="logo"><img src="https://i.imgur.com/XjT4AO0.png" alt="Genetek" onerror="document.getElementById('brand').classList.add('nologo')"></span>
-      <span class="wm"><span class="mk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M20 8.5A8.5 8.5 0 1 0 20.5 13H13"/></svg></span><span><b>GENETEK</b><small>Mainmenu</small></span></span>
+    <a class="brand" href="#top" aria-label="Genetek, ke atas">
+      <span class="mk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M20 8.5A8.5 8.5 0 1 0 20.5 13H13"/></svg></span>
+      <span><b>GENETEK</b><small>Mainmenu</small></span>
     </a>
     <div class="search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="gsearch" type="search" placeholder="Cari aplikasi, divisi, atau karyawan…" autocomplete="off" aria-label="Cari aplikasi, divisi, atau karyawan">
+      <input id="gsearch" type="search" placeholder="Cari aplikasi atau divisi…" autocomplete="off" aria-label="Cari aplikasi atau divisi">
       <div class="sres" id="gres" hidden></div>
     </div>
     <div class="tools">
-      <div class="clk"><b id="clockTime">--.--</b><span id="clockDay">—</span><i class="sun" id="sun"></i></div>
+      <div class="clk"><b id="clockTime">--.--</b><span id="clockDay">—</span></div>
       <button class="tool" id="themeBtn" type="button" aria-label="Ganti mode gelap atau terang" title="Ganti mode gelap/terang"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
     </div>
   </div>
@@ -32,46 +182,9 @@
 
 <div class="wrap" id="top">
   <section class="hero">
-    <div><h1>Selamat datang di <em>Effrensindo Kencana</em></h1></div>
-    <span class="mode" id="mode" hidden>Menghubungkan…</span>
+    <div><h1>Selamat datang di <em>Effrensindo Kencana</em></h1><p>Semua aplikasi internal ada di sini. Bingung harus pakai aplikasi yang mana? Tanya asisten saja.</p></div>
+    <button class="ask" type="button" id="heroAsk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg>Tanya asisten aplikasi</button>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="main solo">
-    <div class="stage" id="stage">
-      <canvas id="cv" aria-label="Gedung kantor 4 lantai. Klik karyawan atau divisi untuk membuka aplikasinya."></canvas>
-      <div class="hud tl">
-        <div class="seg" role="group" aria-label="Lantai" id="floorSeg">
-          <button data-view="out" aria-pressed="false">Gedung</button>
-          <button data-view="0" aria-pressed="true">Lt 1</button>
-          <button data-view="1" aria-pressed="false">Lt 2</button>
-          <button data-view="2" aria-pressed="false">Lt 3</button>
-          <button data-view="3" aria-pressed="false">Lt 4</button>
-        </div>
-        <span class="spacer"></span>
-        <div class="seg" role="group" aria-label="Label di atas kepala" id="labelSeg">
-          <span class="lbl">Label</span>
-          <button data-lab="full" aria-pressed="true">Lengkap</button>
-          <button data-lab="div" aria-pressed="false">Divisi</button>
-          <button data-lab="name" aria-pressed="false">Nama</button>
-          <button data-lab="off" aria-pressed="false">Mati</button>
-        </div>
-        <button class="hudbtn" id="plaqBtn" aria-pressed="true">Nama ruang</button>
-      </div>
-      <div class="follow" id="follow" hidden></div>
-      <div class="hub" id="hub" hidden></div>
-      <div class="hud bl">
-        <button class="hudbtn" id="zin" aria-label="Perbesar">＋</button>
-        <button class="hudbtn" id="zout" aria-label="Perkecil">－</button>
-        <button class="hudbtn" id="zfit">Pusatkan</button>
-        <span class="spacer"></span>
-        <div class="seg" role="group" aria-label="Waktu" id="daySeg"><button data-day="auto" aria-pressed="true">Otomatis</button><button data-day="day" aria-pressed="false">Siang</button><button data-day="night" aria-pressed="false">Malam</button></div>
-      </div>
-      <div class="tip" id="tip" hidden></div>
-    </div>
-
-  </div>
 
   <section class="apps" id="apps">
     <div class="sec-head"><h2><span class="i"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg></span>Aplikasi Utama</h2><span class="count" id="appCount">—</span></div>
@@ -89,9 +202,206 @@
     <p>Engineered by <a href="https://effrensindokencana.com" target="_blank" rel="noopener">Effrensindo Kencana</a></p>
   </footer>
 </div>
+
+<button class="bot-fab" id="botFab" type="button" aria-expanded="false" aria-controls="bot"><span class="av"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg></span><i class="pip"></i><span class="lb">Tanya aplikasi</span></button>
+<section class="bot" id="bot" hidden aria-label="Asisten aplikasi">
+  <div class="bot-h">
+    <span class="av"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg></span>
+    <div><b>Asisten Aplikasi</b><small><i></i>Siap membantu</small></div>
+    <button class="x" id="botClose" type="button" aria-label="Tutup asisten">×</button>
+  </div>
+  <div class="bot-log" id="botLog" aria-live="polite"></div>
+  <div class="chips" id="botChips"></div>
+  <form class="bot-f" id="botForm" autocomplete="off">
+    <input id="botIn" placeholder="Tulis pertanyaan, mis. mau klaim berobat" aria-label="Pertanyaan untuk asisten">
+    <button type="submit" aria-label="Kirim"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </form>
+</section>
 <div class="toast" id="toast" hidden></div>
 
-  <script type="module" src="/assets/firebase.js"></script>
-  <script src="/assets/app.js" defer></script>
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let toastT;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2400)}
+
+/* ================= DATA — ubah di sini bila ada aplikasi / divisi baru ================= */
+const DIVS={
+  hccs:{name:"HCCS",color:"#c2477a",alias:["hccs","hr","hrd","hrga","human capital","sdm","personalia","ga"]},
+  hse:{name:"HSE",color:"#f97316",alias:["hse","k3","safety","qhse"]},
+  sales:{name:"Sales",color:"#d14b3c",alias:["sales","penjualan","marketing"]},
+  engineering:{name:"Engineering",color:"#7b4fc4",alias:["engineering","engineer"]},
+  supplychain:{name:"Supply Chain",color:"#d17f22",alias:["supply chain","scm","logistik","procurement","purchasing"]},
+  technic:{name:"Technic",color:"#168f9c",alias:["technic","teknik","technical","teknisi"]},
+  finance:{name:"Finance",color:"#2e8b57",alias:["finance","keuangan","accounting","akuntansi"]},
+};
+const APPS=[
+  {id:"guides",title:"Guides & Manuals",icon:"book",color:"#3b82f6",href:"https://panduan.genetek.co.id",div:"hccs",
+   desc:"Akses cepat ke panduan pengguna dan manual operasional lengkap.",
+   kw:["panduan","manual","sop","prosedur","tutorial","petunjuk","cara pakai","cara menggunakan","handbook","dokumen panduan","aturan","kebijakan"]},
+  {id:"atk",title:"Office Supply (ATK)",icon:"box",color:"#10b981",href:"https://orderatk.genetek.co.id",div:"hccs",
+   desc:"Pengelolaan dan permintaan alat tulis kantor secara terstruktur.",
+   kw:["atk","alat tulis","office supply","kertas","pulpen","pena","pensil","spidol","map","stapler","staples","tinta","buku tulis","amplop","lakban","perlengkapan kantor","order atk","minta atk"]},
+  {id:"ga",title:"General Affair",icon:"building",color:"#f59e0b",href:"https://ga.genetek.co.id",div:"hccs",
+   desc:"Layanan fasilitas umum dan pengelolaan kebutuhan umum kantor.",
+   kw:["general affair","ga","fasilitas","id card","kartu identitas","kartu nama","konsumsi","snack","makan rapat","laptop","pinjam laptop","feedback","keluhan","ruangan","kebersihan","ac rusak","perbaikan fasilitas","kebutuhan kantor"]},
+  {id:"apd",title:"Secure Gear (APD)",icon:"shield",color:"#f97316",href:"https://formapd.genetek.co.id",div:"hse",
+   desc:"Manajemen peminjaman Alat Pelindung Diri & standar K3.",
+   kw:["apd","alat pelindung diri","helm","safety helmet","sepatu safety","safety shoes","rompi","vest","sarung tangan","gloves","masker","kacamata safety","coverall","earplug","wearpack","k3","pinjam apd","safety"]},
+  {id:"pipelines",title:"Pipeline Sales Manager",icon:"chart",color:"#a855f7",href:"https://pipelines.genetek.co.id",div:"sales",
+   desc:"Monitoring dan manajemen proyek peluang sales secara real-time.",
+   kw:["pipeline","peluang","prospek","opportunity","penawaran","quotation","tender","customer","klien","pelanggan","forecast","target sales","proyek sales","deal"]},
+  {id:"engmon",title:"Engineering Monitor",icon:"chip",color:"#6366f1",href:"https://monitoringeng.genetek.co.id",div:"engineering",
+   desc:"Monitoring teknis operasi engineering & keandalan alat.",
+   kw:["engineering","monitoring engineering","keandalan","alat","equipment","instrumen","kalibrasi","gas detector","operasi teknis","kondisi alat","proyek engineering"]},
+  {id:"supplychain",title:"Supply Chain App",icon:"truck",color:"#0ea5e9",href:"https://supplychain.genetek.co.id",div:"supplychain",
+   desc:"Pelacakan arus kargo, rantai pasok, dan stok gudang.",
+   kw:["supply chain","kargo","cargo","pengiriman","kirim barang","ekspedisi","shipment","rantai pasok","logistik","stok gudang","gudang","barang masuk","barang keluar","tracking","lacak"]},
+  {id:"workorder",title:"Work Order",icon:"check",color:"#06b6d4",href:"https://workorder.genetek.co.id",div:"technic",
+   desc:"Sistem tiket instruksi kerja dan penugasan maintenance teknis.",
+   kw:["work order","wo","tiket kerja","instruksi kerja","maintenance","perawatan","perbaikan teknis","penugasan","teknisi","servis alat","jadwal maintenance"]},
+  {id:"medical",title:"Medical Claim",icon:"heart",color:"#f43f5e",href:"https://medicalclaim.genetek.co.id",div:"finance",
+   desc:"Pengajuan penggantian klaim medis dan biaya kesehatan.",
+   kw:["klaim medis","medical","berobat","dokter","rumah sakit","klinik","obat","kesehatan","reimburse kesehatan","penggantian biaya","rawat jalan","rawat inap","kacamata minus","kwitansi berobat","sakit"]},
+  {id:"monfinance",title:"Monitoring Finance",icon:"pie",color:"#14b8a6",href:"https://monfinance.genetek.co.id",div:"finance",
+   desc:"Pemantauan arus kas dan pelaporan keuangan terpadu.",
+   kw:["keuangan","arus kas","cash flow","laporan keuangan","saldo","kas","monitoring finance","pembayaran","tagihan","invoice"]},
+  {id:"pengajuankaryawan",title:"Pengajuan Karyawan",icon:"users",color:"#8b5cf6",href:"https://pengajuankaryawan.genetek.co.id",div:"hccs",
+   desc:"Pengajuan kebutuhan karyawan baru (manpower request).",
+   kw:["karyawan baru","tambah karyawan","rekrut","rekrutmen","recruitment","manpower","mpp","lowongan","hiring","tenaga kerja","tambah orang","pengajuan karyawan","kebutuhan karyawan"]},
+  {id:"taksi",title:"Tiket Taksi Dinas",icon:"car",color:"#eab308",href:"https://taksi.genetek.co.id",div:"hccs",
+   desc:"Pengajuan dan pencatatan tiket taksi untuk keperluan dinas.",
+   kw:["taksi","taxi","bluebird","voucher taksi","tiket taksi","transport","transportasi","perjalanan dinas","dinas luar","kendaraan","antar jemput","ke bandara","ke client"]},
+  {id:"inventory",title:"Inventory",icon:"boxes",color:"#22c55e",href:"https://inventory.genetek.co.id",div:"hccs",
+   desc:"Pencatatan dan pengecekan stok barang inventaris kantor.",
+   kw:["inventory","inventaris","aset","asset","stok barang","cek stok","barcode","barang kantor","data barang"]},
+  {id:"rabmonitor",title:"RAB Monitoring",icon:"wallet",color:"#0891b2",href:"https://rabmonitor.genetek.co.id",div:"technic",
+   desc:"Pemantauan RAB proyek dan pengajuan klaim pembayaran PO.",
+   kw:["rab","rencana anggaran","anggaran proyek","budget proyek","biaya proyek","po","purchase order","klaim pembayaran","klaim po","bayar vendor","pembayaran vendor"]},
+];
+const SLIDES=[
+  {tag:"Feature Highlight",tone:"feature",title:"Email Signature Generator",desc:"Format standar tanda tangan email resmi Genetek. Buat profil profesional secara otomatis dalam hitungan detik.",cta:"Buat Signature",href:"https://forms.gle/PrdDHmJugaxzD4mW9"},
+  {tag:"Certification",tone:"cert",title:"ISO 14001:2015 Accredited",desc:"Environmental Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2014%20IA.pdf"},
+  {tag:"Certification",tone:"cert",title:"ISO 9001:2015 Accredited",desc:"Quality Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%209K%20IA.pdf"},
+  {tag:"Certification",tone:"cert",title:"ISO 45001:2018 Accredited",desc:"Health And Safety Management Systems",cta:"Unduh Sertifikat PDF",href:"https://mainmenu.genetek.co.id/Amtivo%20Certificate%20PT%20Effrensindo%20Kencana%2045K%20IA.pdf"},
+];
+
+/* ================= ikon ================= */
+const IC={
+  book:'<path d="M2 5.5C4.5 4 8 4 12 6c4-2 7.5-2 10-.5V19c-2.5-1.5-6-1.5-10 .5-4-2-7.5-2-10-.5Z"/><path d="M12 6v13.5"/>',
+  box:'<path d="m3 7 9-4 9 4v10l-9 4-9-4Z"/><path d="m3 7 9 4 9-4M12 11v10M7.5 5l9 4"/>',
+  building:'<path d="M4 21V4h11v17M15 9h5v12"/><path d="M8 8h3M8 12h3M8 16h3M2 21h20"/>',
+  shield:'<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5Z"/><path d="m9 12 2 2 4-4"/>',
+  chart:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/>',
+  check:'<path d="M10 6h11M10 12h11M10 18h11"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/>',
+  chip:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="9.5" y="9.5" width="5" height="5"/>',
+  truck:'<path d="M2 5h11v11H2zM13 9h4l4 4v3h-8"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  heart:'<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 22l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/><path d="M7 12h2.5l1.5-3 2 6 1.5-3H17"/>',
+  pie:'<path d="M21 12A9 9 0 1 1 12 3v9Z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15Z"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  car:'<path d="M5 17h14v-5l-2-5H7l-2 5z"/><path d="M5 12h14"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/>',
+  boxes:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  award:'<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/>',
+  pen:'<path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/>',
+  download:'<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>',
+};
+const svg=(k,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]||""}</svg>`;
+
+/* ================= daftar aplikasi ================= */
+let afilter="";
+function renderApps(){const keys=Object.keys(DIVS).filter(k=>APPS.some(a=>a.div===k));
+  $("afilter").innerHTML=`<button data-af="" aria-pressed="${!afilter}">Semua</button>`+keys.map(k=>`<button data-af="${k}" style="--c:${DIVS[k].color}" aria-pressed="${afilter===k}"><i></i>${esc(DIVS[k].name)}</button>`).join("");
+  const list=APPS.filter(a=>!afilter||a.div===afilter);$("appCount").textContent=list.length+" Aplikasi";
+  $("appsGrid").innerHTML=list.map(a=>{const d=DIVS[a.div];return`<article class="app" style="--c:${a.color};--dc:${d.color}">
+    <div class="app-top"><span class="ghost">${svg(a.icon,104)}</span><div class="app-ic">${svg(a.icon,24)}</div><span class="app-div"><i></i>${esc(d.name)}</span></div>
+    <div class="app-body"><h4>${esc(a.title)}</h4><p>${esc(a.desc)}</p></div>
+    <a class="app-go" href="${esc(a.href)}" target="_blank" rel="noopener" aria-label="Buka aplikasi ${esc(a.title)}"><span>Buka Aplikasi</span><span class="ci">${svg("arrow",13)}</span></a></article>`}).join("")}
+$("afilter").addEventListener("click",e=>{const b=e.target.closest("[data-af]");if(!b)return;afilter=b.dataset.af;renderApps()});
+if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+  $("appsGrid").addEventListener("pointermove",e=>{const c=e.target.closest(".app");if(!c||e.pointerType!=="mouse")return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.setProperty("--ry",x*10+"deg");c.style.setProperty("--rx",-y*10+"deg")});
+  $("appsGrid").addEventListener("pointerout",e=>{const c=e.target.closest(".app");if(c&&!c.contains(e.relatedTarget)){c.style.setProperty("--rx","0deg");c.style.setProperty("--ry","0deg")}})}
+$("info").innerHTML=SLIDES.map(s=>`<a class="icard ${s.tone}" href="${esc(s.href)}" target="_blank" rel="noopener"><span class="bg">${svg(s.tone==="cert"?"award":"pen",120)}</span><span class="tag">${esc(s.tag)}</span><h4>${esc(s.title)}</h4><p>${esc(s.desc)}</p><span class="cta">${esc(s.cta)} ${svg(s.tone==="cert"?"download":"arrow",14)}</span></a>`).join("");
+
+/* ================= pencarian cepat ================= */
+const gs=$("gsearch"),gr=$("gres");
+function renderSearch(){const q=gs.value.trim().toLowerCase();if(!q){gr.hidden=true;return}
+  const divs=Object.entries(DIVS).filter(([k,d])=>d.name.toLowerCase().includes(q)||d.alias.some(a=>a.includes(q)));
+  const apps=APPS.filter(a=>(a.title+" "+a.desc+" "+DIVS[a.div].name+" "+a.kw.join(" ")).toLowerCase().includes(q)).slice(0,6);
+  let h="";if(apps.length)h+=`<div class="grp">Aplikasi</div>`+apps.map(a=>`<a href="${esc(a.href)}" target="_blank" rel="noopener"><span class="ic" style="background:${a.color}">${svg(a.icon,16)}</span><span><span class="t">${esc(a.title)}</span><br><span class="d">${esc(DIVS[a.div].name)}</span></span></a>`).join("");
+  if(divs.length)h+=`<div class="grp">Divisi</div>`+divs.map(([k,d])=>`<button data-sdiv="${k}"><span class="ic" style="background:${d.color}">${esc(d.name.slice(0,2).toUpperCase())}</span><span><span class="t">${esc(d.name)}</span><br><span class="d">${APPS.filter(a=>a.div===k).length} aplikasi</span></span></button>`).join("");
+  if(!h)h=`<div class="grp">Tidak ditemukan</div><button data-ask="${esc(gs.value)}"><span class="ic" style="background:var(--violet)">?</span><span><span class="t">Tanya asisten</span><br><span class="d">“${esc(gs.value)}”</span></span></button>`;
+  gr.innerHTML=h;gr.hidden=false}
+gs.addEventListener("input",renderSearch);gs.addEventListener("focus",renderSearch);
+gr.addEventListener("click",e=>{const d=e.target.closest("[data-sdiv]"),q=e.target.closest("[data-ask]");
+  if(d){afilter=d.dataset.sdiv;renderApps();$("apps").scrollIntoView({behavior:"smooth",block:"start"})}
+  if(q){openBot();ask(q.dataset.ask)}gr.hidden=true;if(d||q)gs.value=""});
+document.addEventListener("pointerdown",e=>{if(!e.target.closest(".search"))gr.hidden=true});
+
+/* ================= tema & jam ================= */
+$("themeBtn").onclick=()=>{const root=document.documentElement,cur=root.dataset.theme||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"),next=cur==="dark"?"light":"dark";
+  root.dataset.theme=next;try{localStorage.setItem("gt-theme",next)}catch{}toast(next==="dark"?"Mode gelap aktif":"Mode terang aktif")};
+function tick(){const d=new Date();$("clockTime").textContent=d.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"});$("clockDay").textContent=d.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"short"})}
+tick();setInterval(tick,1000);
+renderApps();
+
+/* =====================================================================
+   ASISTEN APLIKASI — berjalan langsung di browser, tanpa server & tanpa biaya.
+   Menjawab dari daftar APPS di atas (nama, deskripsi, kata kunci, divisi).
+   ===================================================================== */
+const STOP=new Set("saya aku kami kita mau ingin pengen pingin bisa tolong mohon gimana bagaimana cara caranya untuk buat dengan yang di ke dari dan atau apa apakah ada aplikasi app apps link alamat web website situs mana dimana kalau kalo nya itu ini lewat pakai pake menggunakan harus perlu boleh sih dong ya kak pak bu mas mbak min admin halo hai hi tentang soal sama juga lagi mengajukan ajukan pengajuan minta meminta request order pesan memesan".split(" "));
+const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
+const stem=w=>{let x=w;if(x.length>5)x=x.replace(/(kan|nya|an)$/,"");if(x.length>5)x=x.replace(/^(meng|meny|mem|men|me|peng|peny|pem|pen|di|ber|ter|ke)/,"");return x};
+const toks=s=>norm(s).split(" ").filter(w=>w.length>1&&!STOP.has(w));
+const IDX=APPS.map(a=>({a,phr:[...a.kw,a.title,a.id].map(norm),words:new Set([...a.kw.join(" ").split(/\s+/),...a.title.split(/\s+/),...a.desc.split(/\s+/)].map(norm).filter(w=>w.length>2&&!STOP.has(w)).map(stem))}));
+function score(q){const nq=" "+norm(q)+" ",qt=toks(q).map(stem);
+  return IDX.map(({a,phr,words})=>{let s=0;
+    for(const p of phr)if(p.length>1&&nq.includes(" "+p+" "))s+=p.includes(" ")?4:3;
+    for(const t of qt){if(t.length<3)continue;if(words.has(t))s+=1;else for(const w of words)if(w.length>=4&&t.length>=4&&(w.startsWith(t)||t.startsWith(w))){s+=.6;break}}
+    return{a,s}}).filter(x=>x.s>0).sort((x,y)=>y.s-x.s)}
+function divIn(q){const nq=" "+norm(q)+" ";for(const[k,d]of Object.entries(DIVS))if([d.name,...d.alias].some(a=>nq.includes(" "+norm(a)+" ")))return k;return null}
+const card=a=>`<a class="mapp" style="--c:${a.color}" href="${esc(a.href)}" target="_blank" rel="noopener"><span class="ic">${svg(a.icon,17)}</span><span><span class="t">${esc(a.title)}</span><br><span class="d">${esc(a.desc)}</span></span><span class="go">Buka</span></a>`;
+const cards=l=>`<div class="mapps">${l.map(card).join("")}</div>`;
+const pick=l=>l[Math.floor(Math.random()*l.length)];
+function answer(q){const n=norm(q);
+  if(!n)return null;
+  if(/^(halo|hai|hi|hello|pagi|siang|sore|malam|assalamualaikum|permisi|selamat \w+)( \w+)?$/.test(n))
+    return{h:`${pick(["Halo!","Hai!","Halo, selamat datang!"])} Ceritakan saja apa yang mau dikerjakan, misalnya <b>“mau klaim biaya berobat”</b> atau <b>“pinjam helm safety”</b>, nanti saya tunjukkan aplikasinya.`};
+  if(/(terima ?kasih|makasih|thanks|thank you|tq|mantap|oke siap|sip)/.test(n))return{h:pick(["Sama-sama! Kalau ada yang lain, tanya saja.","Siap, senang bisa membantu."])};
+  if(/(lupa password|lupa kata sandi|tidak bisa login|gak bisa login|ga bisa login|nggak bisa login|error|eror|tidak bisa dibuka|ga bisa dibuka|gak bisa dibuka|akses ditolak|blank|lemot)/.test(n)){
+    const r=score(q);return{h:`Untuk kendala login, lupa password, atau aplikasi error, silakan hubungi <b>admin aplikasi tersebut</b> atau tim IT. Coba juga muat ulang halaman dengan <b>Ctrl+F5</b>.`+(r.length&&r[0].s>=3?`<div class="grp">Aplikasinya</div>`+cards([r[0].a]):"")}}
+  const dk=divIn(q),wantsList=/(apa saja|apa aja|semua|daftar|list|ada berapa|berapa|lihat)/.test(n);
+  if(wantsList&&!dk&&/(aplikasi|app|menu)/.test(n)||/^(menu|aplikasi|semua aplikasi|daftar aplikasi)$/.test(n)){
+    let h=`Ada <b>${APPS.length} aplikasi</b> di mainmenu:`;for(const[k,d]of Object.entries(DIVS)){const l=APPS.filter(a=>a.div===k);if(l.length)h+=`<div class="grp">${esc(d.name)} · ${l.length}</div>`+cards(l)}return{h}}
+  const r=score(q);
+  if(dk&&(wantsList||!r.length||r[0].s<3)){const l=APPS.filter(a=>a.div===dk);return{h:l.length?`Aplikasi milik divisi <b>${esc(DIVS[dk].name)}</b> (${l.length}):`+cards(l):`Divisi <b>${esc(DIVS[dk].name)}</b> belum punya aplikasi khusus di mainmenu.`}}
+  if(r.length){const top=r[0].s,best=r.filter(x=>x.s>=Math.max(1,top*.6)).slice(0,3).map(x=>x.a);
+    if(/(milik|punya|divisi|siapa yang (pegang|kelola|urus))/.test(n)&&top>=3){const a=best[0];return{h:`<b>${esc(a.title)}</b> dikelola divisi <b>${esc(DIVS[a.div].name)}</b>.`+cards([a])}}
+    if(/(link|alamat|url|website|situs)/.test(n)&&top>=3){const a=best[0];return{h:`Alamat <b>${esc(a.title)}</b>: <b>${esc(a.href.replace("https://",""))}</b>`+cards([a])}}
+    const a=best[0],lead=best.length===1?`Untuk itu pakai <b>${esc(a.title)}</b> (divisi ${esc(DIVS[a.div].name)}).`:`Ini aplikasi yang paling cocok:`;
+    return{h:lead+cards(best)}}
+  return{h:`Maaf, saya belum menemukan aplikasi yang cocok untuk <b>“${esc(q)}”</b>. Coba tulis dengan kata lain, misalnya <b>“minta ATK”</b>, <b>“pesan taksi”</b>, atau <b>“aplikasi HCCS apa saja”</b>.`,chips:["Aplikasi apa saja?","Aplikasi HCCS apa saja?"]}}
+
+const log=$("botLog"),bot=$("bot"),fab=$("botFab");
+const CHIPS=["Aplikasi apa saja?","Mau klaim biaya berobat","Pinjam APD / helm safety","Pesan taksi dinas","Minta ATK","Ajukan karyawan baru"];
+function chips(l){$("botChips").innerHTML=l.map(c=>`<button type="button">${esc(c)}</button>`).join("")}
+function add(who,html){const d=document.createElement("div");d.className="msg "+who;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+function ask(q){q=String(q||"").trim();if(!q)return;add("me",esc(q));
+  const t=add("ai",`<span class="typing"><i></i><i></i><i></i></span>`);
+  setTimeout(()=>{const r=answer(q);t.innerHTML=r?r.h:"…";chips(r&&r.chips||CHIPS.slice(0,4));log.scrollTop=log.scrollHeight},450)}
+let greeted=false;
+function openBot(){bot.hidden=false;fab.setAttribute("aria-expanded","true");
+  if(!greeted){greeted=true;add("ai",`Halo! Saya <b>Asisten Aplikasi</b> mainmenu. Tulis saja kebutuhan Anda, nanti saya tunjukkan aplikasi yang tepat beserta tautannya.`);chips(CHIPS)}
+  setTimeout(()=>$("botIn").focus(),50)}
+function closeBot(){bot.hidden=true;fab.setAttribute("aria-expanded","false")}
+fab.onclick=()=>bot.hidden?openBot():closeBot();$("botClose").onclick=closeBot;$("heroAsk").onclick=openBot;
+$("botChips").addEventListener("click",e=>{const b=e.target.closest("button");if(b)ask(b.textContent)});
+$("botForm").addEventListener("submit",e=>{e.preventDefault();const i=$("botIn");ask(i.value);i.value=""});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!bot.hidden)closeBot()});
+window.__bot={answer};
+})();
+</script>
 </body>
 </html>
